@@ -230,7 +230,7 @@ fun FlightTabs() {
 fun AddFlightButton() {
     ExtendedFloatingActionButton(
         onClick = {},
-        icon = { Icon(Icons.Filled.Add, "Extended floating action button.") },
+        icon = { Icon(Icons.Filled.Add, "Add flight") },
         text = { Text(text = "Add Flight") },
     )
 }
