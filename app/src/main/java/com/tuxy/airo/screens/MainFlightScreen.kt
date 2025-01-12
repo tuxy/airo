@@ -1,4 +1,4 @@
-package com.tuxy.airo
+package com.tuxy.airo.screens
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -39,6 +39,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
+import com.tuxy.airo.Screen
 import com.tuxy.airo.ui.theme.AeroTheme
 
 @Composable
@@ -191,7 +192,7 @@ fun FlightDepartureAndArrival() { // TODO Implement API
 @Composable
 fun MainTopBar(modifier: Modifier = Modifier, navController: NavController) {
     LargeTopAppBar(
-        title = { Text("DEBUG MODE") },
+        title = { Text("My Flights") },
         colors = TopAppBarDefaults.topAppBarColors(),
         actions = {
             IconButton(onClick = {

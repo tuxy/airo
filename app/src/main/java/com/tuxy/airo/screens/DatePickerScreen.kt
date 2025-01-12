@@ -1,4 +1,4 @@
-package com.tuxy.airo
+package com.tuxy.airo.screens
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding

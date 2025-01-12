@@ -1,41 +1,46 @@
 package com.tuxy.airo
 
-import androidx.compose.animation.AnimatedContentTransitionScope
-import androidx.compose.animation.core.tween
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
 import androidx.compose.runtime.Composable
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import com.tuxy.airo.motion.materialSharedAxisXIn
+import com.tuxy.airo.motion.materialSharedAxisXOut
+import com.tuxy.airo.motion.materialSharedAxisYIn
+import com.tuxy.airo.motion.materialSharedAxisYOut
+import com.tuxy.airo.screens.DatePickerView
+import com.tuxy.airo.screens.FlightDetailsView
+import com.tuxy.airo.screens.MainFlightView
+import com.tuxy.airo.screens.NewFlightView
+import com.tuxy.airo.screens.SettingsView
 
-const val SCREEN_TRANSITION_MILLIS = 350
+private const val INITIAL_OFFSET_FACTOR = 0.10f
 
 @Composable
-fun SetupNavGraph( // TODO Currently, while the animations "Match" android's choice of animation for material 3, it feels very unnatural
+fun SetupNavGraph( // Transitions taken from Read You's repository
     navController: NavHostController
 ) {
     NavHost(
         navController = navController,
         startDestination = Screen.MainFlightsScreen.route,
-        enterTransition = {
-            slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Start, animationSpec = tween(SCREEN_TRANSITION_MILLIS))
-        },
-        exitTransition = {
-            fadeOut(tween(SCREEN_TRANSITION_MILLIS))
-        },
-        popEnterTransition = {
-            fadeIn(tween(SCREEN_TRANSITION_MILLIS))
-        },
-        popExitTransition = {
-            slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.End, animationSpec = tween(SCREEN_TRANSITION_MILLIS))
-        }
+        enterTransition = { materialSharedAxisXIn(initialOffsetX = { (it * INITIAL_OFFSET_FACTOR).toInt() }) },
+        exitTransition = { materialSharedAxisXOut(targetOffsetX = { -(it * INITIAL_OFFSET_FACTOR).toInt() }) },
+        popEnterTransition = { materialSharedAxisXIn(initialOffsetX = { -(it * INITIAL_OFFSET_FACTOR).toInt() }) },
+        popExitTransition = { materialSharedAxisXOut(targetOffsetX = { (it * INITIAL_OFFSET_FACTOR).toInt() }) },
     ) {
         composable( route = Screen.MainFlightsScreen.route ) { MainFlightView(navController) }
         composable( route = Screen.SettingsScreen.route ) { SettingsView(navController) }
         composable( route = Screen.FlightDetailsScreen.route ) { FlightDetailsView(navController) }
 
-        composable( route = Screen.NewFlightScreen.route ) { NewFlightView(navController) }
-        composable( route = Screen.DatePickerScreen.route ) { DatePickerView() }
+        composable(
+            route = Screen.NewFlightScreen.route,
+            enterTransition = { materialSharedAxisYIn(initialOffsetY = { it / 4 }) },
+            exitTransition = { materialSharedAxisYOut(targetOffsetY = { it / 4 }) },
+        ) { NewFlightView(navController) }
+        composable(
+            route = Screen.DatePickerScreen.route,
+            enterTransition = { materialSharedAxisYIn(initialOffsetY = { it / 4 }) },
+            exitTransition = { materialSharedAxisYOut(targetOffsetY = { it / 4 }) },
+        ) { DatePickerView() }
     }
 }
