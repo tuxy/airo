@@ -38,7 +38,7 @@ fun FlightDetailsView(navController: NavController) {
             modifier = Modifier
                 .padding(innerPadding)
         ) {
-            MainContent(navController)
+            MainContent()
         }
     }
 }
@@ -62,13 +62,13 @@ fun FlightDetailsAppBar(navController: NavController) {
 }
 
 @Composable
-fun MainContent(navController: NavController) {
+fun MainContent() {
     Column {
         LinearProgressIndicator(
             progress = { 50F }
         )
         RouteBar()
-        FlightInformationInteract(navController)
+        FlightInformationInteract()
     }
 }
 
@@ -104,7 +104,7 @@ fun DepartureAndDestinationText(icao: String, fullName: String) {
 }
 
 @Composable
-fun FlightInformationInteract(navController: NavController) {
+fun FlightInformationInteract() {
     Column {
         ListItem(
             modifier = Modifier.clickable(onClick = {}),

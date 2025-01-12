@@ -47,7 +47,7 @@ fun MainFlightView(navController: NavController) {
         Scaffold(
             modifier = Modifier.fillMaxSize(),
             topBar = { MainTopBar(navController = navController) },
-            floatingActionButton = { AddFlightButton() }
+            floatingActionButton = { AddFlightButton(navController) }
         ) { innerPadding ->
             Column (
                 modifier = Modifier
@@ -191,7 +191,7 @@ fun FlightDepartureAndArrival() { // TODO Implement API
 @Composable
 fun MainTopBar(modifier: Modifier = Modifier, navController: NavController) {
     LargeTopAppBar(
-        title = { Text("My Flights") },
+        title = { Text("DEBUG MODE") },
         colors = TopAppBarDefaults.topAppBarColors(),
         actions = {
             IconButton(onClick = {
@@ -227,9 +227,11 @@ fun FlightTabs() {
 }
 
 @Composable
-fun AddFlightButton() {
+fun AddFlightButton(navController: NavController) {
     ExtendedFloatingActionButton(
-        onClick = {},
+        onClick = {
+            navController.navigate(Screen.NewFlightScreen.route)
+        },
         icon = { Icon(Icons.Filled.Add, "Add flight") },
         text = { Text(text = "Add Flight") },
     )

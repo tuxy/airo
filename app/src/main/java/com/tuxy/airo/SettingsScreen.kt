@@ -57,7 +57,7 @@ fun SettingsTopBar(navController: NavController) {
 }
 
 @Composable
-fun SettingsSwitch(setting: String, checked: Boolean, modifier: Modifier = Modifier) {
+fun SettingsSwitch(setting: String, checked: Boolean) {
     Row(
         modifier = Modifier.fillMaxWidth()
             .padding(horizontal = 16.dp, vertical = 8.dp),

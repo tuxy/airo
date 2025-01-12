@@ -5,11 +5,11 @@ plugins {
 }
 
 android {
-    namespace = "com.tuxy.aero"
+    namespace = "com.tuxy.airo"
     compileSdk = 34
 
     defaultConfig {
-        applicationId = "com.tuxy.aero"
+        applicationId = "com.tuxy.airo"
         minSdk = 26
         targetSdk = 34
         versionCode = 1
