@@ -57,7 +57,7 @@ fun FlightSearch(navController: NavController) {
             navController.navigate(Screen.DatePickerScreen.route)
         },
         active = active,
-        onActiveChange = { active = it },
+        onActiveChange = { navController.popBackStack() },
         placeholder = { Text("Callsign") },
         leadingIcon = {
             IconButton(onClick = {
