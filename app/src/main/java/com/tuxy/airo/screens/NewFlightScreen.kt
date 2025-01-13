@@ -3,10 +3,9 @@ package com.tuxy.airo.screens
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -20,6 +19,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
@@ -33,7 +34,7 @@ fun NewFlightView(navController: NavController) {
         Column(
             modifier = Modifier
                 .padding(innerPadding)
-                .fillMaxWidth(),
+                .fillMaxSize(),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Top
         ) {
@@ -46,10 +47,14 @@ fun NewFlightView(navController: NavController) {
 @Composable
 fun FlightSearch(navController: NavController) {
 
+    val focusRequester = remember { FocusRequester() }
     var query by remember { mutableStateOf("") }
     var active by remember { mutableStateOf(true) }
 
     SearchBar(
+        modifier = Modifier
+            .focusRequester(focusRequester)
+            .fillMaxSize(),
         query = query,
         onQueryChange = { query = it },
         onSearch = { // newQuery ->
@@ -57,14 +62,14 @@ fun FlightSearch(navController: NavController) {
             navController.navigate(Screen.DatePickerScreen.route)
         },
         active = active,
-        onActiveChange = { navController.popBackStack() },
+        onActiveChange = { active = it },
         placeholder = { Text("Callsign") },
         leadingIcon = {
             IconButton(onClick = {
                 navController.navigateUp()
             }) {
                 Icon(
-                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                    imageVector = Icons.Filled.Close,
                     contentDescription = "Back"
                 )
             }

@@ -55,7 +55,7 @@ fun materialSharedAxisXOut(
     animationSpec = tween(
         durationMillis = durationMillis.ForOutgoing,
         delayMillis = 0,
-        easing = FastOutLinearInEasing
+        easing = LinearOutSlowInEasing
     )
 )
 

@@ -10,7 +10,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.Badge
@@ -40,6 +39,7 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.tuxy.airo.Screen
+import com.tuxy.airo.composables.RouteBar
 import com.tuxy.airo.ui.theme.AeroTheme
 
 @Composable
@@ -79,7 +79,7 @@ fun FlightCard(navController: NavController) { // TODO Add parameters to create 
             .padding(16.dp)
     ) {
         Column {
-            FlightDepartureAndArrival()
+            RouteBar()
             TicketInformationCard()
             CheckInButtonGroup()
             LinearProgressIndicator(
@@ -151,40 +151,6 @@ fun TicketInformationCard() { // TODO How to get ticket information from ticket?
             modifier = Modifier.size(16.dp),
             containerColor = Color.Gray
         )
-    }
-}
-
-@Composable
-fun FlightDepartureAndArrival() { // TODO Implement API
-    Row(
-        modifier = Modifier.fillMaxWidth()
-            .padding(16.dp),
-        horizontalArrangement = Arrangement.SpaceBetween,
-    ) {
-        Column {
-            Text(
-                "San Francisco",
-                style = TextStyle(
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 18.sp
-                )
-            )
-            Text("KSFO")
-        }
-        Icon(
-            imageVector = Icons.AutoMirrored.Filled.ArrowForward,
-            contentDescription = "To"
-        )
-        Column( horizontalAlignment = Alignment.End ) {
-            Text(
-                "Atlanta",
-                style = TextStyle(
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 18.sp
-                )
-            )
-            Text("KATL")
-        }
     }
 }
 

@@ -6,13 +6,13 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import com.tuxy.airo.motion.materialSharedAxisXIn
 import com.tuxy.airo.motion.materialSharedAxisXOut
-import com.tuxy.airo.motion.materialSharedAxisYIn
-import com.tuxy.airo.motion.materialSharedAxisYOut
+import com.tuxy.airo.screens.AircraftInformationView
 import com.tuxy.airo.screens.DatePickerView
 import com.tuxy.airo.screens.FlightDetailsView
 import com.tuxy.airo.screens.MainFlightView
 import com.tuxy.airo.screens.NewFlightView
 import com.tuxy.airo.screens.SettingsView
+import com.tuxy.airo.screens.TicketInformationView
 
 private const val INITIAL_OFFSET_FACTOR = 0.10f
 
@@ -31,16 +31,9 @@ fun SetupNavGraph( // Transitions taken from Read You's repository
         composable( route = Screen.MainFlightsScreen.route ) { MainFlightView(navController) }
         composable( route = Screen.SettingsScreen.route ) { SettingsView(navController) }
         composable( route = Screen.FlightDetailsScreen.route ) { FlightDetailsView(navController) }
-
-        composable(
-            route = Screen.NewFlightScreen.route,
-            enterTransition = { materialSharedAxisYIn(initialOffsetY = { it / 4 }) },
-            exitTransition = { materialSharedAxisYOut(targetOffsetY = { it / 4 }) },
-        ) { NewFlightView(navController) }
-        composable(
-            route = Screen.DatePickerScreen.route,
-            enterTransition = { materialSharedAxisYIn(initialOffsetY = { it / 4 }) },
-            exitTransition = { materialSharedAxisYOut(targetOffsetY = { it / 4 }) },
-        ) { DatePickerView() }
+        composable( route = Screen.NewFlightScreen.route ) { NewFlightView(navController) }
+        composable( route = Screen.DatePickerScreen.route ) { DatePickerView() }
+        composable( route = Screen.AircraftInformationScreen.route ) { AircraftInformationView(navController) }
+        composable( route = Screen.TicketInformationScreen.route ) { TicketInformationView(navController) }
     }
 }
