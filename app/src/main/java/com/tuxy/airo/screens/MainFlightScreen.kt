@@ -31,39 +31,53 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
-import androidx.navigation.compose.rememberNavController
 import com.tuxy.airo.Screen
+import com.tuxy.airo.composables.LargeTopSmallBottom
 import com.tuxy.airo.composables.RouteBar
-import com.tuxy.airo.ui.theme.AeroTheme
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MainFlightView(navController: NavController) {
-    AeroTheme {
-        Scaffold(
-            modifier = Modifier.fillMaxSize(),
-            topBar = { MainTopBar(navController = navController) },
-            floatingActionButton = { AddFlightButton(navController) }
-        ) { innerPadding ->
-            Column (
-                modifier = Modifier
-                    .padding(innerPadding),
+    Scaffold(
+        modifier = Modifier.fillMaxSize(),
+        topBar = { MainTopBar(navController = navController) },
+        floatingActionButton = {
+            ExtendedFloatingActionButton(
+                onClick = {
+                    navController.navigate(Screen.NewFlightScreen.route)
+                },
+                icon = { Icon(Icons.Filled.Add, "Add flight") },
+                text = { Text(text = "Add Flight") },
+            )
+        }
+    ) { innerPadding ->
+        Column (
+            modifier = Modifier
+                .padding(innerPadding)
+        ) {
+            PrimaryTabRow(
+                selectedTabIndex = 0,
             ) {
-                FlightTabs()
-                Column (
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    modifier = Modifier.fillMaxWidth()
-                        .verticalScroll(rememberScrollState())
-                ) {
-                    repeat(10) {
-                        FlightCard(navController)
-                    }
-                }
+                Tab(
+                    selected = true,
+                    onClick = {},
+                    text = { Text("Upcoming") }
+                )
+                Tab(
+                    selected = false,
+                    onClick = {},
+                    text = { Text("Past") }
+                )
+            }
+            Column (
+                horizontalAlignment = Alignment.CenterHorizontally,
+                modifier = Modifier.fillMaxWidth()
+                    .verticalScroll(rememberScrollState())
+                    .fillMaxSize()
+            ) {
+                FlightCard(navController)
             }
         }
     }
@@ -81,30 +95,25 @@ fun FlightCard(navController: NavController) { // TODO Add parameters to create 
         Column {
             RouteBar()
             TicketInformationCard()
-            CheckInButtonGroup()
+            Row(
+                modifier = Modifier.fillMaxWidth()
+                    .padding(16.dp),
+                horizontalArrangement = Arrangement.End
+            ) {
+                OutlinedButton(
+                    modifier = Modifier.padding(horizontal = 12.dp),
+                    onClick = {}
+                ) {
+                    Text("Show Ticket")
+                }
+                FilledTonalButton(onClick = {}) {
+                    Text("Check-in")
+                }
+            }
             LinearProgressIndicator(
                 progress = { 0F },
                 modifier = Modifier.fillMaxWidth(),
             )
-        }
-    }
-}
-
-@Composable
-fun CheckInButtonGroup() {
-    Row(
-        modifier = Modifier.fillMaxWidth()
-            .padding(16.dp),
-        horizontalArrangement = Arrangement.End
-    ) {
-        OutlinedButton(
-            modifier = Modifier.padding(horizontal = 12.dp),
-            onClick = {}
-        ) {
-            Text("Show Ticket")
-        }
-        FilledTonalButton(onClick = {}) {
-            Text("Check-in")
         }
     }
 }
@@ -117,36 +126,9 @@ fun TicketInformationCard() { // TODO How to get ticket information from ticket?
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
-        Column {
-            Text(
-                "Terminal",
-                style = TextStyle(
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 18.sp
-                )
-            )
-            Text("2")
-        }
-        Column {
-            Text(
-                "Gate",
-                style = TextStyle(
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 18.sp
-                )
-            )
-            Text("5")
-        }
-        Column {
-            Text(
-                "Seat",
-                style = TextStyle(
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 18.sp
-                )
-            )
-            Text("32A")
-        }
+        LargeTopSmallBottom("Terminal", "2")
+        LargeTopSmallBottom("Gate", "5")
+        LargeTopSmallBottom("Seat", "32A")
         Badge(
             modifier = Modifier.size(16.dp),
             containerColor = Color.Gray
@@ -172,52 +154,4 @@ fun MainTopBar(modifier: Modifier = Modifier, navController: NavController) {
         },
         modifier = modifier
     )
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun FlightTabs() {
-    PrimaryTabRow(
-        selectedTabIndex = 0,
-    ) {
-        Tab(
-            selected = true,
-            onClick = {},
-            text = { Text("Upcoming") }
-        )
-        Tab(
-            selected = false,
-            onClick = {},
-            text = { Text("Past") }
-        )
-    }
-}
-
-@Composable
-fun AddFlightButton(navController: NavController) {
-    ExtendedFloatingActionButton(
-        onClick = {
-            navController.navigate(Screen.NewFlightScreen.route)
-        },
-        icon = { Icon(Icons.Filled.Add, "Add flight") },
-        text = { Text(text = "Add Flight") },
-    )
-}
-
-
-@Preview(showBackground = true)
-@Composable
-fun TopBarPreview() {
-    Column {
-        MainTopBar(navController = rememberNavController())
-        FlightTabs()
-    }
-}
-
-@Preview(showBackground = true)
-@Composable
-fun FlightCardPreview() {
-    AeroTheme {
-        FlightCard(navController = rememberNavController())
-    }
 }

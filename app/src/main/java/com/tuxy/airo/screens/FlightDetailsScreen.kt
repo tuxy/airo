@@ -4,6 +4,9 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Info
+import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.Scaffold
@@ -69,14 +72,15 @@ fun FlightInformationInteract(navController: NavController) {
             supportingContent = { Text("Seat 32A - Economy") }
         )
         ListItem(
-            modifier = Modifier.clickable(onClick = {}),
-            headlineContent = { Text("Airport") },
-            supportingContent = { Text("KSFO - Gate 5 Terminal 2") }
-        )
-        ListItem(
             modifier = Modifier.clickable(onClick = { navController.navigate(Screen.AircraftInformationScreen.route) }),
             headlineContent = { Text("Aircraft") },
             supportingContent = { Text("Boeing 777-300ER") }
+        )
+        ListItem(
+            modifier = Modifier.clickable(onClick = {}),
+            headlineContent = { Text("Airport") },
+            supportingContent = { Text("KSFO - Gate 5 Terminal 2") },
+            trailingContent = { Icon(Icons.Filled.Info, "Airport Information") }
         )
     }
 }

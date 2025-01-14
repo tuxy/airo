@@ -14,15 +14,17 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
+import androidx.navigation.NavController
+import com.tuxy.airo.composables.SmallAppBar
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun DatePickerView() {
+fun DatePickerView(navController: NavController) {
     Scaffold(
+        topBar = { SmallAppBar("", navController) },
         floatingActionButton = {
             ExtendedFloatingActionButton(
-                onClick = {},
+                onClick = { navController.navigateUp() },
                 icon = { Icon(Icons.Filled.Check, "Add flight") },
                 text = { Text(text = "Add Flight") },
             )
@@ -36,10 +38,4 @@ fun DatePickerView() {
             )
         }
     }
-}
-
-@Composable
-@Preview(showBackground = true)
-fun DatePickerViewPreview() {
-    DatePickerView()
 }
