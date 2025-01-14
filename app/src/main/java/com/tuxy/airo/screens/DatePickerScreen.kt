@@ -24,7 +24,10 @@ fun DatePickerView(navController: NavController) {
         topBar = { SmallAppBar("", navController) },
         floatingActionButton = {
             ExtendedFloatingActionButton(
-                onClick = { navController.navigateUp() },
+                onClick = {
+                    navController.navigateUp()
+                    navController.navigateUp()
+                },
                 icon = { Icon(Icons.Filled.Check, "Add flight") },
                 text = { Text(text = "Add Flight") },
             )
