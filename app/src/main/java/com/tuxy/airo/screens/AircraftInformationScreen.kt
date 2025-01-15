@@ -30,6 +30,10 @@ fun AircraftInformationView(navController: NavController) {
     ) { innerPadding ->
         Column( modifier = Modifier.padding(innerPadding) ) {
             SmallAppBar("Aircraft Information", navController)
+            ListItem(
+                headlineContent = { Text("Boeing 777-300ER") },
+                supportingContent = { Text("United Airlines") }
+            )
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -52,10 +56,6 @@ fun AircraftInformationView(navController: NavController) {
 @Composable
 fun AircraftListView() {
     Column {
-        ListItem(
-            headlineContent = { Text("Boeing 777-300ER") },
-            supportingContent = { Text("United Airlines") }
-        )
         ListItem(
             headlineContent = { Text("Seating information") },
             trailingContent = { Icon(Icons.Filled.Info, "Seating information") }

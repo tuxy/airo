@@ -21,7 +21,6 @@ import com.tuxy.airo.composables.SmallAppBar
 @Composable
 fun DatePickerView(navController: NavController) {
     Scaffold(
-        topBar = { SmallAppBar("", navController) },
         floatingActionButton = {
             ExtendedFloatingActionButton(
                 onClick = {
@@ -36,6 +35,7 @@ fun DatePickerView(navController: NavController) {
         Column(
             modifier = Modifier.padding(innerPadding)
         ) {
+            SmallAppBar("", navController)
             DatePicker(
                 state = DatePickerState(locale = CalendarLocale.UK)
             )

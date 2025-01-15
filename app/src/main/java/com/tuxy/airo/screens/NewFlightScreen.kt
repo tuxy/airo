@@ -33,17 +33,21 @@ import com.tuxy.airo.composables.SmallAppBar
 fun NewFlightView(navController: NavController) {
     Scaffold(
         modifier = Modifier.fillMaxSize(),
-        topBar = { SmallAppBar("", navController) }
     ) { innerPadding ->
         Column(
             modifier = Modifier
                 .padding(innerPadding)
-                .padding(16.dp)
-                .fillMaxSize(),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Top
         ) {
-            FlightSearch(navController)
+            SmallAppBar("", navController)
+            Column(
+                modifier = Modifier
+                    .padding(16.dp)
+                    .fillMaxSize(),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Top
+            ) {
+                FlightSearch(navController)
+            }
         }
     }
 }

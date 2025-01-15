@@ -23,12 +23,12 @@ fun SettingsView( // TODO Implement notification permissions
 ) {
     Scaffold(
         modifier = Modifier.fillMaxSize(),
-        topBar = { LargeAppBar("Settings", navController) }
     ) { innerPadding ->
         Column(
             modifier = Modifier
                 .padding(innerPadding)
         ) {
+            LargeAppBar("Settings", navController)
             Row(
                 modifier = Modifier.fillMaxWidth()
                     .padding(horizontal = 16.dp, vertical = 8.dp),

@@ -42,7 +42,6 @@ import com.tuxy.airo.composables.RouteBar
 fun MainFlightView(navController: NavController) {
     Scaffold(
         modifier = Modifier.fillMaxSize(),
-        topBar = { MainTopBar(navController = navController) },
         floatingActionButton = {
             ExtendedFloatingActionButton(
                 onClick = {
@@ -57,6 +56,7 @@ fun MainFlightView(navController: NavController) {
             modifier = Modifier
                 .padding(innerPadding)
         ) {
+            MainTopBar(navController = navController)
             PrimaryTabRow(
                 selectedTabIndex = 0,
             ) {
