@@ -73,7 +73,9 @@ fun FlightSearch(navController: NavController) {
         singleLine = true,
         keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
         keyboardActions = KeyboardActions(
-            onDone = { navController.navigate(Screen.DatePickerScreen.route) }
+            onDone = {
+                navController.navigate("${Screen.DatePickerScreen.route}/${value}")
+            }
         ),
     )
 }
