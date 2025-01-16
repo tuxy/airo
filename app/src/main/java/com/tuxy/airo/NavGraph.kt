@@ -32,7 +32,9 @@ fun SetupNavGraph( // Transitions taken from Read You's repository
         composable( route = Screen.SettingsScreen.route ) { SettingsView(navController) }
         composable( route = Screen.FlightDetailsScreen.route ) { FlightDetailsView(navController) }
         composable( route = Screen.NewFlightScreen.route ) { NewFlightView(navController) }
-        composable( route = Screen.DatePickerScreen.route ) { DatePickerView(navController) }
+        composable( route = "${Screen.DatePickerScreen.route}/{flight_number}" ) { backStackEntry ->
+            DatePickerView(navController, backStackEntry.arguments?.getString("flight_number").toString())
+        }
         composable( route = Screen.AircraftInformationScreen.route ) { AircraftInformationView(navController) }
         composable( route = Screen.TicketInformationScreen.route ) { TicketInformationView(navController) }
     }
