@@ -21,14 +21,21 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavController
 import com.tuxy.airo.composables.SmallAppBar
+import com.tuxy.airo.data.FlightData
+import com.tuxy.airo.data.FlightDataDao
+import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, DelicateCoroutinesApi::class)
 @Composable
-fun DatePickerView(navController: NavController, flightNumber: String) {
+fun DatePickerView(
+    navController: NavController,
+    flightNumber: String,
+    data: FlightDataDao
+) {
     var loading = remember { mutableStateOf(false) }
     val datePickerState = rememberDatePickerState(initialDisplayMode = DisplayMode.Picker)
 
@@ -42,6 +49,21 @@ fun DatePickerView(navController: NavController, flightNumber: String) {
                     GlobalScope.launch(Dispatchers.Main) {
                         delay(3000L) // TODO Implement date processing here
                         loading.value = false
+                        val flightData = FlightData(
+                            id = 0,
+                            from = "Somewhere",
+                            to = "Somewhere",
+                            ticketSeat = "Somewhere",
+                            ticketData = "Somewhere",
+                            ticketQr = "Somewhere",
+                            aircraftIcao = "Somewhere",
+                            aircraftName = "Somewhere",
+                            aircraftUri = "",
+                            mapOrigin = "Somewhere",
+                            mapDestination = "Somewhere",
+                            progress = 80,
+                        )
+                        data.addFlight(flightData)
                         navController.navigateUp()
                         navController.navigateUp()
                     }

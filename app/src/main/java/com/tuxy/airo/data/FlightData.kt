@@ -1,17 +1,18 @@
 package com.tuxy.airo.data
 
-import android.app.Application
 import android.content.Context
-import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
-import androidx.lifecycle.viewModelScope
-import androidx.room.Database
 import androidx.room.Entity
 import androidx.room.PrimaryKey
+import androidx.room.Dao
+import androidx.room.Database
+import androidx.room.Delete
+import androidx.room.Insert
+import androidx.room.OnConflictStrategy
+import androidx.room.Query
 import androidx.room.Room
 import androidx.room.RoomDatabase
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
+import androidx.room.Update
 
 @Entity(tableName = "flight_table")
 data class FlightData(
@@ -30,54 +31,35 @@ data class FlightData(
     val progress: Int,
 )
 
-@Database(entities = [FlightData::class], version = 1, exportSchema = true)
+@Dao
+interface FlightDataDao {
+    @Insert(onConflict = OnConflictStrategy.IGNORE)
+    suspend fun addFlight(flightData: FlightData)
+
+    @Delete
+    suspend fun deleteFlight(flightData: FlightData)
+
+    @Update
+    suspend fun updateFlight(flightData: FlightData)
+
+    @Query("SELECT * FROM flight_table ORDER BY id ASC")
+    fun readAll(): LiveData<List<FlightData>>
+}
+
+
+@Database(entities = [FlightData::class], version = 1, exportSchema = false)
 abstract class FlightDataBase: RoomDatabase() {
     abstract fun flightDataDao(): FlightDataDao
 
     companion object{
         @Volatile
-        private var INSTANCE: FlightDataBase? = null
+        private var Instance: FlightDataBase? = null
 
-        fun getDataBase(context: Context): FlightDataBase { // Gets database, creates if doesn't exist
-            val tempInstance = INSTANCE
-            if (tempInstance != null) {
-                return tempInstance
+        fun getDatabase(context: Context): FlightDataBase { // Gets database, creates if doesn't exist
+            return Instance ?: synchronized(this) {
+                Room.databaseBuilder(context, FlightDataBase::class.java, "flight_database")
+                    .build().also { Instance = it }
             }
-            synchronized(this) {
-                val instance = Room.databaseBuilder(
-                    context = context.applicationContext,
-                    FlightDataBase::class.java,
-                    "flight_database"
-                ).build()
-                INSTANCE = instance
-                return instance
-            }
-        }
-    }
-}
-
-class FlightRepository(private val flightDataDao: FlightDataDao) {
-    val readAllData: LiveData<List<FlightData>> = flightDataDao.readAll()
-
-    suspend fun addFlight(flightData: FlightData) {
-        flightDataDao.addFlight(flightData)
-    }
-}
-
-class FlightViewModel(application: Application): AndroidViewModel(application) {
-    private val readAllData: LiveData<List<FlightData>>
-    private val repository: FlightRepository
-
-    init {
-        val flightDataDao = FlightDataBase.getDataBase(application).flightDataDao()
-
-        repository = FlightRepository(flightDataDao)
-        readAllData = repository.readAllData
-    }
-
-    fun addFlight(flightData: FlightData) {
-        viewModelScope.launch(Dispatchers.IO) {
-            repository.addFlight(flightData)
         }
     }
 }

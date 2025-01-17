@@ -8,22 +8,27 @@ import androidx.activity.enableEdgeToEdge
 import androidx.compose.material3.Scaffold
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
+import com.tuxy.airo.data.FlightDataBase
+import com.tuxy.airo.data.FlightDataDao
 import com.tuxy.airo.ui.theme.AeroTheme
 
 class MainActivity : ComponentActivity() {
 
     private lateinit var navController: NavHostController
+    lateinit var data: FlightDataDao
 
     @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        data = FlightDataBase.getDatabase(this).flightDataDao()
 
         enableEdgeToEdge()
         setContent {
             AeroTheme {
                 Scaffold {
                     navController = rememberNavController()
-                    SetupNavGraph(navController = navController)
+                    SetupNavGraph(navController, data)
                 }
             }
         }
