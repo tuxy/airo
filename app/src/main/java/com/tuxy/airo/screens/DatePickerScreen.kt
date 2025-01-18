@@ -28,6 +28,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import java.text.SimpleDateFormat
+import java.util.Calendar
 
 @OptIn(ExperimentalMaterial3Api::class, DelicateCoroutinesApi::class)
 @Composable
@@ -38,16 +40,17 @@ fun DatePickerView(
 ) {
     var loading = remember { mutableStateOf(false) }
     val datePickerState = rememberDatePickerState(initialDisplayMode = DisplayMode.Picker)
+    val timeMillis = maybe(datePickerState.selectedDateMillis)
 
     Scaffold(
         topBar = { SmallAppBar("", navController) },
         floatingActionButton = {
             ExtendedFloatingActionButton(
                 onClick = {
-                    Log.d("API", "Flight number: ${flightNumber}, date: ${datePickerState.selectedDateMillis}")
+                    Log.d("APIACCESS", "Flight number: ${flightNumber}, date: ${timeMillis}")
                     loading.value = true
                     GlobalScope.launch(Dispatchers.Main) {
-                        getData("vj84", data)
+                        getData(flightNumber, data, getDateAsString(timeMillis))
                         delay(3000L) // TODO Implement date processing here
                         loading.value = false
                         navController.navigateUp()
@@ -73,4 +76,17 @@ fun DatePickerView(
             )
         }
     }
+}
+
+fun maybe(time: Long?): Long {
+    return if(time != null) {
+        time.toLong()
+    } else {
+        0
+    }
+}
+
+fun getDateAsString(time: Long): String {
+    val dateFormat = SimpleDateFormat("YYYY-MM-DD")
+    return dateFormat.format(time)
 }

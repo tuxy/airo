@@ -6,18 +6,20 @@ import kotlinx.coroutines.withContext
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import java.io.IOException
-import java.util.Optional
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 
 suspend fun getData(
     flightNumber: String,
-    data: FlightDataDao
+    data: FlightDataDao,
+    date: String
 ) {
     withContext(Dispatchers.IO) {
         val client = OkHttpClient()
 
 
         val request = Request.Builder()
-            .url("https://api.magicapi.dev/api/v1/aedbx/aerodatabox/flights/number/${flightNumber}")
+            .url("https://api.magicapi.dev/api/v1/aedbx/aerodatabox/flights/number/${flightNumber}/${date}")
             .header("Accept", "application/json")
             .header("x-magicapi-key", "") // API Key here
             .build()
@@ -34,12 +36,18 @@ suspend fun getData(
 }
 
 fun parseData(jsonRoot: Root): FlightData {
+    val departureTime = parseDateTime(jsonRoot[0].departure.scheduledTime.local)
+    val arrivalTime = parseDateTime(jsonRoot[0].arrival.scheduledTime.local)
     return FlightData(
         id = 0, // Auto-assigned id
         from = jsonRoot[0].departure.airport.icao,
         to = jsonRoot[0].arrival.airport.icao,
         fromName = jsonRoot[0].departure.airport.shortName,
         toName = jsonRoot[0].arrival.airport.shortName,
+        localDepartDate = departureTime[0],
+        localDepartTime = departureTime[1],
+        localArriveDate = arrivalTime[0],
+        localArriveTime = arrivalTime[1],
         ticketSeat = "", // TODO
         ticketData = "", // TODO
         ticketQr = "", // TODO
@@ -53,6 +61,18 @@ fun parseData(jsonRoot: Root): FlightData {
         mapDestinationLat = jsonRoot[0].arrival.airport.location.lat,
         mapDestinationLong = jsonRoot[0].arrival.airport.location.lon,
         progress = 50, // TODO
+    )
+}
+
+fun parseDateTime(time: String): Array<String> { // TODO Date is the first element shown in format DD-MM-YYYY and time is shown in 24-hours (Locale default?)
+    val pattern = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mmXXXXX")
+    val localDateTime = LocalDateTime.parse(time, pattern)
+
+    val timeFormatter = DateTimeFormatter.ofPattern("HH:mm")
+    val dateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
+    return arrayOf(
+        localDateTime.format(timeFormatter),
+        localDateTime.format(dateFormatter)
     )
 }
 
