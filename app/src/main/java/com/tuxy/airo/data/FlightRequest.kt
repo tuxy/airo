@@ -6,41 +6,15 @@ import kotlinx.coroutines.withContext
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import java.io.IOException
+import java.util.Optional
 
-data class Response( // The full response, which is a JSON array
-    val departure: Flight,
-    val arrival: Flight,
-    val aircraft: Aircraft,
-)
-
-data class Flight( // The actual flight object, either as "departure" or "arrival" in JSON response
-    val airport: Airport,
-    val terminal: String,
-    val scheduledTime: Time,
-)
-
-data class Airport( // ICAO code of the airport as well as it's location
-    val icao: String,
-    val location: Location,
-)
-
-data class Aircraft( // TODO The header may also show an image, which should be handled and cached
-    val model: String,
-)
-
-data class Location( // Represents the latitude and longitude of airport as a float
-    val lat: Float,
-    val long: Float
-)
-
-data class Time( // Represents utc and local time for flight
-    val utc: String,
-    val local: String,
-)
-
-suspend fun getData(flightNumber: String) {
+suspend fun getData(
+    flightNumber: String,
+    data: FlightDataDao
+) {
     withContext(Dispatchers.IO) {
         val client = OkHttpClient()
+
 
         val request = Request.Builder()
             .url("https://api.magicapi.dev/api/v1/aedbx/aerodatabox/flights/number/${flightNumber}")
@@ -50,9 +24,36 @@ suspend fun getData(flightNumber: String) {
 
         client.newCall(request).execute().use { response ->
             if (!response.isSuccessful) throw IOException("Unexpected code $response")
-            Log.d("APIACCESS", response.body!!.string())
+            val jsonListResponse = response.body!!.string()
+
+            val jsonRoot = Root.fromJson(jsonListResponse)
+            data.addFlight(parseData(jsonRoot))
+            Log.d("APIACCESS", jsonRoot.toString())
         }
     }
+}
+
+fun parseData(jsonRoot: Root): FlightData {
+    return FlightData(
+        id = 0, // Auto-assigned id
+        from = jsonRoot[0].departure.airport.icao,
+        to = jsonRoot[0].arrival.airport.icao,
+        fromName = jsonRoot[0].departure.airport.shortName,
+        toName = jsonRoot[0].arrival.airport.shortName,
+        ticketSeat = "", // TODO
+        ticketData = "", // TODO
+        ticketQr = "", // TODO
+        ticketGate = jsonRoot[0].departure.gate,
+        ticketTerminal = jsonRoot[0].departure.terminal,
+        aircraftIcao = "", // TODO
+        aircraftName = jsonRoot[0].aircraft.model,
+        aircraftUri = "", // TODO
+        mapOriginLat = jsonRoot[0].departure.airport.location.lat,
+        mapOriginLong = jsonRoot[0].departure.airport.location.lon,
+        mapDestinationLat = jsonRoot[0].arrival.airport.location.lat,
+        mapDestinationLong = jsonRoot[0].arrival.airport.location.lon,
+        progress = 50, // TODO
+    )
 }
 
 /* This is some sample json data for quick reference

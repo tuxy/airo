@@ -57,20 +57,6 @@ fun MainFlightView(navController: NavController) {
                 .padding(innerPadding)
         ) {
             MainTopBar(navController = navController)
-            PrimaryTabRow(
-                selectedTabIndex = 0,
-            ) {
-                Tab(
-                    selected = true,
-                    onClick = {},
-                    text = { Text("Upcoming") }
-                )
-                Tab(
-                    selected = false,
-                    onClick = {},
-                    text = { Text("Past") }
-                )
-            }
             Column (
                 horizontalAlignment = Alignment.CenterHorizontally,
                 modifier = Modifier.fillMaxWidth()

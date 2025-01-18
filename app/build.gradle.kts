@@ -67,11 +67,14 @@ dependencies {
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose-android:2.8.7")
     implementation("androidx.compose.runtime:runtime-livedata:1.7.6")
 
-    //hilt
+    // hilt
     implementation("com.google.dagger:hilt-android:2.48")
     implementation("androidx.hilt:hilt-navigation-compose:1.2.0")
     ksp("com.google.dagger:hilt-compiler:2.48")
     ksp("com.google.dagger:dagger-compiler:2.48")
+
+    // klaxon
+    implementation("com.beust:klaxon:5.5")
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.navigation.testing)

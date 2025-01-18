@@ -21,8 +21,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavController
 import com.tuxy.airo.composables.SmallAppBar
-import com.tuxy.airo.data.FlightData
 import com.tuxy.airo.data.FlightDataDao
+import com.tuxy.airo.data.getData
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
@@ -47,23 +47,9 @@ fun DatePickerView(
                     Log.d("API", "Flight number: ${flightNumber}, date: ${datePickerState.selectedDateMillis}")
                     loading.value = true
                     GlobalScope.launch(Dispatchers.Main) {
+                        getData("vj84", data)
                         delay(3000L) // TODO Implement date processing here
                         loading.value = false
-                        val flightData = FlightData(
-                            id = 0,
-                            from = "Somewhere",
-                            to = "Somewhere",
-                            ticketSeat = "Somewhere",
-                            ticketData = "Somewhere",
-                            ticketQr = "Somewhere",
-                            aircraftIcao = "Somewhere",
-                            aircraftName = "Somewhere",
-                            aircraftUri = "",
-                            mapOrigin = "Somewhere",
-                            mapDestination = "Somewhere",
-                            progress = 80,
-                        )
-                        data.addFlight(flightData)
                         navController.navigateUp()
                         navController.navigateUp()
                     }
