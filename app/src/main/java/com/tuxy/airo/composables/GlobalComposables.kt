@@ -21,7 +21,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
-import com.tuxy.airo.screens.DepartureAndDestinationText
+import com.tuxy.airo.data.FlightData
 
 // Used in Airport, Aircraft, Ticket and Flight information screens
 @OptIn(ExperimentalMaterial3Api::class)
@@ -60,19 +60,19 @@ fun LargeAppBar(text: String, navController: NavController) {
 
 // Used in Flight, Ticket and main screen
 @Composable
-fun RouteBar() {
+fun RouteBar(flight: FlightData) {
     Row(
         modifier = Modifier
             .padding(16.dp)
             .fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
-        DepartureAndDestinationText("KSFO", "San Francisco")
+        DepartureAndDestinationText(flight.from, flight.fromName)
         Icon(
             imageVector = Icons.AutoMirrored.Filled.ArrowForward,
             contentDescription = "To"
         )
-        DepartureAndDestinationText("KATL", "Atlanta")
+        DepartureAndDestinationText(flight.to, flight.toName)
     }
 }
 
@@ -88,5 +88,19 @@ fun LargeTopSmallBottom(top: String, bottom: String) {
             )
         )
         Text(bottom)
+    }
+}
+
+@Composable
+fun DepartureAndDestinationText(icao: String, fullName: String) {
+    Column {
+        Text(
+            fullName,
+            style = TextStyle(
+                fontWeight = FontWeight.Bold,
+                fontSize = 18.sp
+            )
+        )
+        Text(icao)
     }
 }

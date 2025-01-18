@@ -1,7 +1,9 @@
 package com.tuxy.airo.data
 
-import android.util.Log
+import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import okhttp3.OkHttpClient
 import okhttp3.Request
@@ -17,7 +19,6 @@ suspend fun getData(
     withContext(Dispatchers.IO) {
         val client = OkHttpClient()
 
-
         val request = Request.Builder()
             .url("https://api.magicapi.dev/api/v1/aedbx/aerodatabox/flights/number/${flightNumber}/${date}")
             .header("Accept", "application/json")
@@ -30,7 +31,6 @@ suspend fun getData(
 
             val jsonRoot = Root.fromJson(jsonListResponse)
             data.addFlight(parseData(jsonRoot))
-            Log.d("APIACCESS", jsonRoot.toString())
         }
     }
 }
@@ -48,12 +48,12 @@ fun parseData(jsonRoot: Root): FlightData {
         localDepartTime = departureTime[1],
         localArriveDate = arrivalTime[0],
         localArriveTime = arrivalTime[1],
-        ticketSeat = "", // TODO
-        ticketData = "", // TODO
-        ticketQr = "", // TODO
+        ticketSeat = "N/A", // TODO
+        ticketData = "N/A", // TODO
+        ticketQr = "N/A", // TODO
         ticketGate = jsonRoot[0].departure.gate,
         ticketTerminal = jsonRoot[0].departure.terminal,
-        aircraftIcao = "", // TODO
+        aircraftIcao = "N/A", // TODO
         aircraftName = jsonRoot[0].aircraft.model,
         aircraftUri = "", // TODO
         mapOriginLat = jsonRoot[0].departure.airport.location.lat,
@@ -65,7 +65,7 @@ fun parseData(jsonRoot: Root): FlightData {
 }
 
 fun parseDateTime(time: String): Array<String> { // TODO Date is the first element shown in format DD-MM-YYYY and time is shown in 24-hours (Locale default?)
-    val pattern = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mmXXXXX")
+    val pattern = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mmXXXXX") // Ignore time-zone, as time is set to local by default
     val localDateTime = LocalDateTime.parse(time, pattern)
 
     val timeFormatter = DateTimeFormatter.ofPattern("HH:mm")

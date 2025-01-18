@@ -20,7 +20,7 @@ private const val INITIAL_OFFSET_FACTOR = 0.10f
 @Composable
 fun SetupNavGraph( // Transitions taken from Read You's repository
     navController: NavHostController,
-    data: FlightDataDao
+    flightData: FlightDataDao
 ) {
     NavHost(
         navController = navController,
@@ -30,13 +30,21 @@ fun SetupNavGraph( // Transitions taken from Read You's repository
         popEnterTransition = { materialSharedAxisXIn(initialOffsetX = { -(it * INITIAL_OFFSET_FACTOR).toInt() }) },
         popExitTransition = { materialSharedAxisXOut(targetOffsetX = { (it * INITIAL_OFFSET_FACTOR).toInt() }) },
     ) {
-        composable( route = Screen.MainFlightsScreen.route ) { MainFlightView(navController) }
+        composable( route = Screen.MainFlightsScreen.route ) { MainFlightView(navController, flightData) }
         composable( route = Screen.SettingsScreen.route ) { SettingsView(navController) }
-        composable( route = Screen.FlightDetailsScreen.route ) { FlightDetailsView(navController) }
-        composable( route = Screen.NewFlightScreen.route ) { NewFlightView(navController) }
-        composable( route = "${Screen.DatePickerScreen.route}/{flight_number}" ) { backStackEntry ->
-            DatePickerView(navController, backStackEntry.arguments?.getString("flight_number").toString(), data)
+
+        // Passing flight id into FlightDetails
+        composable( route = "${Screen.FlightDetailsScreen.route}/{id}" ) { backStackEntry ->
+            FlightDetailsView(navController, backStackEntry.arguments?.getString("id").toString(), flightData)
         }
+
+        composable( route = Screen.NewFlightScreen.route ) { NewFlightView(navController) }
+
+        // DatePickerView with flight_number passed into
+        composable( route = "${Screen.DatePickerScreen.route}/{flight_number}" ) { backStackEntry ->
+            DatePickerView(navController, backStackEntry.arguments?.getString("flight_number").toString(), flightData)
+        }
+
         composable( route = Screen.AircraftInformationScreen.route ) { AircraftInformationView(navController) }
         composable( route = Screen.TicketInformationScreen.route ) { TicketInformationView(navController) }
     }

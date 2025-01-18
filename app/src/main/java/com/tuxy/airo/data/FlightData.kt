@@ -1,7 +1,7 @@
 package com.tuxy.airo.data
 
 import android.content.Context
-import androidx.lifecycle.LiveData
+import androidx.compose.runtime.MutableState
 import androidx.room.Dao
 import androidx.room.Database
 import androidx.room.Delete
@@ -13,32 +13,35 @@ import androidx.room.Query
 import androidx.room.Room
 import androidx.room.RoomDatabase
 import androidx.room.Update
+import kotlinx.coroutines.DelicateCoroutinesApi
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
 
 @Entity(tableName = "flight_table")
 data class FlightData(
     @PrimaryKey(autoGenerate = true)
-    val id: Int,
-    val from: String,
-    val to: String,
-    val fromName: String,
-    val localDepartDate: String,
-    val localDepartTime: String,
-    val localArriveDate: String,
-    val localArriveTime: String,
-    val toName: String,
-    val ticketSeat: String,
-    val ticketData: String,
-    val ticketQr: String,
-    val ticketGate: String,
-    val ticketTerminal: String,
-    val aircraftIcao: String,
-    val aircraftName: String,
-    val aircraftUri: String,
-    val mapOriginLat: Double,
-    val mapOriginLong: Double,
-    val mapDestinationLat: Double,
-    val mapDestinationLong: Double,
-    val progress: Int,
+    val id: Int = 0,
+    val from: String = "",
+    val to: String = "",
+    val fromName: String = "",
+    val localDepartDate: String = "",
+    val localDepartTime: String = "",
+    val localArriveDate: String = "",
+    val localArriveTime: String = "",
+    val toName: String = "",
+    val ticketSeat: String = "",
+    val ticketData: String = "",
+    val ticketQr: String = "",
+    val ticketGate: String = "",
+    val ticketTerminal: String = "",
+    val aircraftIcao: String = "",
+    val aircraftName: String = "",
+    val aircraftUri: String = "",
+    val mapOriginLat: Double = 0.0,
+    val mapOriginLong: Double = 0.0,
+    val mapDestinationLat: Double = 0.0,
+    val mapDestinationLong: Double = 0.0,
+    val progress: Int = 0,
 )
 
 @Dao
@@ -53,7 +56,10 @@ interface FlightDataDao {
     suspend fun updateFlight(flightData: FlightData)
 
     @Query("SELECT * FROM flight_table ORDER BY id ASC")
-    fun readAll(): LiveData<List<FlightData>>
+    fun readAll(): List<FlightData>
+
+    @Query("SELECT * FROM flight_table WHERE id=:id ")
+    fun readSingle(id: String): FlightData
 
     @Query("DELETE FROM flight_table") // ONLY FOR DEVELOPMENT
     fun nukeTable()
@@ -74,5 +80,19 @@ abstract class FlightDataBase: RoomDatabase() {
                     .build().also { Instance = it }
             }
         }
+    }
+}
+
+@OptIn(DelicateCoroutinesApi::class)
+fun dataIntoMut(flightList: MutableState<List<FlightData>>, flightDataDao: FlightDataDao) {
+    GlobalScope.launch {
+        flightList.value = flightDataDao.readAll()
+    }
+}
+
+@OptIn(DelicateCoroutinesApi::class)
+fun singleIntoMut(flightData: MutableState<FlightData>, flightDataDao: FlightDataDao, id: String) {
+    GlobalScope.launch {
+        flightData.value = flightDataDao.readSingle(id)
     }
 }

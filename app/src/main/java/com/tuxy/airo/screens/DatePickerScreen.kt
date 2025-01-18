@@ -27,9 +27,10 @@ import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.joinAll
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
-import java.util.Calendar
+import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class, DelicateCoroutinesApi::class)
 @Composable
@@ -47,11 +48,10 @@ fun DatePickerView(
         floatingActionButton = {
             ExtendedFloatingActionButton(
                 onClick = {
-                    Log.d("APIACCESS", "Flight number: ${flightNumber}, date: ${timeMillis}")
                     loading.value = true
                     GlobalScope.launch(Dispatchers.Main) {
                         getData(flightNumber, data, getDateAsString(timeMillis))
-                        delay(3000L) // TODO Implement date processing here
+                        joinAll()
                         loading.value = false
                         navController.navigateUp()
                         navController.navigateUp()
@@ -79,14 +79,10 @@ fun DatePickerView(
 }
 
 fun maybe(time: Long?): Long {
-    return if(time != null) {
-        time.toLong()
-    } else {
-        0
-    }
+    return time?.toLong() ?: 0
 }
 
 fun getDateAsString(time: Long): String {
-    val dateFormat = SimpleDateFormat("YYYY-MM-DD")
+    val dateFormat = SimpleDateFormat("yyyy-MM-DD", Locale.UK)
     return dateFormat.format(time)
 }

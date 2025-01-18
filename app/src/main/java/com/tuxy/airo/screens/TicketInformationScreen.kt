@@ -20,7 +20,6 @@ import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import coil3.compose.AsyncImage
 import com.tuxy.airo.composables.LargeTopSmallBottom
-import com.tuxy.airo.composables.RouteBar
 import com.tuxy.airo.composables.SmallAppBar
 
 @Composable
@@ -40,7 +39,7 @@ fun MainTicketView() {
     Column(
         modifier = Modifier,
     ) {
-        RouteBar()
+//        RouteBar() // TODO add flight
         Box(
             modifier = Modifier
                 .padding(horizontal = 96.dp)

@@ -24,9 +24,9 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
 
         data = FlightDataBase.getDatabase(this).flightDataDao()
-        GlobalScope.launch {
-            data.nukeTable() // Deletes all table values when opening, ONLY FOR DEVELOPMENT
-        }
+//        GlobalScope.launch {
+//            data.nukeTable() // Deletes all table values when opening, ONLY FOR DEVELOPMENT
+//        }
 
         enableEdgeToEdge()
         setContent {

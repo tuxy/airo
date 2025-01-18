@@ -1,6 +1,6 @@
 package com.tuxy.airo.data
-import com.beust.klaxon.*
-import java.util.Optional
+import com.beust.klaxon.Json
+import com.beust.klaxon.Klaxon
 
 private val klaxon = Klaxon()
 
