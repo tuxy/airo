@@ -59,25 +59,18 @@ dependencies {
     implementation(libs.kotlinx.datetime)
 
     // room
-    ksp("androidx.room:room-compiler:2.6.1")
-    implementation("androidx.room:room-runtime:2.6.1")
-    implementation("androidx.room:room-ktx:2.6.1")
-
-    // viewmodel
-    implementation("androidx.lifecycle:lifecycle-viewmodel-compose-android:2.8.7")
-    implementation("androidx.compose.runtime:runtime-livedata:1.7.6")
-
-    // hilt
-    implementation("com.google.dagger:hilt-android:2.48")
-    implementation("androidx.hilt:hilt-navigation-compose:1.2.0")
-    ksp("com.google.dagger:hilt-compiler:2.48")
-    ksp("com.google.dagger:dagger-compiler:2.48")
+    ksp(libs.androidx.room.compiler)
+    implementation(libs.androidx.room.runtime)
+    implementation(libs.androidx.room.ktx)
 
     // klaxon
-    implementation("com.beust:klaxon:5.5")
+    implementation(libs.klaxon)
 
     // datastore
-    implementation("androidx.datastore:datastore-preferences:1.1.2")
+    implementation(libs.androidx.datastore.preferences)
+
+    // map-compose
+    implementation(libs.mapcompose)
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.navigation.testing)

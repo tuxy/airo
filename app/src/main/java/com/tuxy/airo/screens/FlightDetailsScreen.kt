@@ -20,15 +20,20 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.NavController
-import coil3.compose.AsyncImage
 import com.tuxy.airo.Screen
 import com.tuxy.airo.composables.RouteBar
 import com.tuxy.airo.composables.SmallAppBar
 import com.tuxy.airo.data.FlightData
 import com.tuxy.airo.data.FlightDataDao
 import com.tuxy.airo.data.singleIntoMut
+import ovh.plrapps.mapcompose.api.addLayer
+import ovh.plrapps.mapcompose.core.TileStreamProvider
+import ovh.plrapps.mapcompose.ui.MapUI
+import ovh.plrapps.mapcompose.ui.layout.Forced
+import ovh.plrapps.mapcompose.ui.state.MapState
+import kotlin.math.pow
 
 @Composable
 fun FlightDetailsView(
@@ -38,6 +43,16 @@ fun FlightDetailsView(
 ) {
     val flightData = remember { mutableStateOf(FlightData()) }
     singleIntoMut(flightData, flightDataDao, id)
+    val context = LocalContext.current
+
+    val tileStreamProvider = TileStreamProvider { row, col, zoomLvl ->
+        context.assets.open("tiles/${zoomLvl}/${col}/${row}.png")
+    }
+
+    val mapSize = mapSizeAtLevel(5, 256)
+    val mapState = MapState(6, mapSize, mapSize).apply {
+        addLayer(tileStreamProvider)
+    }
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),
@@ -56,14 +71,10 @@ fun FlightDetailsView(
                     modifier = Modifier
                         .fillMaxWidth()
                         .background(Color.Gray)
+                        .aspectRatio(1280f / 847f)
                 ) {
-                    AsyncImage(
-                        model = "",
-                        contentDescription = "Map view",
-                        contentScale = ContentScale.Crop,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .aspectRatio(1280f/847f)
+                    MapUI(
+                        state = mapState
                     )
                 }
                 FlightInformationInteract(navController, flightData.value)
@@ -92,4 +103,8 @@ fun FlightInformationInteract(navController: NavController, flightData: FlightDa
             trailingContent = { Icon(Icons.Filled.Info, "Airport Information") }
         )
     }
+}
+
+private fun mapSizeAtLevel(wmtsLevel: Int, tileSize: Int): Int {
+    return tileSize * 2.0.pow(wmtsLevel).toInt()
 }
