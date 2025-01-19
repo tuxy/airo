@@ -60,19 +60,19 @@ fun LargeAppBar(text: String, navController: NavController) {
 
 // Used in Flight, Ticket and main screen
 @Composable
-fun RouteBar(flight: FlightData) {
+fun RouteBar(flightData: FlightData) {
     Row(
         modifier = Modifier
             .padding(16.dp)
             .fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
-        DepartureAndDestinationText(flight.from, flight.fromName)
+        DepartureAndDestinationText(flightData.from, flightData.fromName)
         Icon(
             imageVector = Icons.AutoMirrored.Filled.ArrowForward,
             contentDescription = "To"
         )
-        DepartureAndDestinationText(flight.to, flight.toName)
+        DepartureAndDestinationText(flightData.to, flightData.toName)
     }
 }
 

@@ -76,6 +76,9 @@ dependencies {
     // klaxon
     implementation("com.beust:klaxon:5.5")
 
+    // datastore
+    implementation("androidx.datastore:datastore-preferences:1.1.2")
+
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.navigation.testing)
     androidTestImplementation(libs.androidx.junit)

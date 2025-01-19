@@ -21,6 +21,7 @@ import kotlinx.coroutines.launch
 data class FlightData(
     @PrimaryKey(autoGenerate = true)
     val id: Int = 0,
+    val callSign: String = "",
     val from: String = "",
     val to: String = "",
     val fromName: String = "",

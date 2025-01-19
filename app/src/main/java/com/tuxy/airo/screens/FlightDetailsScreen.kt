@@ -76,12 +76,12 @@ fun FlightDetailsView(
 fun FlightInformationInteract(navController: NavController, flightData: FlightData) {
     Column {
         ListItem(
-            modifier = Modifier.clickable(onClick = { navController.navigate(Screen.TicketInformationScreen.route) }),
+            modifier = Modifier.clickable(onClick = { navController.navigate("${Screen.TicketInformationScreen.route}/${flightData.id}") }),
             headlineContent = { Text("Ticket") },
             supportingContent = { Text(flightData.ticketSeat) }
         )
         ListItem(
-            modifier = Modifier.clickable(onClick = { navController.navigate(Screen.AircraftInformationScreen.route) }),
+            modifier = Modifier.clickable(onClick = { navController.navigate("${Screen.AircraftInformationScreen.route}/${flightData.id}") }),
             headlineContent = { Text("Aircraft") },
             supportingContent = { Text(flightData.aircraftName) }
         )

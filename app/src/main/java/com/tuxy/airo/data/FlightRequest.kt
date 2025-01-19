@@ -1,36 +1,50 @@
 package com.tuxy.airo.data
 
-import kotlinx.coroutines.DelicateCoroutinesApi
+import android.widget.Toast
+import com.beust.klaxon.KlaxonException
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import okhttp3.OkHttpClient
 import okhttp3.Request
-import java.io.IOException
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
 suspend fun getData(
     flightNumber: String,
     data: FlightDataDao,
-    date: String
+    date: String,
+    toasts: Array<Toast>
 ) {
     withContext(Dispatchers.IO) {
         val client = OkHttpClient()
+        val apiKey = "" // API Key here
+        // TODO Implement DataStore for apikey + other settings
 
         val request = Request.Builder()
             .url("https://api.magicapi.dev/api/v1/aedbx/aerodatabox/flights/number/${flightNumber}/${date}")
             .header("Accept", "application/json")
-            .header("x-magicapi-key", "") // API Key here
+            .header("x-magicapi-key", apiKey)
             .build()
 
+        if(apiKey == "") {
+            toasts[0].show() // API_KEY toast
+            return@withContext
+        }
+
         client.newCall(request).execute().use { response ->
-            if (!response.isSuccessful) throw IOException("Unexpected code $response")
+            if(!response.isSuccessful) {
+                toasts[1].show() // Network Error toast
+                return@use // Stops from executing further
+            }
             val jsonListResponse = response.body!!.string()
 
-            val jsonRoot = Root.fromJson(jsonListResponse)
-            data.addFlight(parseData(jsonRoot))
+            try {
+                val jsonRoot = Root.fromJson(jsonListResponse)
+                data.addFlight(parseData(jsonRoot)) // If this errors, we give up
+            } catch (e: KlaxonException) {
+                toasts[2].show() // flight not found
+                return@use // Stops from executing further
+            }
         }
     }
 }
@@ -40,8 +54,9 @@ fun parseData(jsonRoot: Root): FlightData {
     val arrivalTime = parseDateTime(jsonRoot[0].arrival.scheduledTime.local)
     return FlightData(
         id = 0, // Auto-assigned id
-        from = jsonRoot[0].departure.airport.icao,
-        to = jsonRoot[0].arrival.airport.icao,
+        callSign = jsonRoot[0].airline.iata,
+        from = jsonRoot[0].departure.airport.iata,
+        to = jsonRoot[0].arrival.airport.iata,
         fromName = jsonRoot[0].departure.airport.shortName,
         toName = jsonRoot[0].arrival.airport.shortName,
         localDepartDate = departureTime[0],

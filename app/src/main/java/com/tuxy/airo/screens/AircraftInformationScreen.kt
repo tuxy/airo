@@ -14,25 +14,35 @@ import androidx.compose.material3.ListItem
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.navigation.NavController
-import androidx.navigation.compose.rememberNavController
 import coil3.compose.AsyncImage
 import com.tuxy.airo.composables.SmallAppBar
+import com.tuxy.airo.data.FlightData
+import com.tuxy.airo.data.FlightDataDao
+import com.tuxy.airo.data.singleIntoMut
 
 @Composable
-fun AircraftInformationView(navController: NavController) {
+fun AircraftInformationView(
+    navController: NavController,
+    id: String,
+    flightDataDao: FlightDataDao
+) {
+    val flightData = remember { mutableStateOf(FlightData()) }
+    singleIntoMut(flightData, flightDataDao, id)
+
     Scaffold(
         modifier = Modifier.fillMaxSize()
     ) { innerPadding ->
         Column( modifier = Modifier.padding(innerPadding) ) {
             SmallAppBar("Aircraft Information", navController)
             ListItem(
-                headlineContent = { Text("Boeing 777-300ER") },
-                supportingContent = { Text("United Airlines") }
+                headlineContent = { Text(flightData.value.aircraftName) },
+                supportingContent = { Text(flightData.value.callSign) }
             )
             Box(
                 modifier = Modifier
@@ -40,7 +50,7 @@ fun AircraftInformationView(navController: NavController) {
                     .background(Color.Gray)
             ) {
                 AsyncImage(
-                    model = "",
+                    model = flightData.value.aircraftUri,
                     contentDescription = "Aircraft",
                     contentScale = ContentScale.Crop,
                     modifier = Modifier
@@ -65,10 +75,4 @@ fun AircraftListView() {
             trailingContent = { Icon(Icons.Filled.Info, "Aircraft information") }
         )
     }
-}
-
-@Composable
-@Preview(showBackground = true)
-fun AircraftInformationPreview() {
-    AircraftInformationView(rememberNavController())
 }

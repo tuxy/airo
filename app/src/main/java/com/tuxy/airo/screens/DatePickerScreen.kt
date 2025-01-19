@@ -1,6 +1,6 @@
 package com.tuxy.airo.screens
 
-import android.util.Log
+import android.widget.Toast
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -19,6 +19,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.NavController
 import com.tuxy.airo.composables.SmallAppBar
 import com.tuxy.airo.data.FlightDataDao
@@ -26,7 +27,6 @@ import com.tuxy.airo.data.getData
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.joinAll
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
@@ -39,9 +39,15 @@ fun DatePickerView(
     flightNumber: String,
     data: FlightDataDao
 ) {
-    var loading = remember { mutableStateOf(false) }
+    val loading = remember { mutableStateOf(false) }
     val datePickerState = rememberDatePickerState(initialDisplayMode = DisplayMode.Picker)
     val timeMillis = maybe(datePickerState.selectedDateMillis)
+
+    val toasts = arrayOf(
+        Toast.makeText(LocalContext.current, "API Key not found", Toast.LENGTH_SHORT),
+        Toast.makeText(LocalContext.current, "Network error", Toast.LENGTH_SHORT),
+        Toast.makeText(LocalContext.current, "Could not find flight", Toast.LENGTH_SHORT)
+    )
 
     Scaffold(
         topBar = { SmallAppBar("", navController) },
@@ -50,13 +56,12 @@ fun DatePickerView(
                 onClick = {
                     loading.value = true
                     GlobalScope.launch(Dispatchers.Main) {
-                        getData(flightNumber, data, getDateAsString(timeMillis))
+                        getData(flightNumber, data, getDateAsString(timeMillis), toasts)
                         joinAll()
                         loading.value = false
                         navController.navigateUp()
                         navController.navigateUp()
                     }
-
                 },
                 icon = { Icon(Icons.Filled.Check, "Add flight") },
                 text = { Text(text = "Add Flight") },

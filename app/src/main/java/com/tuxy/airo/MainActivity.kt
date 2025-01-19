@@ -11,8 +11,6 @@ import androidx.navigation.compose.rememberNavController
 import com.tuxy.airo.data.FlightDataBase
 import com.tuxy.airo.data.FlightDataDao
 import com.tuxy.airo.ui.theme.AeroTheme
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
 

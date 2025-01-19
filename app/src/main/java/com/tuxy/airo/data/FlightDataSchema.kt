@@ -5,10 +5,10 @@ import com.beust.klaxon.Klaxon
 private val klaxon = Klaxon()
 
 class Root(elements: Collection<RootElement>) : ArrayList<RootElement>(elements) {
-    public fun toJson() = klaxon.toJsonString(this)
-
     companion object {
-        public fun fromJson(json: String) = Root(klaxon.parseArray<RootElement>(json)!!)
+        public fun fromJson(json: String) = Root(
+            klaxon.parseArray<RootElement>(json)!! // TODO handle error
+        )
     }
 }
 
