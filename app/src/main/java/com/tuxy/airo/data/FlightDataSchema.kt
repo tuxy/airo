@@ -28,7 +28,18 @@ data class RootElement (
 )
 
 data class Aircraft (
-    val model: String
+    val model: String,
+    val image: Image
+)
+
+data class Image (
+    val url: String,
+    val webUrl: String,
+    val author: String,
+    val title: String,
+    val description: String,
+    val license: String,
+    val htmlAttributions: List<String>
 )
 
 data class Airline (

@@ -1,6 +1,7 @@
 package com.tuxy.airo.screens
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.aspectRatio
@@ -21,6 +22,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.navigation.NavController
 import coil3.compose.AsyncImage
+import com.tuxy.airo.Screen
 import com.tuxy.airo.composables.SmallAppBar
 import com.tuxy.airo.data.FlightData
 import com.tuxy.airo.data.FlightDataDao
@@ -42,7 +44,7 @@ fun AircraftInformationView(
             SmallAppBar("Aircraft Information", navController)
             ListItem(
                 headlineContent = { Text(flightData.value.aircraftName) },
-                supportingContent = { Text(flightData.value.callSign) }
+                supportingContent = { Text(flightData.value.airline) }
             )
             Box(
                 modifier = Modifier
@@ -58,21 +60,19 @@ fun AircraftInformationView(
                         .aspectRatio(1280f/847f)
                 )
             }
-            AircraftListView()
+            AircraftListView(navController, flightData.value)
         }
     }
 }
 
 @Composable
-fun AircraftListView() {
+fun AircraftListView(navController: NavController, flightData: FlightData) {
     Column {
         ListItem(
-            headlineContent = { Text("Seating information") },
+            modifier = Modifier
+                .clickable { navController.navigate("${Screen.WebViewScreen.route}/${flightData.airlineIata}") },
+            headlineContent = { Text("Seat Maps") },
             trailingContent = { Icon(Icons.Filled.Info, "Seating information") }
-        )
-        ListItem(
-            headlineContent = { Text("Aircraft information") },
-            trailingContent = { Icon(Icons.Filled.Info, "Aircraft information") }
         )
     }
 }

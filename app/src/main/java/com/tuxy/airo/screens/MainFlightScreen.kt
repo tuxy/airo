@@ -1,8 +1,10 @@
 package com.tuxy.airo.screens
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -104,22 +106,6 @@ fun FlightCard(
         Column {
             RouteBar(flightData)
             TicketInformationCard(flightData)
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp),
-                horizontalArrangement = Arrangement.End
-            ) {
-                OutlinedButton(
-                    modifier = Modifier.padding(horizontal = 12.dp),
-                    onClick = {}
-                ) {
-                    Text("Show Ticket")
-                }
-                FilledTonalButton(onClick = {}) {
-                    Text("Check-in")
-                }
-            }
             LinearProgressIndicator(
                 progress = { 0F },
                 modifier = Modifier.fillMaxWidth(),
@@ -140,10 +126,7 @@ fun TicketInformationCard(flight: FlightData) { // TODO How to get ticket inform
         LargeTopSmallBottom("Terminal", flight.ticketTerminal)
         LargeTopSmallBottom("Gate", flight.ticketGate)
         LargeTopSmallBottom("Seat", flight.ticketSeat)
-        Badge(
-            modifier = Modifier.size(16.dp),
-            containerColor = Color.Gray
-        )
+        Spacer(modifier = Modifier)
     }
 }
 

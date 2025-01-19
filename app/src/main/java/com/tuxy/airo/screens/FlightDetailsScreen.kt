@@ -41,7 +41,7 @@ fun FlightDetailsView(
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),
-        topBar = { SmallAppBar("${flightData.value.from} to ${flightData.value.from}", navController) }
+        topBar = { SmallAppBar("${flightData.value.from} to ${flightData.value.to}", navController) }
     ) { innerPadding ->
         Column(
             modifier = Modifier

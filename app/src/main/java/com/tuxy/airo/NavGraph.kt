@@ -7,6 +7,7 @@ import androidx.navigation.compose.composable
 import com.tuxy.airo.data.FlightDataDao
 import com.tuxy.airo.motion.materialSharedAxisXIn
 import com.tuxy.airo.motion.materialSharedAxisXOut
+import com.tuxy.airo.screens.AeroLopaView
 import com.tuxy.airo.screens.AircraftInformationView
 import com.tuxy.airo.screens.DatePickerView
 import com.tuxy.airo.screens.FlightDetailsView
@@ -45,11 +46,19 @@ fun SetupNavGraph( // Transitions taken from Read You's repository
             DatePickerView(navController, backStackEntry.arguments?.getString("flight_number").toString(), flightDataDao)
         }
 
+        // Aircraft Information
         composable( route = "${Screen.AircraftInformationScreen.route}/{id}" ) { backStackEntry ->
             AircraftInformationView(navController, backStackEntry.arguments?.getString("id").toString(), flightDataDao)
         }
+
+        // Ticket information
         composable( route = "${Screen.TicketInformationScreen.route}/{id}" ) { backStackEntry ->
             TicketInformationView(navController, backStackEntry.arguments?.getString("id").toString(), flightDataDao)
+        }
+
+        // WebView
+        composable( route = "${Screen.WebViewScreen.route}/{url}" ) { backStackEntry ->
+            AeroLopaView(backStackEntry.arguments?.getString("url").toString())
         }
     }
 }

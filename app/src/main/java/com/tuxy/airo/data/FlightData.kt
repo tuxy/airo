@@ -22,6 +22,8 @@ data class FlightData(
     @PrimaryKey(autoGenerate = true)
     val id: Int = 0,
     val callSign: String = "",
+    val airline: String = "",
+    val airlineIata: String = "",
     val from: String = "",
     val to: String = "",
     val fromName: String = "",
@@ -38,6 +40,8 @@ data class FlightData(
     val aircraftIcao: String = "",
     val aircraftName: String = "",
     val aircraftUri: String = "",
+    val author: String = "",
+    val authorUri: String = "",
     val mapOriginLat: Double = 0.0,
     val mapOriginLong: Double = 0.0,
     val mapDestinationLat: Double = 0.0,

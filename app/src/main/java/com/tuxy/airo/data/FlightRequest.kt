@@ -1,9 +1,11 @@
 package com.tuxy.airo.data
 
+import android.util.Log
 import android.widget.Toast
 import com.beust.klaxon.KlaxonException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import okhttp3.HttpUrl.Companion.toHttpUrl
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import java.time.LocalDateTime
@@ -18,10 +20,15 @@ suspend fun getData(
     withContext(Dispatchers.IO) {
         val client = OkHttpClient()
         val apiKey = "" // API Key here
+        val webUrl = "https://api.magicapi.dev/api/v1/aedbx/aerodatabox/flights/number/${flightNumber}/${date}"
         // TODO Implement DataStore for apikey + other settings
 
+        val url = webUrl.toHttpUrl().newBuilder() // Adds parameter for aircraft image
+            .addQueryParameter("withAircraftImage", "True")
+            .build()
+
         val request = Request.Builder()
-            .url("https://api.magicapi.dev/api/v1/aedbx/aerodatabox/flights/number/${flightNumber}/${date}")
+            .url(url)
             .header("Accept", "application/json")
             .header("x-magicapi-key", apiKey)
             .build()
@@ -42,6 +49,7 @@ suspend fun getData(
                 val jsonRoot = Root.fromJson(jsonListResponse)
                 data.addFlight(parseData(jsonRoot)) // If this errors, we give up
             } catch (e: KlaxonException) {
+                Log.e("APIACCESS", e.toString())
                 toasts[2].show() // flight not found
                 return@use // Stops from executing further
             }
@@ -55,6 +63,8 @@ fun parseData(jsonRoot: Root): FlightData {
     return FlightData(
         id = 0, // Auto-assigned id
         callSign = jsonRoot[0].airline.iata,
+        airline = jsonRoot[0].airline.name,
+        airlineIata = jsonRoot[0].airline.iata,
         from = jsonRoot[0].departure.airport.iata,
         to = jsonRoot[0].arrival.airport.iata,
         fromName = jsonRoot[0].departure.airport.shortName,
@@ -70,7 +80,9 @@ fun parseData(jsonRoot: Root): FlightData {
         ticketTerminal = jsonRoot[0].departure.terminal,
         aircraftIcao = "N/A", // TODO
         aircraftName = jsonRoot[0].aircraft.model,
-        aircraftUri = "", // TODO
+        aircraftUri = jsonRoot[0].aircraft.image.url, // TODO
+        author = jsonRoot[0].aircraft.image.author,
+        authorUri = jsonRoot[0].aircraft.image.webUrl,
         mapOriginLat = jsonRoot[0].departure.airport.location.lat,
         mapOriginLong = jsonRoot[0].departure.airport.location.lon,
         mapDestinationLat = jsonRoot[0].arrival.airport.location.lat,
