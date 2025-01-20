@@ -84,7 +84,7 @@ fun DatePickerView(
 }
 
 fun maybe(time: Long?): Long {
-    return time?.toLong() ?: 0
+    return time ?: 0
 }
 
 fun getDateAsString(time: Long): String {

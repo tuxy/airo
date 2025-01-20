@@ -4,34 +4,54 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.wrapContentHeight
+import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Info
+import androidx.compose.material3.AlertDialogDefaults
+import androidx.compose.material3.BasicAlertDialog
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.ListItem
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.tuxy.airo.Screen
 import com.tuxy.airo.composables.RouteBar
-import com.tuxy.airo.composables.SmallAppBar
 import com.tuxy.airo.data.FlightData
 import com.tuxy.airo.data.FlightDataDao
 import com.tuxy.airo.data.singleIntoMut
+import kotlinx.coroutines.DelicateCoroutinesApi
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
 import ovh.plrapps.mapcompose.api.addLayer
 import ovh.plrapps.mapcompose.core.TileStreamProvider
 import ovh.plrapps.mapcompose.ui.MapUI
-import ovh.plrapps.mapcompose.ui.layout.Forced
 import ovh.plrapps.mapcompose.ui.state.MapState
 import kotlin.math.pow
 
@@ -41,10 +61,20 @@ fun FlightDetailsView(
     id: String,
     flightDataDao: FlightDataDao
 ) {
-    val flightData = remember { mutableStateOf(FlightData()) }
-    singleIntoMut(flightData, flightDataDao, id)
-    val context = LocalContext.current
+    val flightData = remember { mutableStateOf(FlightData()) } // Empty flight data
+    val loaded = remember { mutableStateOf(false) } // has db has been loaded into flightData
 
+    // Loaded?
+    if(!loaded.value) {
+        singleIntoMut(flightData, flightDataDao, id)
+        loaded.value = true
+    }
+
+    // Dialog open?
+    val openDialog = remember { mutableStateOf(false) }
+
+    // Map data
+    val context = LocalContext.current
     val tileStreamProvider = TileStreamProvider { row, col, zoomLvl ->
         context.assets.open("tiles/${zoomLvl}/${col}/${row}.png")
     }
@@ -56,13 +86,21 @@ fun FlightDetailsView(
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),
-        topBar = { SmallAppBar("${flightData.value.from} to ${flightData.value.to}", navController) }
+        topBar = { SmallAppBarWithDelete("${flightData.value.from} to ${flightData.value.to}", navController, openDialog) }
     ) { innerPadding ->
         Column(
             modifier = Modifier
                 .padding(innerPadding)
         ) {
             Column {
+                if(openDialog.value) {
+                    DeleteDialog(
+                        openDialog,
+                        navController,
+                        flightDataDao,
+                        flightData
+                    )
+                }
                 LinearProgressIndicator(
                     progress = { flightData.value.progress.toFloat() }
                 )
@@ -81,6 +119,38 @@ fun FlightDetailsView(
             }
         }
     }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun SmallAppBarWithDelete(
+    text:String,
+    navController: NavController,
+    openDialog: MutableState<Boolean>,
+) {
+    TopAppBar(
+        title = { Text(text) },
+        navigationIcon = {
+            IconButton(onClick = {
+                navController.popBackStack()
+            }) {
+                Icon(
+                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                    contentDescription = "Back"
+                )
+            }
+        },
+        actions = {
+            IconButton(onClick = {
+                openDialog.value = true
+            }) {
+                Icon(
+                    imageVector = Icons.Filled.Delete,
+                    contentDescription = "Back"
+                )
+            }
+        }
+    )
 }
 
 @Composable
@@ -103,6 +173,61 @@ fun FlightInformationInteract(navController: NavController, flightData: FlightDa
             trailingContent = { Icon(Icons.Filled.Info, "Airport Information") }
         )
     }
+}
+
+@OptIn(ExperimentalMaterial3Api::class, DelicateCoroutinesApi::class)
+@Composable
+fun DeleteDialog(
+    openDialog: MutableState<Boolean>,
+    navController: NavController,
+    flightDataDao: FlightDataDao,
+    flightData: MutableState<FlightData>
+) {
+    BasicAlertDialog(
+        onDismissRequest = {
+            openDialog.value = false
+        }
+    ) {
+        Surface(
+            modifier = Modifier
+                .wrapContentWidth()
+                .wrapContentHeight(),
+            shape = MaterialTheme.shapes.large,
+            tonalElevation = AlertDialogDefaults.TonalElevation
+        ) {
+            Column(
+                modifier = Modifier.padding(16.dp),
+                horizontalAlignment = Alignment.End
+            ) {
+                Text(
+                    modifier = Modifier.padding(8.dp),
+                    text = "Delete flight? This CANNOT be undone.",
+                )
+                Spacer(modifier = Modifier.height(24.dp))
+                Row {
+                    TextButton(
+                        onClick = {
+                            openDialog.value = false
+                        },
+                    ) {
+                        Text("Cancel")
+                    }
+                    TextButton(
+                        onClick = {
+                        GlobalScope.launch(Dispatchers.IO) {
+                            flightDataDao.deleteFlight(flightData.value)
+                        }
+                            openDialog.value = false
+                            navController.navigateUp()
+                        },
+                    ) {
+                        Text("Delete")
+                    }
+                }
+            }
+        }
+    }
+
 }
 
 private fun mapSizeAtLevel(wmtsLevel: Int, tileSize: Int): Int {
