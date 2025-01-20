@@ -42,10 +42,10 @@ data class FlightData(
     val aircraftUri: String = "",
     val author: String = "",
     val authorUri: String = "",
-    val mapOriginLat: Double = 0.0,
-    val mapOriginLong: Double = 0.0,
-    val mapDestinationLat: Double = 0.0,
-    val mapDestinationLong: Double = 0.0,
+    val mapOriginX: Double = 0.0,
+    val mapOriginY: Double = 0.0,
+    val mapDestinationX: Double = 0.0,
+    val mapDestinationY: Double = 0.0,
     val progress: Int = 0,
 )
 

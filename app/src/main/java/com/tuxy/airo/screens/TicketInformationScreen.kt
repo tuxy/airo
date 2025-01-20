@@ -33,7 +33,12 @@ fun TicketInformationView(
     flightDataDao: FlightDataDao
 ) {
     val flightData = remember { mutableStateOf(FlightData()) }
-    singleIntoMut(flightData, flightDataDao, id)
+    val loaded = remember { mutableStateOf(false) }
+
+    if(!loaded.value) {
+        singleIntoMut(flightData, flightDataDao, id)
+        loaded.value = true
+    }
 
     Scaffold(
         modifier = Modifier.fillMaxSize()

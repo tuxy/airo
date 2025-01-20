@@ -10,6 +10,9 @@ import okhttp3.OkHttpClient
 import okhttp3.Request
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
+import kotlin.math.abs
+import kotlin.math.ln
+import kotlin.math.sin
 
 suspend fun getData(
     flightNumber: String,
@@ -60,6 +63,33 @@ suspend fun getData(
 fun parseData(jsonRoot: Root): FlightData {
     val departureTime = parseDateTime(jsonRoot[0].departure.scheduledTime.local)
     val arrivalTime = parseDateTime(jsonRoot[0].arrival.scheduledTime.local)
+
+    // Normalised coordinates for origin airport
+    val (projectedXOrigin, projectedYOrigin) = doProjection(jsonRoot[0].departure.airport.location.lat, jsonRoot[0].departure.airport.location.lon)!!
+    val xOrigin = normalize(
+        projectedXOrigin,
+        min = X0,
+        max = -X0
+    )
+    val yOrigin = normalize(
+        projectedYOrigin,
+        min = -X0,
+        max = X0
+    )
+
+    // Normalised coordinates for destination airport
+    val (projectedXDest, projectedYDest) = doProjection(jsonRoot[0].arrival.airport.location.lat, jsonRoot[0].arrival.airport.location.lon)!!
+    val xDest = normalize(
+        projectedXDest,
+        min = X0,
+        max = -X0
+    )
+    val yDest = normalize(
+        projectedYDest,
+        min = -X0,
+        max = X0
+    )
+
     return FlightData(
         id = 0, // Auto-assigned id
         callSign = jsonRoot[0].airline.iata,
@@ -83,13 +113,32 @@ fun parseData(jsonRoot: Root): FlightData {
         aircraftUri = jsonRoot[0].aircraft.image.url, // TODO
         author = jsonRoot[0].aircraft.image.author,
         authorUri = jsonRoot[0].aircraft.image.webUrl,
-        mapOriginLat = jsonRoot[0].departure.airport.location.lat,
-        mapOriginLong = jsonRoot[0].departure.airport.location.lon,
-        mapDestinationLat = jsonRoot[0].arrival.airport.location.lat,
-        mapDestinationLong = jsonRoot[0].arrival.airport.location.lon,
+        mapOriginX = xOrigin,
+        mapOriginY = yOrigin,
+        mapDestinationX = xDest,
+        mapDestinationY = yDest,
         progress = 50, // TODO
     )
 }
+
+fun doProjection(latitude: Double, longitude: Double): Pair<Double, Double>? {
+    if (abs(latitude) > 90 || abs(longitude) > 180) {
+        return null
+    }
+    val num = longitude * 0.017453292519943295 // 2*pi / 360
+    val X = 6378137.0 * num
+    val a = latitude * 0.017453292519943295
+    val Y = 3189068.5 * ln((1.0 + sin(a)) / (1.0 - sin(a)))
+
+    return Pair(X, Y)
+}
+
+fun normalize(t: Double, min: Double, max: Double): Double {
+    return (t - min) / (max - min)
+}
+
+private const val X0 = -2.0037508342789248E7
+
 
 fun parseDateTime(time: String): Array<String> { // TODO Date is the first element shown in format DD-MM-YYYY and time is shown in 24-hours (Locale default?)
     val pattern = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mmXXXXX") // Ignore time-zone, as time is set to local by default

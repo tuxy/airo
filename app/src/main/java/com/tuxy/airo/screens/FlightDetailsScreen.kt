@@ -18,6 +18,7 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material3.AlertDialogDefaults
+import androidx.compose.material3.Badge
 import androidx.compose.material3.BasicAlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -50,10 +51,16 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import ovh.plrapps.mapcompose.api.addLayer
+import ovh.plrapps.mapcompose.api.addMarker
+import ovh.plrapps.mapcompose.api.addPath
+import ovh.plrapps.mapcompose.api.minScale
 import ovh.plrapps.mapcompose.core.TileStreamProvider
 import ovh.plrapps.mapcompose.ui.MapUI
 import ovh.plrapps.mapcompose.ui.state.MapState
+import kotlin.math.abs
+import kotlin.math.ln
 import kotlin.math.pow
+import kotlin.math.sin
 
 @Composable
 fun FlightDetailsView(
@@ -82,6 +89,20 @@ fun FlightDetailsView(
     val mapSize = mapSizeAtLevel(5, 256)
     val mapState = MapState(6, mapSize, mapSize).apply {
         addLayer(tileStreamProvider)
+        addMarker("origin", x = flightData.value.mapOriginX, y = flightData.value.mapOriginY) {
+            Badge(contentColor = Color.Black)
+        }
+        addMarker("destination", x = flightData.value.mapDestinationX, y = flightData.value.mapDestinationY) {
+            Badge(contentColor = Color.Black)
+        }
+        addPath(
+            id = "filled polygon",
+            color = Color.Black,
+            fillColor = Color.Black.copy(alpha = .6f),
+        ) {
+            addPoint(flightData.value.mapOriginX, flightData.value.mapOriginY)
+            addPoint(flightData.value.mapDestinationX, flightData.value.mapDestinationY)
+        }
     }
 
     Scaffold(
