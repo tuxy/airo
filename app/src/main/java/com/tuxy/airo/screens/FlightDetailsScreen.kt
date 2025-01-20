@@ -95,14 +95,6 @@ fun FlightDetailsView(
         addMarker("destination", x = flightData.value.mapDestinationX, y = flightData.value.mapDestinationY) {
             Badge(contentColor = Color.Black)
         }
-        addPath(
-            id = "filled polygon",
-            color = Color.Black,
-            fillColor = Color.Black.copy(alpha = .6f),
-        ) {
-            addPoint(flightData.value.mapOriginX, flightData.value.mapOriginY)
-            addPoint(flightData.value.mapDestinationX, flightData.value.mapDestinationY)
-        }
     }
 
     Scaffold(

@@ -13,6 +13,8 @@ import androidx.navigation.compose.rememberNavController
 import com.tuxy.airo.data.FlightDataBase
 import com.tuxy.airo.data.FlightDataDao
 import com.tuxy.airo.ui.theme.AeroTheme
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
 
 private val Context.dataStore by preferencesDataStore(name = "user_settings")
 
@@ -26,9 +28,6 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
 
         data = FlightDataBase.getDatabase(this).flightDataDao()
-//        GlobalScope.launch {
-//            data.nukeTable() // Deletes all table values when opening, ONLY FOR DEVELOPMENT
-//        }
 
         enableEdgeToEdge()
         setContent {

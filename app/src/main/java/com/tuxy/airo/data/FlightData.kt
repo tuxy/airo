@@ -46,7 +46,7 @@ data class FlightData(
     val mapOriginY: Double = 0.0,
     val mapDestinationX: Double = 0.0,
     val mapDestinationY: Double = 0.0,
-    val progress: Int = 0,
+    val progress: Double = 0.0,
 )
 
 @Dao
@@ -82,7 +82,9 @@ abstract class FlightDataBase: RoomDatabase() {
         fun getDatabase(context: Context): FlightDataBase { // Gets database, creates if doesn't exist
             return Instance ?: synchronized(this) {
                 Room.databaseBuilder(context, FlightDataBase::class.java, "flight_database")
-                    .build().also { Instance = it }
+                    .fallbackToDestructiveMigration()
+                    .build()
+                    .also { Instance = it }
             }
         }
     }

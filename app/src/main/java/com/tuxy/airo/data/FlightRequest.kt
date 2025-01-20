@@ -90,7 +90,7 @@ fun parseData(jsonRoot: Root): FlightData {
         max = X0
     )
 
-    return FlightData(
+    return FlightData( // TODO Add flight number
         id = 0, // Auto-assigned id
         callSign = jsonRoot[0].airline.iata,
         airline = jsonRoot[0].airline.name,
@@ -117,7 +117,7 @@ fun parseData(jsonRoot: Root): FlightData {
         mapOriginY = yOrigin,
         mapDestinationX = xDest,
         mapDestinationY = yDest,
-        progress = 50, // TODO
+        progress = 0.0, // TODO
     )
 }
 
