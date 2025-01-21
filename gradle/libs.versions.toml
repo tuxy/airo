@@ -1,5 +1,6 @@
 [versions]
 agp = "8.7.3"
+browser = "1.8.0"
 coilNetworkOkhttp = "3.0.4"
 datastorePreferences = "1.1.2"
 klaxon = "5.5"
@@ -18,6 +19,7 @@ osmdroidAndroid = "6.1.16"
 roomCompiler = "2.6.1"
 
 [libraries]
+androidx-browser = { module = "androidx.browser:browser", version.ref = "browser" }
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
 androidx-datastore-preferences = { module = "androidx.datastore:datastore-preferences", version.ref = "datastorePreferences" }
 androidx-navigation-compose = { module = "androidx.navigation:navigation-compose", version.ref = "navigationCompose" }

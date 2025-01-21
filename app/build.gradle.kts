@@ -72,6 +72,9 @@ dependencies {
     // map-compose
     implementation(libs.mapcompose)
 
+    // browser
+    implementation(libs.androidx.browser)
+
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.navigation.testing)
     androidTestImplementation(libs.androidx.junit)

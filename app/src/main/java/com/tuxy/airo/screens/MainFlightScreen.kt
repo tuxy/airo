@@ -118,7 +118,7 @@ fun FlightCard(
             .padding(horizontal = 16.dp, vertical = 8.dp)
     ) {
         // Top main card
-        OutlinedCard(
+        ElevatedCard(
             modifier = Modifier
                 .fillMaxWidth(),
             onClick = {
@@ -157,26 +157,6 @@ fun FlightCard(
 }
 
 @Composable
-@Preview(showBackground = true)
-fun FlightCardPreview() {
-    FlightCard(
-        rememberNavController(),
-        FlightData(
-            fromName = "Atlanta",
-            from = "ATL",
-            toName = "New York",
-            callSign = "UA45",
-            to = "JFK",
-            ticketGate = "5",
-            ticketTerminal = "2",
-            localDepartDate = "29 Mar",
-            localDepartTime = "11:50",
-            localArriveTime = "16:52",
-        )
-    )
-}
-
-@Composable
 fun TicketInformationCard(flight: FlightData) { // TODO How to get ticket information from ticket?
     Row (
         modifier = Modifier
@@ -202,20 +182,45 @@ fun TicketInformationCard(flight: FlightData) { // TODO How to get ticket inform
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun MainTopBar(modifier: Modifier = Modifier, navController: NavController) {
+fun MainTopBar(navController: NavController) {
     LargeTopAppBar(
         title = { Text("My Flights") },
         colors = TopAppBarDefaults.topAppBarColors(),
         actions = {
-            IconButton(onClick = {
-                navController.navigate(route = Screen.SettingsScreen.route)
-            }) {
-                Icon(
-                    imageVector = Icons.Filled.Settings,
-                    contentDescription = "Settings"
-                )
-            }
+//            IconButton(onClick = {
+//                navController.navigate(route = Screen.SettingsScreen.route)
+//            }) {
+//                Icon(
+//                    imageVector = Icons.Filled.Settings,
+//                    contentDescription = "Settings"
+//                )
+//            }
         },
-        modifier = modifier
+    )
+}
+
+@Composable
+@Preview(showBackground = true)
+fun TopBarPreview() {
+    MainTopBar(rememberNavController())
+}
+
+@Composable
+@Preview(showBackground = true)
+fun FlightCardPreview() { // With placeholder data
+    FlightCard(
+        rememberNavController(),
+        FlightData(
+            fromName = "Atlanta",
+            from = "ATL",
+            toName = "New York",
+            callSign = "UA45",
+            to = "JFK",
+            ticketGate = "5",
+            ticketTerminal = "2",
+            localDepartDate = "29 Mar",
+            localDepartTime = "11:50",
+            localArriveTime = "16:52",
+        )
     )
 }

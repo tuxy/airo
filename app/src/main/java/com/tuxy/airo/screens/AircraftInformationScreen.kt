@@ -1,5 +1,7 @@
 package com.tuxy.airo.screens
 
+import android.net.Uri
+import androidx.browser.customtabs.CustomTabsIntent
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
@@ -20,9 +22,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.NavController
 import coil3.compose.AsyncImage
-import com.tuxy.airo.Screen
 import com.tuxy.airo.composables.SmallAppBar
 import com.tuxy.airo.data.FlightData
 import com.tuxy.airo.data.FlightDataDao
@@ -42,6 +44,8 @@ fun AircraftInformationView(
         loaded.value = true
     }
 
+    val context = LocalContext.current
+
     Scaffold(
         modifier = Modifier.fillMaxSize()
     ) { innerPadding ->
@@ -55,6 +59,14 @@ fun AircraftInformationView(
                 modifier = Modifier
                     .fillMaxWidth()
                     .background(Color.Gray)
+                    .clickable {
+                        val url = flightData.value.authorUri
+                        val intent = CustomTabsIntent.Builder()
+                            .setShowTitle(true) //
+                            .setUrlBarHidingEnabled(true)
+                            .build()
+                        intent.launchUrl(context, Uri.parse(url))
+                    }
             ) {
                 AsyncImage(
                     model = flightData.value.aircraftUri,
@@ -65,19 +77,41 @@ fun AircraftInformationView(
                         .aspectRatio(1280f/847f)
                 )
             }
-            AircraftListView(navController, flightData.value)
+            AircraftListView(flightData.value)
         }
     }
 }
 
 @Composable
-fun AircraftListView(navController: NavController, flightData: FlightData) {
+fun AircraftListView(flightData: FlightData) {
+    val context = LocalContext.current
+
     Column {
         ListItem(
             modifier = Modifier
-                .clickable { navController.navigate("${Screen.WebViewScreen.route}/${flightData.airlineIata}") },
+                .clickable {
+                    val url = "https://aerolopa.com/${flightData.callSign}"
+                    val intent = CustomTabsIntent.Builder()
+                        .setShowTitle(true) //
+                        .setUrlBarHidingEnabled(true)
+                        .build()
+                    intent.launchUrl(context, Uri.parse(url))
+                },
             headlineContent = { Text("Seat Maps") },
-            trailingContent = { Icon(Icons.Filled.Info, "Seating information") }
+            trailingContent = { Icon(Icons.Filled.Info, "Information") }
+        )
+        ListItem(
+            modifier = Modifier
+                .clickable {
+                    val url = flightData.authorUri
+                    val intent = CustomTabsIntent.Builder()
+                        .setShowTitle(true) //
+                        .setUrlBarHidingEnabled(true)
+                        .build()
+                    intent.launchUrl(context, Uri.parse(url))
+                },
+            headlineContent = { Text("Author") },
+            trailingContent = { Icon(Icons.Filled.Info, "Author") }
         )
     }
 }

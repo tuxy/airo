@@ -54,6 +54,7 @@ import ovh.plrapps.mapcompose.api.addLayer
 import ovh.plrapps.mapcompose.api.addMarker
 import ovh.plrapps.mapcompose.api.addPath
 import ovh.plrapps.mapcompose.api.minScale
+import ovh.plrapps.mapcompose.api.scrollTo
 import ovh.plrapps.mapcompose.core.TileStreamProvider
 import ovh.plrapps.mapcompose.ui.MapUI
 import ovh.plrapps.mapcompose.ui.state.MapState
@@ -61,6 +62,7 @@ import kotlin.math.abs
 import kotlin.math.ln
 import kotlin.math.pow
 import kotlin.math.sin
+import kotlin.math.sqrt
 
 @Composable
 fun FlightDetailsView(
@@ -90,10 +92,21 @@ fun FlightDetailsView(
     val mapState = MapState(6, mapSize, mapSize).apply {
         addLayer(tileStreamProvider)
         addMarker("origin", x = flightData.value.mapOriginX, y = flightData.value.mapOriginY) {
-            Badge(contentColor = Color.Black)
+            Badge(contentColor = Color.Black, containerColor = Color.Black)
         }
         addMarker("destination", x = flightData.value.mapDestinationX, y = flightData.value.mapDestinationY) {
-            Badge(contentColor = Color.Black)
+            Badge(contentColor = Color.Black, containerColor = Color.Black)
+        }
+        GlobalScope.launch {
+            scrollTo(
+                avr(flightData.value.mapOriginX, flightData.value.mapDestinationX),
+                avr(flightData.value.mapOriginY, flightData.value.mapDestinationY),
+                calculateScale(flightData.value.mapOriginX, flightData.value.mapOriginY, flightData.value.mapDestinationX, flightData.value.mapDestinationY)
+            )
+            addPath("route", color = Color.Black, width = 2.dp) {
+                addPoint(x = flightData.value.mapOriginX, y = flightData.value.mapOriginY - 0.0007)
+                addPoint(x = flightData.value.mapDestinationX, y = flightData.value.mapDestinationY - 0.0007)
+            }
         }
     }
 
@@ -245,4 +258,16 @@ fun DeleteDialog(
 
 private fun mapSizeAtLevel(wmtsLevel: Int, tileSize: Int): Int {
     return tileSize * 2.0.pow(wmtsLevel).toInt()
+}
+
+private fun avr(a: Double, b: Double): Double {
+    return (a + b) / 2
+}
+
+private fun calculateScale(x1: Double, y1: Double, x2: Double, y2: Double): Float {
+    val zoomConstant = 12.0 // Trial and error
+
+    val a = (x2 - x1) * (x2 - x1)
+    val b = (y2 - y1) * (y2 - y1)
+    return (1/(sqrt(a + b) * zoomConstant)).toFloat()
 }
