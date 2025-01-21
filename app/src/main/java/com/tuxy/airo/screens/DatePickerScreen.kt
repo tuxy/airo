@@ -16,6 +16,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
@@ -23,6 +24,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.NavController
 import com.tuxy.airo.composables.SmallAppBar
 import com.tuxy.airo.data.FlightDataDao
+import com.tuxy.airo.data.UserPreferences
 import com.tuxy.airo.data.getData
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
@@ -43,9 +45,12 @@ fun DatePickerView(
     val datePickerState = rememberDatePickerState(initialDisplayMode = DisplayMode.Picker)
     val timeMillis = maybe(datePickerState.selectedDateMillis)
 
+    val dataStore = UserPreferences(LocalContext.current)
+    val retrievedKey = dataStore.getApiKey.collectAsState(initial = "")
+
     val toasts = arrayOf(
         Toast.makeText(LocalContext.current, "API Key not found", Toast.LENGTH_SHORT),
-        Toast.makeText(LocalContext.current, "Network error", Toast.LENGTH_SHORT),
+        Toast.makeText(LocalContext.current, "Network error / Invalid API Key", Toast.LENGTH_SHORT),
         Toast.makeText(LocalContext.current, "Could not find flight", Toast.LENGTH_SHORT)
     )
 
@@ -56,7 +61,7 @@ fun DatePickerView(
                 onClick = {
                     loading.value = true
                     GlobalScope.launch(Dispatchers.Main) {
-                        getData(flightNumber, data, getDateAsString(timeMillis), toasts)
+                        getData(flightNumber, data, getDateAsString(timeMillis), toasts, retrievedKey)
                         joinAll()
                         loading.value = false
                         navController.navigateUp()

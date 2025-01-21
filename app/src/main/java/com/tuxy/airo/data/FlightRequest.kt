@@ -2,6 +2,7 @@ package com.tuxy.airo.data
 
 import android.util.Log
 import android.widget.Toast
+import androidx.compose.runtime.State
 import com.beust.klaxon.KlaxonException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -18,11 +19,12 @@ suspend fun getData(
     flightNumber: String,
     data: FlightDataDao,
     date: String,
-    toasts: Array<Toast>
+    toasts: Array<Toast>,
+    apiKey: State<String>
 ) {
     withContext(Dispatchers.IO) {
         val client = OkHttpClient()
-        val apiKey = "" // API Key here
+
         val webUrl = "https://api.magicapi.dev/api/v1/aedbx/aerodatabox/flights/number/${flightNumber}/${date}"
         // TODO Implement DataStore for apikey + other settings
 
@@ -33,10 +35,10 @@ suspend fun getData(
         val request = Request.Builder()
             .url(url)
             .header("Accept", "application/json")
-            .header("x-magicapi-key", apiKey)
+            .header("x-magicapi-key", apiKey.value)
             .build()
 
-        if(apiKey == "") {
+        if(apiKey.value == "") {
             toasts[0].show() // API_KEY toast
             return@withContext
         }
@@ -52,7 +54,7 @@ suspend fun getData(
                 val jsonRoot = Root.fromJson(jsonListResponse)
                 data.addFlight(parseData(jsonRoot)) // If this errors, we give up
             } catch (e: KlaxonException) {
-                Log.e("APIACCESS", e.toString())
+                Log.e("ApiAccess", e.toString())
                 toasts[2].show() // flight not found
                 return@use // Stops from executing further
             }

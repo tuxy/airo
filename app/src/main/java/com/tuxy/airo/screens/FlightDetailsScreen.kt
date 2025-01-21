@@ -53,15 +53,11 @@ import kotlinx.coroutines.launch
 import ovh.plrapps.mapcompose.api.addLayer
 import ovh.plrapps.mapcompose.api.addMarker
 import ovh.plrapps.mapcompose.api.addPath
-import ovh.plrapps.mapcompose.api.minScale
 import ovh.plrapps.mapcompose.api.scrollTo
 import ovh.plrapps.mapcompose.core.TileStreamProvider
 import ovh.plrapps.mapcompose.ui.MapUI
 import ovh.plrapps.mapcompose.ui.state.MapState
-import kotlin.math.abs
-import kotlin.math.ln
 import kotlin.math.pow
-import kotlin.math.sin
 import kotlin.math.sqrt
 
 @Composable
