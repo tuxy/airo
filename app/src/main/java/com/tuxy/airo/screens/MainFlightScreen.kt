@@ -1,6 +1,9 @@
 package com.tuxy.airo.screens
 
-import androidx.compose.foundation.Image
+import android.util.Log
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -37,20 +40,25 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import coil3.compose.AsyncImage
-import com.tuxy.airo.R
 import com.tuxy.airo.Screen
 import com.tuxy.airo.composables.BoldDepartureAndDestinationText
 import com.tuxy.airo.composables.LargeTopSmallBottom
 import com.tuxy.airo.data.FlightData
 import com.tuxy.airo.data.FlightDataDao
 import com.tuxy.airo.viewmodel.MainFlightViewModel
+import kotlinx.coroutines.DelicateCoroutinesApi
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+import java.time.Duration
+import java.time.LocalDateTime
+import kotlin.math.absoluteValue
 
 @Composable
 fun MainFlightView(
@@ -86,18 +94,26 @@ fun MainFlightView(
                     .heightIn(max = 2000.dp)
             ) {
                 items(viewModel.flightData) { flight ->
-                    FlightCard(navController, flight)
+                    FlightCard(navController, flight, viewModel)
                 }
             }
         }
     }
 }
 
+@OptIn(DelicateCoroutinesApi::class)
 @Composable
 fun FlightCard(
     navController: NavController,
-    flightData: FlightData
-) { // TODO Add parameters to create multiple separate instances of flights
+    flightData: FlightData,
+    viewModel: MainFlightViewModel
+) {
+    val progressAnimation = animateFloatAsState(
+        targetValue = viewModel.progress.floatValue,
+        animationSpec = tween(durationMillis = 350, easing = FastOutSlowInEasing),
+        label = "",
+    )
+
     Column(
         modifier = Modifier
             .padding(horizontal = 16.dp, vertical = 8.dp)
@@ -120,7 +136,7 @@ fun FlightCard(
                         .padding(16.dp)
                         .fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
+                    verticalAlignment = Alignment.Bottom
                 ) {
                     BoldDepartureAndDestinationText(flightData.from, flightData.fromName, Alignment.Start)
                     Icon(
@@ -131,7 +147,24 @@ fun FlightCard(
                 }
                 TicketInformationCard(flightData)
                 LinearProgressIndicator(
-                    progress = { flightData.progress.toFloat() },
+                    progress = {
+                        GlobalScope.launch {
+                            delay(500)
+                            val now = Duration.between(LocalDateTime.now(), flightData.departDate).toMillis()
+
+                            if(now.toFloat() <= 0) {
+                                viewModel.progress.floatValue = 0.0F
+                                return@launch
+                            }
+
+                            val duration = flightData.duration.toMillis()
+                            val current = now.toFloat() / duration.toFloat()
+
+                            Log.d("ApiAccess", current.toString())
+                            viewModel.progress.floatValue = current.absoluteValue
+                        }
+                        progressAnimation.value
+                    },
                     modifier = Modifier
                         .padding(16.dp)
                         .fillMaxWidth(),
@@ -142,7 +175,7 @@ fun FlightCard(
 }
 
 @Composable
-fun TicketInformationCard(flight: FlightData) { // TODO How to get ticket information from ticket?
+fun TicketInformationCard(flight: FlightData) {
     Row (
         modifier = Modifier
             .fillMaxWidth()
@@ -155,21 +188,13 @@ fun TicketInformationCard(flight: FlightData) { // TODO How to get ticket inform
         LargeTopSmallBottom("Gate", flight.ticketGate)
         Spacer(modifier = Modifier.width(16.dp))
         AsyncImage(
-            model = "https://raw.githubusercontent.com/Jxck-S/airline-logos/main/flightaware_logos/SIA.png",
+            model = "https://raw.githubusercontent.com/Jxck-S/airline-logos/main/radarbox_logos/${flight.airlineIcao}.png",
             contentDescription = null,
             contentScale = ContentScale.Crop,
             modifier = Modifier
                 .size(32.dp)
                 .clip(CircleShape)
         )
-//        Image(
-//            painter = painterResource(R.drawable.ic_launcher_background),
-//            contentDescription = "avatar",
-//            contentScale = ContentScale.Crop,
-//            modifier = Modifier
-//                .size(32.dp)
-//                .clip(CircleShape)
-//        )
     }
 }
 
@@ -196,24 +221,4 @@ fun MainTopBar(navController: NavController) {
 @Preview(showBackground = true)
 fun TopBarPreview() {
     MainTopBar(rememberNavController())
-}
-
-@Composable
-@Preview(showBackground = true)
-fun FlightCardPreview() { // With placeholder data
-    FlightCard(
-        rememberNavController(),
-        FlightData(
-            fromName = "Atlanta",
-            from = "ATL",
-            toName = "New York",
-            callSign = "UA45",
-            to = "JFK",
-            ticketGate = "5",
-            ticketTerminal = "2",
-            localDepartDate = "29 Mar",
-            localDepartTime = "11:50",
-            localArriveTime = "16:52",
-        )
-    )
 }

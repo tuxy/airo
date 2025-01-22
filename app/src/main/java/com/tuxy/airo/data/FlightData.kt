@@ -12,10 +12,13 @@ import androidx.room.PrimaryKey
 import androidx.room.Query
 import androidx.room.Room
 import androidx.room.RoomDatabase
+import androidx.room.TypeConverters
 import androidx.room.Update
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
+import java.time.Duration
+import java.time.LocalDateTime
 
 @Entity(tableName = "flight_table")
 data class FlightData(
@@ -23,21 +26,20 @@ data class FlightData(
     val id: Int = 0,
     val callSign: String = "",
     val airline: String = "",
+    val airlineIcao: String = "",
     val airlineIata: String = "",
     val from: String = "",
     val to: String = "",
     val fromName: String = "",
-    val localDepartDate: String = "",
-    val localDepartTime: String = "",
-    val localArriveDate: String = "",
-    val localArriveTime: String = "",
+    val departDate: LocalDateTime = LocalDateTime.of(2000, 1, 1, 1, 1, 1, 1),
+    val arriveDate: LocalDateTime = LocalDateTime.of(2000, 1, 1, 1, 1, 1, 1),
+    val duration: Duration = Duration.between(LocalDateTime.now(), LocalDateTime.now()),
     val toName: String = "",
     val ticketSeat: String = "",
     val ticketData: String = "",
     val ticketQr: String = "",
     val ticketGate: String = "",
     val ticketTerminal: String = "",
-    val aircraftIcao: String = "",
     val aircraftName: String = "",
     val aircraftUri: String = "",
     val author: String = "",
@@ -46,7 +48,6 @@ data class FlightData(
     val mapOriginY: Double = 0.0,
     val mapDestinationX: Double = 0.0,
     val mapDestinationY: Double = 0.0,
-    val progress: Double = 0.0,
 )
 
 @Dao
@@ -72,6 +73,7 @@ interface FlightDataDao {
 
 
 @Database(entities = [FlightData::class], version = 1, exportSchema = false)
+@TypeConverters(Converters::class)
 abstract class FlightDataBase: RoomDatabase() {
     abstract fun flightDataDao(): FlightDataDao
 

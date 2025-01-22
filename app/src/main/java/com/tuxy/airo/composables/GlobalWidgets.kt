@@ -3,6 +3,7 @@ package com.tuxy.airo.composables
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
@@ -112,6 +113,7 @@ fun DepartureAndDestinationText(icao: String, fullName: String) {
 @Composable
 fun BoldDepartureAndDestinationText(icao: String, fullName: String, alignment: Alignment.Horizontal) {
     Column(
+        modifier = Modifier.defaultMinSize(minWidth = 64.dp),
         horizontalAlignment = alignment
     ) {
         Text(

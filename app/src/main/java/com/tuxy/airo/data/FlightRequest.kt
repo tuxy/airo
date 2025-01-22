@@ -8,6 +8,7 @@ import kotlinx.coroutines.withContext
 import okhttp3.HttpUrl.Companion.toHttpUrl
 import okhttp3.OkHttpClient
 import okhttp3.Request
+import java.time.Duration
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import kotlin.math.abs
@@ -93,32 +94,30 @@ fun parseData(jsonRoot: Root): FlightData {
 
     return FlightData( // TODO Add flight number
         id = 0, // Auto-assigned id
-        callSign = jsonRoot[0].airline.iata,
+        callSign = jsonRoot[0].number,
         airline = jsonRoot[0].airline.name,
+        airlineIcao = jsonRoot[0].airline.icao,
         airlineIata = jsonRoot[0].airline.iata,
         from = jsonRoot[0].departure.airport.iata,
         to = jsonRoot[0].arrival.airport.iata,
         fromName = jsonRoot[0].departure.airport.shortName,
         toName = jsonRoot[0].arrival.airport.shortName,
-        localDepartDate = departureTime[0],
-        localDepartTime = departureTime[1],
-        localArriveDate = arrivalTime[0],
-        localArriveTime = arrivalTime[1],
+        departDate = departureTime,
+        arriveDate = arrivalTime,
+        duration = Duration.between(parseDateTime(jsonRoot[0].departure.scheduledTime.utc), parseDateTime(jsonRoot[0].arrival.scheduledTime.utc)),
         ticketSeat = "N/A", // TODO
         ticketData = "N/A", // TODO
         ticketQr = "N/A", // TODO
         ticketGate = jsonRoot[0].departure.gate,
         ticketTerminal = jsonRoot[0].departure.terminal,
-        aircraftIcao = "N/A", // TODO
         aircraftName = jsonRoot[0].aircraft.model,
-        aircraftUri = jsonRoot[0].aircraft.image.url, // TODO
+        aircraftUri = jsonRoot[0].aircraft.image.url,
         author = jsonRoot[0].aircraft.image.author,
         authorUri = jsonRoot[0].aircraft.image.webUrl,
         mapOriginX = xOrigin,
         mapOriginY = yOrigin,
         mapDestinationX = xDest,
         mapDestinationY = yDest,
-        progress = 0.0, // TODO
     )
 }
 
@@ -138,19 +137,14 @@ fun normalize(t: Double, min: Double, max: Double): Double {
     return (t - min) / (max - min)
 }
 
-private const val X0 = -2.0037508342789248E7
+private const val X0 = -2.0037508342789248E7 // Constant for map projection
 
 
-fun parseDateTime(time: String): Array<String> { // TODO Date is the first element shown in format DD-MM-YYYY and time is shown in 24-hours (Locale default?)
-    val pattern = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mmXXXXX") // Ignore time-zone, as time is set to local by default
+fun parseDateTime(time: String): LocalDateTime {
+    val pattern = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mmXXXXX")!! // Ignore time-zone, as time is set to local by default
     val localDateTime = LocalDateTime.parse(time, pattern)
 
-    val timeFormatter = DateTimeFormatter.ofPattern("HH:mm")
-    val dateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
-    return arrayOf(
-        localDateTime.format(timeFormatter),
-        localDateTime.format(dateFormatter)
-    )
+    return localDateTime!!
 }
 
 /* This is some sample json data for quick reference

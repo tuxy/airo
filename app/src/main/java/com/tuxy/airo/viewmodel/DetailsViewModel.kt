@@ -2,6 +2,7 @@ package com.tuxy.airo.viewmodel
 
 import android.content.Context
 import androidx.compose.material3.Badge
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
@@ -26,6 +27,9 @@ import kotlin.math.sqrt
 class DetailsViewModel(context: Context, flightDataDao: FlightDataDao, id: String): ViewModel() {
     var flightData = mutableStateOf(FlightData())
     var openDialog = mutableStateOf(false)
+
+    var progress = mutableFloatStateOf(0.0F)
+        private set
 
     init {
         singleIntoMut(flightData, flightDataDao, id) // On initialisation, pass db data into flightData
