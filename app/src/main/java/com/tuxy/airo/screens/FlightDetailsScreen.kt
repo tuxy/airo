@@ -16,9 +16,7 @@ import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.Info
 import androidx.compose.material3.AlertDialogDefaults
-import androidx.compose.material3.Badge
 import androidx.compose.material3.BasicAlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -33,32 +31,23 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.tuxy.airo.Screen
 import com.tuxy.airo.composables.RouteBar
 import com.tuxy.airo.data.FlightData
 import com.tuxy.airo.data.FlightDataDao
-import com.tuxy.airo.data.singleIntoMut
+import com.tuxy.airo.viewmodel.DetailsViewModel
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
-import ovh.plrapps.mapcompose.api.addLayer
-import ovh.plrapps.mapcompose.api.addMarker
-import ovh.plrapps.mapcompose.api.addPath
-import ovh.plrapps.mapcompose.api.scrollTo
-import ovh.plrapps.mapcompose.core.TileStreamProvider
 import ovh.plrapps.mapcompose.ui.MapUI
-import ovh.plrapps.mapcompose.ui.state.MapState
-import kotlin.math.pow
-import kotlin.math.sqrt
 
 @Composable
 fun FlightDetailsView(
@@ -66,67 +55,37 @@ fun FlightDetailsView(
     id: String,
     flightDataDao: FlightDataDao
 ) {
-    val flightData = remember { mutableStateOf(FlightData()) } // Empty flight data
-    val loaded = remember { mutableStateOf(false) } // has db has been loaded into flightData
 
-    // Loaded?
-    if(!loaded.value) {
-        singleIntoMut(flightData, flightDataDao, id)
-        loaded.value = true
-    }
-
-    // Dialog open?
-    val openDialog = remember { mutableStateOf(false) }
-
-    // Map data
-    val context = LocalContext.current
-    val tileStreamProvider = TileStreamProvider { row, col, zoomLvl ->
-        context.assets.open("tiles/${zoomLvl}/${col}/${row}.png")
-    }
-
-    val mapSize = mapSizeAtLevel(5, 256)
-    val mapState = MapState(6, mapSize, mapSize).apply {
-        addLayer(tileStreamProvider)
-        addMarker("origin", x = flightData.value.mapOriginX, y = flightData.value.mapOriginY) {
-            Badge(contentColor = Color.Black, containerColor = Color.Black)
-        }
-        addMarker("destination", x = flightData.value.mapDestinationX, y = flightData.value.mapDestinationY) {
-            Badge(contentColor = Color.Black, containerColor = Color.Black)
-        }
-        GlobalScope.launch {
-            scrollTo(
-                avr(flightData.value.mapOriginX, flightData.value.mapDestinationX),
-                avr(flightData.value.mapOriginY, flightData.value.mapDestinationY),
-                calculateScale(flightData.value.mapOriginX, flightData.value.mapOriginY, flightData.value.mapDestinationX, flightData.value.mapDestinationY)
-            )
-            addPath("route", color = Color.Black, width = 2.dp) {
-                addPoint(x = flightData.value.mapOriginX, y = flightData.value.mapOriginY - 0.0007)
-                addPoint(x = flightData.value.mapDestinationX, y = flightData.value.mapDestinationY - 0.0007)
-            }
-        }
-    }
+    val viewModelFactory = DetailsViewModel.Factory(LocalContext.current, flightDataDao, id)
+    val viewModel: DetailsViewModel = viewModel(factory = viewModelFactory)
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),
-        topBar = { SmallAppBarWithDelete("${flightData.value.from} to ${flightData.value.to}", navController, openDialog) }
+        topBar = {
+            SmallAppBarWithDelete(
+                "${viewModel.flightData.value.from} to ${viewModel.flightData.value.to}",
+                navController,
+                viewModel.openDialog
+            )
+        }
     ) { innerPadding ->
         Column(
             modifier = Modifier
                 .padding(innerPadding)
         ) {
             Column {
-                if(openDialog.value) {
+                if(viewModel.openDialog.value) {
                     DeleteDialog(
-                        openDialog,
+                        viewModel.openDialog,
                         navController,
                         flightDataDao,
-                        flightData
+                        viewModel.flightData
                     )
                 }
                 LinearProgressIndicator(
-                    progress = { flightData.value.progress.toFloat() }
+                    progress = { viewModel.flightData.value.progress.toFloat() }
                 )
-                RouteBar(flightData.value)
+                RouteBar(viewModel.flightData.value)
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -134,10 +93,10 @@ fun FlightDetailsView(
                         .aspectRatio(1280f / 847f)
                 ) {
                     MapUI(
-                        state = mapState
+                        state = viewModel.mapState
                     )
                 }
-                FlightInformationInteract(navController, flightData.value)
+                FlightInformationInteract(navController, viewModel.flightData.value)
             }
         }
     }
@@ -188,12 +147,13 @@ fun FlightInformationInteract(navController: NavController, flightData: FlightDa
             headlineContent = { Text("Aircraft") },
             supportingContent = { Text(flightData.aircraftName) }
         )
-        ListItem(
-            modifier = Modifier.clickable(onClick = {}),
-            headlineContent = { Text("Airport") },
-            supportingContent = { Text(flightData.fromName) },
-            trailingContent = { Icon(Icons.Filled.Info, "Airport Information") }
-        )
+//        No API or webpage really exists with good coverage for terminal maps. Please send me links to good ones
+//        ListItem(
+//            modifier = Modifier.clickable(onClick = {}),
+//            headlineContent = { Text("Airport") },
+//            supportingContent = { Text(flightData.fromName) },
+//            trailingContent = { Icon(Icons.Filled.Info, "Airport Information") }
+//        )
     }
 }
 
@@ -250,20 +210,4 @@ fun DeleteDialog(
         }
     }
 
-}
-
-private fun mapSizeAtLevel(wmtsLevel: Int, tileSize: Int): Int {
-    return tileSize * 2.0.pow(wmtsLevel).toInt()
-}
-
-private fun avr(a: Double, b: Double): Double {
-    return (a + b) / 2
-}
-
-private fun calculateScale(x1: Double, y1: Double, x2: Double, y2: Double): Float {
-    val zoomConstant = 12.0 // Trial and error
-
-    val a = (x2 - x1) * (x2 - x1)
-    val b = (y2 - y1) * (y2 - y1)
-    return (1/(sqrt(a + b) * zoomConstant)).toFloat()
 }

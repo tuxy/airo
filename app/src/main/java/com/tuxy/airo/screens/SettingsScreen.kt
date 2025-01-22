@@ -1,6 +1,5 @@
 package com.tuxy.airo.screens
 
-import android.util.Log
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -17,32 +16,26 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.tuxy.airo.composables.LargeAppBar
-import com.tuxy.airo.data.UserPreferences
-import kotlinx.coroutines.launch
+import com.tuxy.airo.viewmodel.SettingsViewModel
 
 @Composable
 fun SettingsView( // TODO Implement notification permissions
     navController: NavController
 ) {
-    val dataStore = UserPreferences(LocalContext.current)
-    val scope = rememberCoroutineScope()
-
-    val retrievedKey = dataStore.getApiKey.collectAsState(initial = "")
-
-    val key = remember { mutableStateOf("") }
+    val viewModelFactory = SettingsViewModel.Factory(LocalContext.current)
+    val viewModel: SettingsViewModel = viewModel(factory = viewModelFactory)
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),
@@ -50,10 +43,7 @@ fun SettingsView( // TODO Implement notification permissions
         floatingActionButton = {
             ExtendedFloatingActionButton(
                 onClick = {
-                    scope.launch {
-                        dataStore.saveApiKey(key.value)
-                    }
-                    Log.d("ApiAccess", retrievedKey.value)
+                    viewModel.saveKey(viewModel.currentKey)
                     navController.navigateUp()
                 },
                 icon = { Icon(Icons.Filled.Check, "Apply settings") },
@@ -70,9 +60,9 @@ fun SettingsView( // TODO Implement notification permissions
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp),
                 shape = RoundedCornerShape(15.dp),
-                value = key.value,
+                value = viewModel.currentKey,
                 label = { Text("API Key") },
-                onValueChange = { key.value = it },
+                onValueChange = { viewModel.currentKey = it },
                 singleLine = true,
             )
         }

@@ -91,13 +91,6 @@ abstract class FlightDataBase: RoomDatabase() {
 }
 
 @OptIn(DelicateCoroutinesApi::class)
-fun dataIntoMut(flightList: MutableState<List<FlightData>>, flightDataDao: FlightDataDao) {
-    GlobalScope.launch {
-        flightList.value = flightDataDao.readAll()
-    }
-}
-
-@OptIn(DelicateCoroutinesApi::class)
 fun singleIntoMut(flightData: MutableState<FlightData>, flightDataDao: FlightDataDao, id: String) {
     GlobalScope.launch {
         flightData.value = flightDataDao.readSingle(id)

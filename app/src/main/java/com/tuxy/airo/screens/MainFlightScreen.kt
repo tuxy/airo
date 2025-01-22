@@ -33,8 +33,6 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -42,6 +40,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.tuxy.airo.R
@@ -50,20 +49,15 @@ import com.tuxy.airo.composables.BoldDepartureAndDestinationText
 import com.tuxy.airo.composables.LargeTopSmallBottom
 import com.tuxy.airo.data.FlightData
 import com.tuxy.airo.data.FlightDataDao
-import com.tuxy.airo.data.dataIntoMut
+import com.tuxy.airo.viewmodel.MainFlightViewModel
 
 @Composable
 fun MainFlightView(
     navController: NavController,
     flightDataDao: FlightDataDao
 ) {
-    val flightData = remember { mutableStateOf(emptyList<FlightData>()) }
-    val loaded = remember { mutableStateOf(false) } // has db has been loaded into flightData
-
-    if(!loaded.value) {
-        dataIntoMut(flightData, flightDataDao)
-        loaded.value = true
-    }
+    val viewModel = viewModel<MainFlightViewModel>()
+    viewModel.loadData(flightDataDao)
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),
@@ -90,7 +84,7 @@ fun MainFlightView(
                     .wrapContentHeight()
                     .heightIn(max = 2000.dp)
             ) {
-                items(flightData.value) { flight ->
+                items(viewModel.flightData) { flight ->
                     FlightCard(navController, flight)
                 }
             }

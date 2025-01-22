@@ -11,12 +11,11 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import coil3.compose.AsyncImage
 import com.tuxy.airo.composables.LargeTopSmallBottom
@@ -24,7 +23,7 @@ import com.tuxy.airo.composables.RouteBar
 import com.tuxy.airo.composables.SmallAppBar
 import com.tuxy.airo.data.FlightData
 import com.tuxy.airo.data.FlightDataDao
-import com.tuxy.airo.data.singleIntoMut
+import com.tuxy.airo.viewmodel.StandardDataViewModel
 
 @Composable
 fun TicketInformationView(
@@ -32,20 +31,15 @@ fun TicketInformationView(
     id: String,
     flightDataDao: FlightDataDao
 ) {
-    val flightData = remember { mutableStateOf(FlightData()) }
-    val loaded = remember { mutableStateOf(false) }
-
-    if(!loaded.value) {
-        singleIntoMut(flightData, flightDataDao, id)
-        loaded.value = true
-    }
+    val viewModelFactory = StandardDataViewModel.Factory(flightDataDao, id)
+    val viewModel: StandardDataViewModel = viewModel(factory = viewModelFactory)
 
     Scaffold(
         modifier = Modifier.fillMaxSize()
     ) { innerPadding ->
         Column( modifier = Modifier.padding(innerPadding) ) {
-            SmallAppBar(flightData.value.callSign, navController)
-            MainTicketView(flightData.value)
+            SmallAppBar(viewModel.flightData.value.callSign, navController)
+            MainTicketView(viewModel.flightData.value)
         }
     }
 }

@@ -2,7 +2,6 @@ package com.tuxy.airo.data
 
 import android.util.Log
 import android.widget.Toast
-import androidx.compose.runtime.State
 import com.beust.klaxon.KlaxonException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -20,7 +19,7 @@ suspend fun getData(
     data: FlightDataDao,
     date: String,
     toasts: Array<Toast>,
-    apiKey: State<String>
+    apiKey: String
 ) {
     withContext(Dispatchers.IO) {
         val client = OkHttpClient()
@@ -35,10 +34,10 @@ suspend fun getData(
         val request = Request.Builder()
             .url(url)
             .header("Accept", "application/json")
-            .header("x-magicapi-key", apiKey.value)
+            .header("x-magicapi-key", apiKey)
             .build()
 
-        if(apiKey.value == "") {
+        if(apiKey == "") {
             toasts[0].show() // API_KEY toast
             return@withContext
         }
@@ -128,11 +127,11 @@ fun doProjection(latitude: Double, longitude: Double): Pair<Double, Double>? {
         return null
     }
     val num = longitude * 0.017453292519943295 // 2*pi / 360
-    val X = 6378137.0 * num
+    val x = 6378137.0 * num
     val a = latitude * 0.017453292519943295
-    val Y = 3189068.5 * ln((1.0 + sin(a)) / (1.0 - sin(a)))
+    val y = 3189068.5 * ln((1.0 + sin(a)) / (1.0 - sin(a)))
 
-    return Pair(X, Y)
+    return Pair(x, y)
 }
 
 fun normalize(t: Double, min: Double, max: Double): Double {

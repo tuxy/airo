@@ -1,7 +1,6 @@
 package com.tuxy.airo.screens
 
-import android.net.Uri
-import androidx.browser.customtabs.CustomTabsIntent
+import android.content.Context
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
@@ -17,18 +16,17 @@ import androidx.compose.material3.ListItem
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import coil3.compose.AsyncImage
 import com.tuxy.airo.composables.SmallAppBar
 import com.tuxy.airo.data.FlightData
 import com.tuxy.airo.data.FlightDataDao
-import com.tuxy.airo.data.singleIntoMut
+import com.tuxy.airo.viewmodel.StandardDataViewModel
 
 @Composable
 fun AircraftInformationView(
@@ -36,15 +34,9 @@ fun AircraftInformationView(
     id: String,
     flightDataDao: FlightDataDao
 ) {
-    val flightData = remember { mutableStateOf(FlightData()) }
-    val loaded = remember { mutableStateOf(false) }
-
-    if(!loaded.value) {
-        singleIntoMut(flightData, flightDataDao, id)
-        loaded.value = true
-    }
-
     val context = LocalContext.current
+    val viewModelFactory = StandardDataViewModel.Factory(flightDataDao, id)
+    val viewModel: StandardDataViewModel = viewModel(factory = viewModelFactory)
 
     Scaffold(
         modifier = Modifier.fillMaxSize()
@@ -52,24 +44,19 @@ fun AircraftInformationView(
         Column( modifier = Modifier.padding(innerPadding) ) {
             SmallAppBar("Aircraft Information", navController)
             ListItem(
-                headlineContent = { Text(flightData.value.aircraftName) },
-                supportingContent = { Text(flightData.value.airline) }
+                headlineContent = { Text(viewModel.flightData.value.aircraftName) },
+                supportingContent = { Text(viewModel.flightData.value.airline) }
             )
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
                     .background(Color.Gray)
                     .clickable {
-                        val url = flightData.value.authorUri
-                        val intent = CustomTabsIntent.Builder()
-                            .setShowTitle(true) //
-                            .setUrlBarHidingEnabled(true)
-                            .build()
-                        intent.launchUrl(context, Uri.parse(url))
+                        viewModel.openWebpage(context, viewModel.flightData.value.authorUri)
                     }
             ) {
                 AsyncImage(
-                    model = flightData.value.aircraftUri,
+                    model = viewModel.flightData.value.aircraftUri,
                     contentDescription = "Aircraft",
                     contentScale = ContentScale.Crop,
                     modifier = Modifier
@@ -77,25 +64,22 @@ fun AircraftInformationView(
                         .aspectRatio(1280f/847f)
                 )
             }
-            AircraftListView(flightData.value)
+            AircraftListView(viewModel.flightData.value, context, viewModel)
         }
     }
 }
 
 @Composable
-fun AircraftListView(flightData: FlightData) {
-    val context = LocalContext.current
-
+fun AircraftListView(
+    flightData: FlightData,
+    context: Context,
+    viewModel: StandardDataViewModel
+) {
     Column {
         ListItem(
             modifier = Modifier
                 .clickable {
-                    val url = "https://aerolopa.com/${flightData.callSign}"
-                    val intent = CustomTabsIntent.Builder()
-                        .setShowTitle(true) //
-                        .setUrlBarHidingEnabled(true)
-                        .build()
-                    intent.launchUrl(context, Uri.parse(url))
+                    viewModel.openWebpage(context, "https://aerolopa.com/${flightData.callSign}")
                 },
             headlineContent = { Text("Seat Maps") },
             trailingContent = { Icon(Icons.Filled.Info, "Information") }
@@ -103,12 +87,7 @@ fun AircraftListView(flightData: FlightData) {
         ListItem(
             modifier = Modifier
                 .clickable {
-                    val url = flightData.authorUri
-                    val intent = CustomTabsIntent.Builder()
-                        .setShowTitle(true) //
-                        .setUrlBarHidingEnabled(true)
-                        .build()
-                    intent.launchUrl(context, Uri.parse(url))
+                    viewModel.openWebpage(context, flightData.authorUri)
                 },
             headlineContent = { Text("Author") },
             trailingContent = { Icon(Icons.Filled.Info, "Author") }

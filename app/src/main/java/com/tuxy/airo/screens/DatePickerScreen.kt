@@ -1,6 +1,5 @@
 package com.tuxy.airo.screens
 
-import android.widget.Toast
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -16,16 +15,14 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.tuxy.airo.composables.SmallAppBar
 import com.tuxy.airo.data.FlightDataDao
-import com.tuxy.airo.data.UserPreferences
 import com.tuxy.airo.data.getData
+import com.tuxy.airo.viewmodel.DateViewModel
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
@@ -41,29 +38,24 @@ fun DatePickerView(
     flightNumber: String,
     data: FlightDataDao
 ) {
-    val loading = remember { mutableStateOf(false) }
     val datePickerState = rememberDatePickerState(initialDisplayMode = DisplayMode.Picker)
     val timeMillis = maybe(datePickerState.selectedDateMillis)
 
-    val dataStore = UserPreferences(LocalContext.current)
-    val retrievedKey = dataStore.getApiKey.collectAsState(initial = "")
+    val viewModelFactory = DateViewModel.Factory(LocalContext.current)
+    val viewModel: DateViewModel = viewModel(factory = viewModelFactory)
 
-    val toasts = arrayOf(
-        Toast.makeText(LocalContext.current, "API Key not found", Toast.LENGTH_SHORT),
-        Toast.makeText(LocalContext.current, "Network error / Invalid API Key", Toast.LENGTH_SHORT),
-        Toast.makeText(LocalContext.current, "Could not find flight", Toast.LENGTH_SHORT)
-    )
+    viewModel.GetKey() // Get key from data store
 
     Scaffold(
         topBar = { SmallAppBar("", navController) },
         floatingActionButton = {
             ExtendedFloatingActionButton(
                 onClick = {
-                    loading.value = true
+                    viewModel.loading = true
                     GlobalScope.launch(Dispatchers.Main) {
-                        getData(flightNumber, data, getDateAsString(timeMillis), toasts, retrievedKey)
+                        getData(flightNumber, data, getDateAsString(timeMillis), viewModel.toasts, viewModel.key)
                         joinAll()
-                        loading.value = false
+                        viewModel.loading = false
                         navController.navigateUp()
                         navController.navigateUp()
                     }
@@ -76,7 +68,7 @@ fun DatePickerView(
         Column(
             modifier = Modifier.padding(innerPadding)
         ) {
-            if(loading.value) {
+            if(viewModel.loading) {
                 LinearProgressIndicator(
                     modifier = Modifier.fillMaxWidth()
                 )
