@@ -43,6 +43,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
+import coil3.compose.AsyncImage
 import com.tuxy.airo.R
 import com.tuxy.airo.Screen
 import com.tuxy.airo.composables.BoldDepartureAndDestinationText
@@ -153,14 +154,22 @@ fun TicketInformationCard(flight: FlightData) { // TODO How to get ticket inform
         LargeTopSmallBottom("Terminal", flight.ticketTerminal)
         LargeTopSmallBottom("Gate", flight.ticketGate)
         Spacer(modifier = Modifier.width(16.dp))
-        Image(
-            painter = painterResource(R.drawable.ic_launcher_background),
-            contentDescription = "avatar",
+        AsyncImage(
+            model = "https://raw.githubusercontent.com/Jxck-S/airline-logos/main/flightaware_logos/SIA.png",
+            contentDescription = null,
             contentScale = ContentScale.Crop,
             modifier = Modifier
                 .size(32.dp)
                 .clip(CircleShape)
         )
+//        Image(
+//            painter = painterResource(R.drawable.ic_launcher_background),
+//            contentDescription = "avatar",
+//            contentScale = ContentScale.Crop,
+//            modifier = Modifier
+//                .size(32.dp)
+//                .clip(CircleShape)
+//        )
     }
 }
 

@@ -39,10 +39,10 @@ fun AircraftInformationView(
     val viewModel: StandardDataViewModel = viewModel(factory = viewModelFactory)
 
     Scaffold(
-        modifier = Modifier.fillMaxSize()
+        modifier = Modifier.fillMaxSize(),
+        topBar = { SmallAppBar("Aircraft Information", navController) }
     ) { innerPadding ->
         Column( modifier = Modifier.padding(innerPadding) ) {
-            SmallAppBar("Aircraft Information", navController)
             ListItem(
                 headlineContent = { Text(viewModel.flightData.value.aircraftName) },
                 supportingContent = { Text(viewModel.flightData.value.airline) }
