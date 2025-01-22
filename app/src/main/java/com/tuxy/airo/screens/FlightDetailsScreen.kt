@@ -61,13 +61,13 @@ import java.time.Duration
 import java.time.LocalDateTime
 import kotlin.math.absoluteValue
 
+@OptIn(DelicateCoroutinesApi::class)
 @Composable
 fun FlightDetailsView(
     navController: NavController,
     id: String,
     flightDataDao: FlightDataDao
 ) {
-
     val viewModelFactory = DetailsViewModel.Factory(LocalContext.current, flightDataDao, id)
     val viewModel: DetailsViewModel = viewModel(factory = viewModelFactory)
 
@@ -133,7 +133,7 @@ fun FlightDetailsView(
                         state = viewModel.mapState
                     )
                 }
-                FlightStatusCard()
+                FlightStatusCard(viewModel)
                 FlightInformationInteract(navController, viewModel.flightData.value)
             }
         }
@@ -141,7 +141,7 @@ fun FlightDetailsView(
 }
 
 @Composable
-fun FlightStatusCard() {
+fun FlightStatusCard(viewModel: DetailsViewModel) {
     Card(
         modifier = Modifier
             .padding(16.dp)
@@ -163,7 +163,7 @@ fun FlightStatusCard() {
                     fontSize = 12.sp
                 )
                 Text(
-                    "Ends at 12:50",
+                    "Ends at ${viewModel.getEndTime()}",
                     fontWeight = FontWeight.Normal,
                     fontSize = 12.sp
                 )
@@ -175,12 +175,12 @@ fun FlightStatusCard() {
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Text(
-                    "Check-in",
+                    viewModel.getStatus(),
                     fontWeight = FontWeight.W500,
                     fontSize = 16.sp
                 )
                 Text(
-                    "4h 15m",
+                    "in ${viewModel.getDuration()}",
                     fontWeight = FontWeight.W500,
                     fontSize = 16.sp
                 )

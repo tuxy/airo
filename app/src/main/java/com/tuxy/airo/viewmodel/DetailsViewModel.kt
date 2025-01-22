@@ -20,6 +20,10 @@ import ovh.plrapps.mapcompose.api.addPath
 import ovh.plrapps.mapcompose.api.scrollTo
 import ovh.plrapps.mapcompose.core.TileStreamProvider
 import ovh.plrapps.mapcompose.ui.state.MapState
+import java.time.Duration
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
+import kotlin.math.floor
 import kotlin.math.pow
 import kotlin.math.sqrt
 
@@ -33,6 +37,57 @@ class DetailsViewModel(context: Context, flightDataDao: FlightDataDao, id: Strin
 
     init {
         singleIntoMut(flightData, flightDataDao, id) // On initialisation, pass db data into flightData
+    }
+
+    fun getDuration(): String {
+        val duration = Duration.between(LocalDateTime.now(), flightData.value.departDate)
+        val seconds = duration.toMillis().toFloat() / 1000.0F
+
+        var days = mutableFloatStateOf(0.0F)
+        var hours = mutableFloatStateOf(0.0F)
+        var minutes = mutableFloatStateOf(0.0F)
+
+        val status = getStatus()
+        val offset = mutableFloatStateOf(0.0F)
+        if(status == "Check-in") {
+            offset.value = 0.041667F
+        }
+
+        days.value = floor((seconds / 86400) - offset.value)
+        hours.value = floor((seconds - days.value * 86400.0F) / 3600.0F)
+        minutes.value = floor((seconds - days.value * 86400.0F - hours.value * 3600.0F)/60.0F)
+
+        if(days.value >= 1.0F) {
+            return "${days.value}d ${hours.value}h"
+        } else if(hours.value >= 1.0F) {
+            return "${hours.value}h ${minutes.value}m"
+        } else {
+            return "${minutes.value}m"
+        }
+    }
+
+    fun getEndTime(): String {
+        val status = getStatus()
+        val time = flightData.value.departDate
+
+        val correctedTime = if(status == "Check-in") {
+            time.minusHours(1)
+        } else {
+            time
+        }
+
+        return correctedTime.format(DateTimeFormatter.ofPattern("HH:mm"))
+    }
+
+    fun getStatus(): String {
+        val duration = Duration.between(LocalDateTime.now(), flightData.value.departDate)
+        val seconds = duration.seconds
+
+        return if(seconds >= 3600) {
+            "Check-in"
+        } else {
+            "Flying"
+        }
     }
 
     private val tileStreamProvider = TileStreamProvider { row, col, zoomLvl -> // Local map tiles for full offline usage
