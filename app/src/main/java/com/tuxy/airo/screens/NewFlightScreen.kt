@@ -21,11 +21,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
+import com.tuxy.airo.R
 import com.tuxy.airo.Screen
 import com.tuxy.airo.composables.SmallAppBar
 
@@ -68,7 +70,7 @@ fun FlightSearch(navController: NavController) {
             .fillMaxWidth(),
         shape = RoundedCornerShape(15.dp),
         value = value,
-        label = { Text("Flight number") },
+        label = { Text(stringResource(R.string.flight_number)) },
         onValueChange = { value = it },
         singleLine = true,
         keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),

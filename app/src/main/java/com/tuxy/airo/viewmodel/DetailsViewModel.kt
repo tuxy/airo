@@ -8,6 +8,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
+import com.tuxy.airo.R
 import com.tuxy.airo.data.FlightData
 import com.tuxy.airo.data.FlightDataDao
 import com.tuxy.airo.data.singleIntoMut
@@ -43,7 +44,7 @@ class DetailsViewModel(context: Context, flightDataDao: FlightDataDao, id: Strin
         ) // On initialisation, pass db data into flightData
     }
 
-    fun getDuration(): String {
+    fun getDuration(context: Context): String {
         val duration = Duration.between(LocalDateTime.now(), flightData.value.departDate)
 
         val offset = mutableFloatStateOf(10800F)
@@ -53,8 +54,8 @@ class DetailsViewModel(context: Context, flightDataDao: FlightDataDao, id: Strin
         val minutes = mutableFloatStateOf(0.0F)
 
 
-        val status = getStatus()
-        if (status == "Check-in") {
+        val status = getStatus(context)
+        if (status == context.resources.getString(R.string.check_in)) {
             if (duration <= Duration.ofSeconds(10800) && duration >= Duration.ofSeconds(3600)) {
                 return ""
             }
@@ -73,35 +74,35 @@ class DetailsViewModel(context: Context, flightDataDao: FlightDataDao, id: Strin
             floor((seconds - days.floatValue * 86400.0F - hours.floatValue * 3600.0F) / 60.0F)
 
         return if (days.floatValue >= 1.0F) {
-            "in ${days.floatValue.toInt()}d ${hours.floatValue.toInt()}h"
+            "${context.resources.getString(R.string.ins)} ${days.floatValue.toInt()}d ${hours.floatValue.toInt()}h"
         } else if (hours.floatValue >= 1.0F) {
-            "in ${hours.floatValue.toInt()}h ${minutes.floatValue.toInt()}m"
+            "${context.resources.getString(R.string.ins)} ${hours.floatValue.toInt()}h ${minutes.floatValue.toInt()}m"
         } else {
-            "in ${minutes.floatValue.toInt()}m"
+            "${context.resources.getString(R.string.ins)} ${minutes.floatValue.toInt()}m"
         }
     }
 
-    fun getEndTime(): String {
-        val status = getStatus()
+    fun getEndTime(context: Context): String {
+        val status = getStatus(context)
         val time = flightData.value.departDate
 
-        if (status == "Check-in") {
+        if (status == context.getString(R.string.check_in)) {
             val correctedTime = time.minusHours(1)
 
-            return "Ends at ${correctedTime.format(DateTimeFormatter.ofPattern("HH:mm"))}"
+            return "${context.resources.getString(R.string.ends_at)} ${correctedTime.format(DateTimeFormatter.ofPattern("HH:mm"))}"
         }
 
         return ""
     }
 
-    fun getStatus(): String {
+    fun getStatus(context: Context): String {
         val duration = Duration.between(LocalDateTime.now(), flightData.value.departDate)
         val seconds = duration.seconds
 
         if (seconds >= 3600) {
-            return "Check-in"
+            return context.resources.getString(R.string.check_in)
         } else {
-            return "Flying"
+            return context.resources.getString(R.string.flying)
         }
     }
 

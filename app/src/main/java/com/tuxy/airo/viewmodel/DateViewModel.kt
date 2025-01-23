@@ -9,15 +9,16 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
+import com.tuxy.airo.R
 import com.tuxy.airo.data.UserPreferences
 
 @Suppress("UNCHECKED_CAST")
 class DateViewModel(context: Context) : ViewModel() {
     private val dataStore = UserPreferences(context)
     val toasts = arrayOf(
-        Toast.makeText(context, "API Key not found", Toast.LENGTH_SHORT),
-        Toast.makeText(context, "Network error / Invalid API Key", Toast.LENGTH_SHORT),
-        Toast.makeText(context, "Could not find flight", Toast.LENGTH_SHORT)
+        Toast.makeText(context, context.resources.getString(R.string.no_api), Toast.LENGTH_SHORT),
+        Toast.makeText(context, context.resources.getString(R.string.invalid_api_network), Toast.LENGTH_SHORT),
+        Toast.makeText(context, context.resources.getString(R.string.no_flight), Toast.LENGTH_SHORT)
     )
     var loading by mutableStateOf(false)
     var key by mutableStateOf("")

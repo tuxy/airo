@@ -18,12 +18,14 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import com.tuxy.airo.R
 import com.tuxy.airo.data.FlightData
 
 // Used in Airport, Aircraft, Ticket and Flight information screens
@@ -38,7 +40,7 @@ fun SmallAppBar(text: String, navController: NavController) {
             }) {
                 Icon(
                     imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                    contentDescription = "Back"
+                    contentDescription = stringResource(R.string.back)
                 )
             }
         }
@@ -55,7 +57,7 @@ fun LargeAppBar(text: String, navController: NavController) {
             IconButton(onClick = {
                 navController.popBackStack()
             }) {
-                Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back")
+                Icon(Icons.AutoMirrored.Filled.ArrowBack, stringResource(R.string.back))
             }
         }
     )
@@ -73,7 +75,7 @@ fun RouteBar(flightData: FlightData) {
         DepartureAndDestinationText(flightData.from, flightData.fromName)
         Icon(
             imageVector = Icons.AutoMirrored.Filled.ArrowForward,
-            contentDescription = "To"
+            contentDescription = stringResource(R.string.to)
         )
         DepartureAndDestinationText(flightData.to, flightData.toName)
     }
@@ -131,10 +133,4 @@ fun BoldDepartureAndDestinationText(
             fontSize = 24.sp
         )
     }
-}
-
-@Composable
-@Preview(showBackground = true)
-fun Prev() {
-    BoldDepartureAndDestinationText("ATL", "Atlanta", Alignment.Start)
 }

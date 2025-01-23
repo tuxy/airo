@@ -17,8 +17,10 @@ import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import com.tuxy.airo.R
 import com.tuxy.airo.composables.SmallAppBar
 import com.tuxy.airo.data.FlightDataDao
 import com.tuxy.airo.data.getData
@@ -66,8 +68,8 @@ fun DatePickerView(
                         navController.navigateUp()
                     }
                 },
-                icon = { Icon(Icons.Filled.Check, "Add flight") },
-                text = { Text(text = "Add Flight") },
+                icon = { Icon(Icons.Filled.Check, stringResource(R.string.empty)) },
+                text = { Text(stringResource(R.string.add_flight)) },
             )
         }
     ) { innerPadding ->

@@ -37,11 +37,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import com.tuxy.airo.R
 import com.tuxy.airo.Screen
 import com.tuxy.airo.composables.RouteBar
 import com.tuxy.airo.data.FlightData
@@ -135,6 +137,8 @@ fun FlightDetailsView(
 @OptIn(DelicateCoroutinesApi::class)
 @Composable
 fun FlightStatusCard(viewModel: DetailsViewModel) {
+    val context = LocalContext.current
+
     Card(
         modifier = Modifier
             .padding(16.dp)
@@ -151,12 +155,12 @@ fun FlightStatusCard(viewModel: DetailsViewModel) {
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Text(
-                    "Now",
+                    stringResource(R.string.now),
                     fontWeight = FontWeight.Normal,
                     fontSize = 12.sp
                 )
                 Text(
-                    viewModel.getEndTime(),
+                    viewModel.getEndTime(context),
                     fontWeight = FontWeight.Normal,
                     fontSize = 12.sp
                 )
@@ -168,12 +172,12 @@ fun FlightStatusCard(viewModel: DetailsViewModel) {
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Text(
-                    viewModel.getStatus(),
+                    viewModel.getStatus(context),
                     fontWeight = FontWeight.W500,
                     fontSize = 16.sp
                 )
                 Text(
-                    viewModel.getDuration(),
+                    viewModel.getDuration(context),
                     fontWeight = FontWeight.W500,
                     fontSize = 16.sp
                 )
@@ -223,7 +227,7 @@ fun SmallAppBarWithDelete(
             }) {
                 Icon(
                     imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                    contentDescription = "Back"
+                    contentDescription = stringResource(R.string.back)
                 )
             }
         },
@@ -233,7 +237,7 @@ fun SmallAppBarWithDelete(
             }) {
                 Icon(
                     imageVector = Icons.Filled.Delete,
-                    contentDescription = "Back"
+                    contentDescription = stringResource(R.string.back)
                 )
             }
         }
@@ -245,12 +249,12 @@ fun FlightInformationInteract(navController: NavController, flightData: FlightDa
     Column {
         ListItem(
             modifier = Modifier.clickable(onClick = { navController.navigate("${Screen.TicketInformationScreen.route}/${flightData.id}") }),
-            headlineContent = { Text("Ticket") },
+            headlineContent = { Text(stringResource(R.string.ticket)) },
             supportingContent = { Text(flightData.ticketSeat) }
         )
         ListItem(
             modifier = Modifier.clickable(onClick = { navController.navigate("${Screen.AircraftInformationScreen.route}/${flightData.id}") }),
-            headlineContent = { Text("Aircraft") },
+            headlineContent = { Text(stringResource(R.string.aircraft)) },
             supportingContent = { Text(flightData.aircraftName) }
         )
 //        No API or webpage really exists with good coverage for terminal maps. Please send me links to good ones
@@ -289,7 +293,7 @@ fun DeleteDialog(
             ) {
                 Text(
                     modifier = Modifier.padding(8.dp),
-                    text = "Delete flight? This CANNOT be undone.",
+                    text = stringResource(R.string.delete_dialog),
                 )
                 Spacer(modifier = Modifier.height(24.dp))
                 Row {
@@ -298,7 +302,7 @@ fun DeleteDialog(
                             openDialog.value = false
                         },
                     ) {
-                        Text("Cancel")
+                        Text(stringResource(R.string.cancel))
                     }
                     TextButton(
                         onClick = {
@@ -309,7 +313,7 @@ fun DeleteDialog(
                             navController.navigateUp()
                         },
                     ) {
-                        Text("Delete")
+                        Text(stringResource(R.string.delete))
                     }
                 }
             }

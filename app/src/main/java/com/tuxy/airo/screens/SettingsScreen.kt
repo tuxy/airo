@@ -21,12 +21,14 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
+import com.tuxy.airo.R
 import com.tuxy.airo.composables.LargeAppBar
 import com.tuxy.airo.viewmodel.SettingsViewModel
 
@@ -39,15 +41,15 @@ fun SettingsView( // TODO Implement notification permissions
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),
-        topBar = { LargeAppBar("Settings", navController) },
+        topBar = { LargeAppBar(stringResource(R.string.settings), navController) },
         floatingActionButton = {
             ExtendedFloatingActionButton(
                 onClick = {
                     viewModel.saveKey(viewModel.currentKey)
                     navController.navigateUp()
                 },
-                icon = { Icon(Icons.Filled.Check, "Apply settings") },
-                text = { Text(text = "Apply settings") },
+                icon = { Icon(Icons.Filled.Check, stringResource(R.string.apply_settings)) },
+                text = { Text(stringResource(R.string.apply_settings)) },
             )
         }
     ) { innerPadding ->
@@ -61,7 +63,7 @@ fun SettingsView( // TODO Implement notification permissions
                     .padding(horizontal = 16.dp),
                 shape = RoundedCornerShape(15.dp),
                 value = viewModel.currentKey,
-                label = { Text("API Key") },
+                label = { Text(stringResource(R.string.api_key)) },
                 onValueChange = { viewModel.currentKey = it },
                 singleLine = true,
             )

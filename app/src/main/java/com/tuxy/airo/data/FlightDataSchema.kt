@@ -8,7 +8,7 @@ private val klaxon = Klaxon()
 class Root(elements: Collection<RootElement>) : ArrayList<RootElement>(elements) {
     companion object {
         fun fromJson(json: String) = Root(
-            klaxon.parseArray<RootElement>(json)!! // TODO handle error
+            klaxon.parseArray<RootElement>(json)!!
         )
     }
 }
