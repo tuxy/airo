@@ -22,7 +22,7 @@
     <string name="to">To</string>
     <string name="flight">Flight</string>
     <string name="terminal">Terminal</string>
-    <string name="gate">gate</string>
+    <string name="gate">Gate</string>
     <string name="my_flights">My flights</string>
     <string name="settings">Settings</string>
     <string name="flight_number">Flight number</string>
@@ -34,4 +34,9 @@
     <string name="premium_class">Premium Economy</string>
     <string name="economy_class">Economy</string>
     <string name="other">Other/Unknown</string>
+    <string name="more">More</string>
+    <string name="add_ticket">Add ticket</string>
+    <string name="class_s">Class</string>
+    <string name="passenger_name">Passenger name</string>
+    <string name="switch_ticket">Switch ticket types</string>
 </resources>
