@@ -38,12 +38,14 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import coil3.compose.AsyncImage
+import com.tuxy.airo.R
 import com.tuxy.airo.Screen
 import com.tuxy.airo.composables.BoldDepartureAndDestinationText
 import com.tuxy.airo.composables.LargeTopSmallBottom
@@ -74,8 +76,8 @@ fun MainFlightView(
                 onClick = {
                     navController.navigate(Screen.NewFlightScreen.route)
                 },
-                icon = { Icon(Icons.Filled.Add, "Add flight") },
-                text = { Text(text = "Add Flight") },
+                icon = { Icon(Icons.Filled.Add, stringResource(R.string.add_flight)) },
+                text = { Text(stringResource(R.string.add_flight)) },
             )
         }
     ) { innerPadding ->
@@ -138,7 +140,7 @@ fun FlightCard(
                     )
                     Icon(
                         imageVector = Icons.AutoMirrored.Filled.ArrowForward,
-                        contentDescription = "To"
+                        contentDescription = stringResource(R.string.to)
                     )
                     BoldDepartureAndDestinationText(flightData.to, flightData.toName, Alignment.End)
                 }
@@ -181,9 +183,9 @@ fun TicketInformationCard(flight: FlightData) {
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
-        LargeTopSmallBottom("Flight", flight.callSign) // TODO
-        LargeTopSmallBottom("Terminal", flight.ticketTerminal)
-        LargeTopSmallBottom("Gate", flight.ticketGate)
+        LargeTopSmallBottom(stringResource(R.string.flight), flight.callSign)
+        LargeTopSmallBottom(stringResource(R.string.terminal), flight.ticketTerminal)
+        LargeTopSmallBottom(stringResource(R.string.gate), flight.ticketGate)
         Spacer(modifier = Modifier.width(16.dp))
         AsyncImage(
             model = "https://raw.githubusercontent.com/Jxck-S/airline-logos/main/radarbox_logos/${flight.airlineIcao}.png",
@@ -200,7 +202,7 @@ fun TicketInformationCard(flight: FlightData) {
 @Composable
 fun MainTopBar(navController: NavController) {
     LargeTopAppBar(
-        title = { Text("My Flights") },
+        title = { Text(stringResource(R.string.my_flights)) },
         colors = TopAppBarDefaults.topAppBarColors(),
         actions = {
             IconButton(onClick = {
@@ -208,7 +210,7 @@ fun MainTopBar(navController: NavController) {
             }) {
                 Icon(
                     imageVector = Icons.Filled.Settings,
-                    contentDescription = "Settings"
+                    contentDescription = stringResource(R.string.settings)
                 )
             }
         },

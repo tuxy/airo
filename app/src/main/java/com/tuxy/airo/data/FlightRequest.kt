@@ -27,7 +27,6 @@ suspend fun getData(
 
         val webUrl =
             "https://api.magicapi.dev/api/v1/aedbx/aerodatabox/flights/number/${flightNumber}/${date}"
-        // TODO Implement DataStore for apikey + other settings
 
         val url = webUrl.toHttpUrl().newBuilder() // Adds parameter for aircraft image
             .addQueryParameter("withAircraftImage", "True")
@@ -100,7 +99,6 @@ fun parseData(jsonRoot: Root): FlightData {
     )
 
     return FlightData(
-        // TODO Add flight number
         id = 0, // Auto-assigned id
         callSign = jsonRoot[0].number,
         airline = jsonRoot[0].airline.name,

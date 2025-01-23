@@ -14,10 +14,12 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import coil3.compose.AsyncImage
+import com.tuxy.airo.R
 import com.tuxy.airo.composables.LargeTopSmallBottom
 import com.tuxy.airo.composables.RouteBar
 import com.tuxy.airo.composables.SmallAppBar
@@ -76,9 +78,9 @@ fun MainTicketView(flightData: FlightData) {
                 .padding(vertical = 16.dp),
             horizontalArrangement = Arrangement.SpaceEvenly,
         ) {
-            LargeTopSmallBottom("Terminal", flightData.ticketTerminal)
-            LargeTopSmallBottom("Gate", flightData.ticketGate)
-            LargeTopSmallBottom("Seat", flightData.ticketSeat)
+            LargeTopSmallBottom(stringResource(R.string.terminal), flightData.ticketTerminal)
+            LargeTopSmallBottom(stringResource(R.string.gate), flightData.ticketGate)
+            LargeTopSmallBottom(stringResource(R.string.seat), flightData.ticketSeat)
         }
     }
 }

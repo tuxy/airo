@@ -20,9 +20,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import coil3.compose.AsyncImage
+import com.tuxy.airo.R
 import com.tuxy.airo.composables.SmallAppBar
 import com.tuxy.airo.data.FlightData
 import com.tuxy.airo.data.FlightDataDao
@@ -40,7 +42,7 @@ fun AircraftInformationView(
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),
-        topBar = { SmallAppBar("Aircraft Information", navController) }
+        topBar = { SmallAppBar(stringResource(R.string.aircraft_information), navController) }
     ) { innerPadding ->
         Column(modifier = Modifier.padding(innerPadding)) {
             ListItem(
@@ -57,7 +59,7 @@ fun AircraftInformationView(
             ) {
                 AsyncImage(
                     model = viewModel.flightData.value.aircraftUri,
-                    contentDescription = "Aircraft",
+                    contentDescription = stringResource(R.string.aircraft),
                     contentScale = ContentScale.Crop,
                     modifier = Modifier
                         .fillMaxWidth()
@@ -81,16 +83,16 @@ fun AircraftListView(
                 .clickable {
                     viewModel.openWebpage(context, "https://aerolopa.com/${flightData.callSign}")
                 },
-            headlineContent = { Text("Seat Maps") },
-            trailingContent = { Icon(Icons.Filled.Info, "Information") }
+            headlineContent = { Text(stringResource(R.string.seat_maps)) },
+            trailingContent = { Icon(Icons.Filled.Info, "") }
         )
         ListItem(
             modifier = Modifier
                 .clickable {
                     viewModel.openWebpage(context, flightData.authorUri)
                 },
-            headlineContent = { Text("Author") },
-            trailingContent = { Icon(Icons.Filled.Info, "Author") }
+            headlineContent = { Text(stringResource(R.string.author)) },
+            trailingContent = { Icon(Icons.Filled.Info, stringResource(R.string.empty)) }
         )
     }
 }
