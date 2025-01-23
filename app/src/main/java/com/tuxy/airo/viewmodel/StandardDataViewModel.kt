@@ -11,11 +11,15 @@ import com.tuxy.airo.data.FlightDataDao
 import com.tuxy.airo.data.singleIntoMut
 
 @Suppress("UNCHECKED_CAST")
-class StandardDataViewModel(flightDataDao: FlightDataDao, id: String): ViewModel() {
+class StandardDataViewModel(flightDataDao: FlightDataDao, id: String) : ViewModel() {
     var flightData = mutableStateOf(FlightData())
 
     init {
-        singleIntoMut(flightData, flightDataDao, id) // On initialisation, pass db data into flightData
+        singleIntoMut(
+            flightData,
+            flightDataDao,
+            id
+        ) // On initialisation, pass db data into flightData
     }
 
     fun openWebpage(context: Context, url: String) {

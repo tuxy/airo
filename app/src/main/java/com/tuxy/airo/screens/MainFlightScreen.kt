@@ -1,9 +1,5 @@
 package com.tuxy.airo.screens
 
-import android.util.Log
-import androidx.compose.animation.core.FastOutSlowInEasing
-import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -36,6 +32,8 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -65,8 +63,8 @@ fun MainFlightView(
     navController: NavController,
     flightDataDao: FlightDataDao
 ) {
-    val viewModel = viewModel<MainFlightViewModel>()
-    viewModel.loadData(flightDataDao)
+    val viewModelFactory = MainFlightViewModel.Factory(flightDataDao)
+    val viewModel: MainFlightViewModel = viewModel(factory = viewModelFactory)
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),
@@ -93,8 +91,8 @@ fun MainFlightView(
                     .wrapContentHeight()
                     .heightIn(max = 2000.dp)
             ) {
-                items(viewModel.flightData) { flight ->
-                    FlightCard(navController, flight, viewModel)
+                items(viewModel.flightData.value) { flight ->
+                    FlightCard(navController, flight)
                 }
             }
         }
@@ -105,14 +103,9 @@ fun MainFlightView(
 @Composable
 fun FlightCard(
     navController: NavController,
-    flightData: FlightData,
-    viewModel: MainFlightViewModel
+    flightData: FlightData
 ) {
-    val progressAnimation = animateFloatAsState(
-        targetValue = viewModel.progress.floatValue,
-        animationSpec = tween(durationMillis = 350, easing = FastOutSlowInEasing),
-        label = "",
-    )
+    val progress = remember { mutableFloatStateOf(0.0F) }
 
     Column(
         modifier = Modifier
@@ -138,7 +131,11 @@ fun FlightCard(
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.Bottom
                 ) {
-                    BoldDepartureAndDestinationText(flightData.from, flightData.fromName, Alignment.Start)
+                    BoldDepartureAndDestinationText(
+                        flightData.from,
+                        flightData.fromName,
+                        Alignment.Start
+                    )
                     Icon(
                         imageVector = Icons.AutoMirrored.Filled.ArrowForward,
                         contentDescription = "To"
@@ -149,21 +146,22 @@ fun FlightCard(
                 LinearProgressIndicator(
                     progress = {
                         GlobalScope.launch {
-                            delay(500)
-                            val now = Duration.between(LocalDateTime.now(), flightData.departDate).toMillis()
+                            val now = Duration.between(LocalDateTime.now(), flightData.departDate)
+                                .toMillis()
 
-                            if(now.toFloat() <= 0) {
-                                viewModel.progress.floatValue = 0.0F
+                            if (LocalDateTime.now() < flightData.departDate) {
+                                progress.floatValue = 0.0F
                                 return@launch
                             }
 
                             val duration = flightData.duration.toMillis()
+
                             val current = now.toFloat() / duration.toFloat()
 
-                            Log.d("ApiAccess", current.toString())
-                            viewModel.progress.floatValue = current.absoluteValue
+                            progress.floatValue = current.absoluteValue
+                            delay(10000)
                         }
-                        progressAnimation.value
+                        progress.floatValue
                     },
                     modifier = Modifier
                         .padding(16.dp)
@@ -176,7 +174,7 @@ fun FlightCard(
 
 @Composable
 fun TicketInformationCard(flight: FlightData) {
-    Row (
+    Row(
         modifier = Modifier
             .fillMaxWidth()
             .padding(start = 16.dp, end = 16.dp),

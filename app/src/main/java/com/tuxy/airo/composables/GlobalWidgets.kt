@@ -29,7 +29,7 @@ import com.tuxy.airo.data.FlightData
 // Used in Airport, Aircraft, Ticket and Flight information screens
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SmallAppBar(text:String, navController: NavController) {
+fun SmallAppBar(text: String, navController: NavController) {
     TopAppBar(
         title = { Text(text) },
         navigationIcon = {
@@ -111,7 +111,11 @@ fun DepartureAndDestinationText(icao: String, fullName: String) {
 }
 
 @Composable
-fun BoldDepartureAndDestinationText(icao: String, fullName: String, alignment: Alignment.Horizontal) {
+fun BoldDepartureAndDestinationText(
+    icao: String,
+    fullName: String,
+    alignment: Alignment.Horizontal
+) {
     Column(
         modifier = Modifier.defaultMinSize(minWidth = 64.dp),
         horizontalAlignment = alignment

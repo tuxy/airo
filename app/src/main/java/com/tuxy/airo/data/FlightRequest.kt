@@ -25,7 +25,8 @@ suspend fun getData(
     withContext(Dispatchers.IO) {
         val client = OkHttpClient()
 
-        val webUrl = "https://api.magicapi.dev/api/v1/aedbx/aerodatabox/flights/number/${flightNumber}/${date}"
+        val webUrl =
+            "https://api.magicapi.dev/api/v1/aedbx/aerodatabox/flights/number/${flightNumber}/${date}"
         // TODO Implement DataStore for apikey + other settings
 
         val url = webUrl.toHttpUrl().newBuilder() // Adds parameter for aircraft image
@@ -38,13 +39,13 @@ suspend fun getData(
             .header("x-magicapi-key", apiKey)
             .build()
 
-        if(apiKey == "") {
+        if (apiKey == "") {
             toasts[0].show() // API_KEY toast
             return@withContext
         }
 
         client.newCall(request).execute().use { response ->
-            if(!response.isSuccessful) {
+            if (!response.isSuccessful) {
                 toasts[1].show() // Network Error toast
                 return@use // Stops from executing further
             }
@@ -67,7 +68,10 @@ fun parseData(jsonRoot: Root): FlightData {
     val arrivalTime = parseDateTime(jsonRoot[0].arrival.scheduledTime.local)
 
     // Normalised coordinates for origin airport
-    val (projectedXOrigin, projectedYOrigin) = doProjection(jsonRoot[0].departure.airport.location.lat, jsonRoot[0].departure.airport.location.lon)!!
+    val (projectedXOrigin, projectedYOrigin) = doProjection(
+        jsonRoot[0].departure.airport.location.lat,
+        jsonRoot[0].departure.airport.location.lon
+    )!!
     val xOrigin = normalize(
         projectedXOrigin,
         min = X0,
@@ -80,7 +84,10 @@ fun parseData(jsonRoot: Root): FlightData {
     )
 
     // Normalised coordinates for destination airport
-    val (projectedXDest, projectedYDest) = doProjection(jsonRoot[0].arrival.airport.location.lat, jsonRoot[0].arrival.airport.location.lon)!!
+    val (projectedXDest, projectedYDest) = doProjection(
+        jsonRoot[0].arrival.airport.location.lat,
+        jsonRoot[0].arrival.airport.location.lon
+    )!!
     val xDest = normalize(
         projectedXDest,
         min = X0,
@@ -92,7 +99,8 @@ fun parseData(jsonRoot: Root): FlightData {
         max = X0
     )
 
-    return FlightData( // TODO Add flight number
+    return FlightData(
+        // TODO Add flight number
         id = 0, // Auto-assigned id
         callSign = jsonRoot[0].number,
         airline = jsonRoot[0].airline.name,
@@ -104,7 +112,10 @@ fun parseData(jsonRoot: Root): FlightData {
         toName = jsonRoot[0].arrival.airport.shortName,
         departDate = departureTime,
         arriveDate = arrivalTime,
-        duration = Duration.between(parseDateTime(jsonRoot[0].departure.scheduledTime.utc), parseDateTime(jsonRoot[0].arrival.scheduledTime.utc)),
+        duration = Duration.between(
+            parseDateTime(jsonRoot[0].departure.scheduledTime.utc),
+            parseDateTime(jsonRoot[0].arrival.scheduledTime.utc)
+        ),
         ticketSeat = "N/A", // TODO
         ticketData = "N/A", // TODO
         ticketQr = "N/A", // TODO
@@ -141,7 +152,8 @@ private const val X0 = -2.0037508342789248E7 // Constant for map projection
 
 
 fun parseDateTime(time: String): LocalDateTime {
-    val pattern = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mmXXXXX")!! // Ignore time-zone, as time is set to local by default
+    val pattern =
+        DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mmXXXXX")!! // Ignore time-zone, as time is set to local by default
     val localDateTime = LocalDateTime.parse(time, pattern)
 
     return localDateTime!!

@@ -12,7 +12,7 @@ import androidx.lifecycle.ViewModelProvider
 import com.tuxy.airo.data.UserPreferences
 
 @Suppress("UNCHECKED_CAST")
-class DateViewModel(context: Context): ViewModel() {
+class DateViewModel(context: Context) : ViewModel() {
     private val dataStore = UserPreferences(context)
     val toasts = arrayOf(
         Toast.makeText(context, "API Key not found", Toast.LENGTH_SHORT),

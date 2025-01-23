@@ -12,7 +12,7 @@ import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 
 @Suppress("UNCHECKED_CAST")
-class SettingsViewModel(context: Context): ViewModel() {
+class SettingsViewModel(context: Context) : ViewModel() {
     private val dataStore = UserPreferences(context)
     var currentKey by mutableStateOf("")
 

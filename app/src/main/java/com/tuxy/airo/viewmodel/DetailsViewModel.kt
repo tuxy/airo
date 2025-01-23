@@ -28,7 +28,7 @@ import kotlin.math.pow
 import kotlin.math.sqrt
 
 @Suppress("UNCHECKED_CAST")
-class DetailsViewModel(context: Context, flightDataDao: FlightDataDao, id: String): ViewModel() {
+class DetailsViewModel(context: Context, flightDataDao: FlightDataDao, id: String) : ViewModel() {
     var flightData = mutableStateOf(FlightData())
     var openDialog = mutableStateOf(false)
 
@@ -36,33 +36,48 @@ class DetailsViewModel(context: Context, flightDataDao: FlightDataDao, id: Strin
         private set
 
     init {
-        singleIntoMut(flightData, flightDataDao, id) // On initialisation, pass db data into flightData
+        singleIntoMut(
+            flightData,
+            flightDataDao,
+            id
+        ) // On initialisation, pass db data into flightData
     }
 
     fun getDuration(): String {
         val duration = Duration.between(LocalDateTime.now(), flightData.value.departDate)
-        val seconds = duration.toMillis().toFloat() / 1000.0F
 
-        var days = mutableFloatStateOf(0.0F)
-        var hours = mutableFloatStateOf(0.0F)
-        var minutes = mutableFloatStateOf(0.0F)
+        val offset = mutableFloatStateOf(10800F)
+
+        val days = mutableFloatStateOf(0.0F)
+        val hours = mutableFloatStateOf(0.0F)
+        val minutes = mutableFloatStateOf(0.0F)
+
 
         val status = getStatus()
-        val offset = mutableFloatStateOf(0.0F)
-        if(status == "Check-in") {
-            offset.value = 0.041667F
+        if (status == "Check-in") {
+            if (duration <= Duration.ofSeconds(10800) && duration >= Duration.ofSeconds(3600)) {
+                return ""
+            }
+        } else {
+            offset.floatValue = 0.0F // Back to departure date
+            if (duration <= Duration.ofSeconds(0)) {
+                return ""
+            }
         }
 
-        days.value = floor((seconds / 86400) - offset.value)
-        hours.value = floor((seconds - days.value * 86400.0F) / 3600.0F)
-        minutes.value = floor((seconds - days.value * 86400.0F - hours.value * 3600.0F)/60.0F)
+        val seconds = (duration.toMillis().toFloat() / 1000F) - offset.floatValue
 
-        if(days.value >= 1.0F) {
-            return "${days.value}d ${hours.value}h"
-        } else if(hours.value >= 1.0F) {
-            return "${hours.value}h ${minutes.value}m"
+        days.floatValue = floor((seconds / 86400))
+        hours.floatValue = floor((seconds - days.floatValue * 86400.0F) / 3600.0F)
+        minutes.floatValue =
+            floor((seconds - days.floatValue * 86400.0F - hours.floatValue * 3600.0F) / 60.0F)
+
+        return if (days.floatValue >= 1.0F) {
+            "in ${days.floatValue.toInt()}d ${hours.floatValue.toInt()}h"
+        } else if (hours.floatValue >= 1.0F) {
+            "in ${hours.floatValue.toInt()}h ${minutes.floatValue.toInt()}m"
         } else {
-            return "${minutes.value}m"
+            "in ${minutes.floatValue.toInt()}m"
         }
     }
 
@@ -70,30 +85,32 @@ class DetailsViewModel(context: Context, flightDataDao: FlightDataDao, id: Strin
         val status = getStatus()
         val time = flightData.value.departDate
 
-        val correctedTime = if(status == "Check-in") {
-            time.minusHours(1)
-        } else {
-            time
+        if (status == "Check-in") {
+            val correctedTime = time.minusHours(1)
+
+            return "Ends at ${correctedTime.format(DateTimeFormatter.ofPattern("HH:mm"))}"
         }
 
-        return correctedTime.format(DateTimeFormatter.ofPattern("HH:mm"))
+        return ""
     }
 
     fun getStatus(): String {
         val duration = Duration.between(LocalDateTime.now(), flightData.value.departDate)
         val seconds = duration.seconds
 
-        return if(seconds >= 3600) {
-            "Check-in"
+        if (seconds >= 3600) {
+            return "Check-in"
         } else {
-            "Flying"
+            return "Flying"
         }
     }
 
-    private val tileStreamProvider = TileStreamProvider { row, col, zoomLvl -> // Local map tiles for full offline usage
-        context.assets.open("tiles/${zoomLvl}/${col}/${row}.png")
-    }
+    private val tileStreamProvider =
+        TileStreamProvider { row, col, zoomLvl -> // Local map tiles for full offline usage
+            context.assets.open("tiles/${zoomLvl}/${col}/${row}.png")
+        }
     private val mapSize = mapSizeAtLevel()
+
     @OptIn(DelicateCoroutinesApi::class)
     val mapState = MapState(6, mapSize, mapSize).apply {
         addLayer(tileStreamProvider)
@@ -152,6 +169,6 @@ class DetailsViewModel(context: Context, flightDataDao: FlightDataDao, id: Strin
 
         val a = (x2 - x1) * (x2 - x1)
         val b = (y2 - y1) * (y2 - y1)
-        return (1/(sqrt(a + b) * zoomConstant)).toFloat()
+        return (1 / (sqrt(a + b) * zoomConstant)).toFloat()
     }
 }

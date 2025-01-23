@@ -42,7 +42,7 @@ fun AircraftInformationView(
         modifier = Modifier.fillMaxSize(),
         topBar = { SmallAppBar("Aircraft Information", navController) }
     ) { innerPadding ->
-        Column( modifier = Modifier.padding(innerPadding) ) {
+        Column(modifier = Modifier.padding(innerPadding)) {
             ListItem(
                 headlineContent = { Text(viewModel.flightData.value.aircraftName) },
                 supportingContent = { Text(viewModel.flightData.value.airline) }
@@ -61,7 +61,7 @@ fun AircraftInformationView(
                     contentScale = ContentScale.Crop,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .aspectRatio(1280f/847f)
+                        .aspectRatio(1280f / 847f)
                 )
             }
             AircraftListView(viewModel.flightData.value, context, viewModel)

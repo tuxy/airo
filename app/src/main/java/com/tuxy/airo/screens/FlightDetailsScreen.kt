@@ -1,9 +1,5 @@
 package com.tuxy.airo.screens
 
-import android.util.Log
-import androidx.compose.animation.core.FastOutSlowInEasing
-import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -71,12 +67,6 @@ fun FlightDetailsView(
     val viewModelFactory = DetailsViewModel.Factory(LocalContext.current, flightDataDao, id)
     val viewModel: DetailsViewModel = viewModel(factory = viewModelFactory)
 
-    val progressAnimation = animateFloatAsState(
-        targetValue = viewModel.progress.floatValue,
-        animationSpec = tween(durationMillis = 350, easing = FastOutSlowInEasing),
-        label = "",
-    )
-
     Scaffold(
         modifier = Modifier.fillMaxSize(),
         topBar = {
@@ -92,7 +82,7 @@ fun FlightDetailsView(
                 .padding(innerPadding)
         ) {
             Column {
-                if(viewModel.openDialog.value) {
+                if (viewModel.openDialog.value) {
                     DeleteDialog(
                         viewModel.openDialog,
                         navController,
@@ -104,10 +94,12 @@ fun FlightDetailsView(
                     modifier = Modifier.fillMaxWidth(),
                     progress = {
                         GlobalScope.launch {
-                            delay(500) // Why not?
-                            val now = Duration.between(LocalDateTime.now(), viewModel.flightData.value.departDate).toMillis()
+                            val now = Duration.between(
+                                LocalDateTime.now(),
+                                viewModel.flightData.value.departDate
+                            ).toMillis()
 
-                            if(now.toFloat() <= 0) {
+                            if (LocalDateTime.now() < viewModel.flightData.value.departDate) {
                                 viewModel.progress.floatValue = 0.0F
                                 return@launch
                             }
@@ -116,10 +108,10 @@ fun FlightDetailsView(
 
                             val current = now.toFloat() / duration.toFloat()
 
-                            Log.d("ApiAccess", current.toString())
                             viewModel.progress.floatValue = current.absoluteValue
+                            delay(10000) // Improve performance
                         }
-                        progressAnimation.value
+                        viewModel.progress.floatValue
                     }
                 )
                 RouteBar(viewModel.flightData.value)
@@ -140,6 +132,7 @@ fun FlightDetailsView(
     }
 }
 
+@OptIn(DelicateCoroutinesApi::class)
 @Composable
 fun FlightStatusCard(viewModel: DetailsViewModel) {
     Card(
@@ -163,7 +156,7 @@ fun FlightStatusCard(viewModel: DetailsViewModel) {
                     fontSize = 12.sp
                 )
                 Text(
-                    "Ends at ${viewModel.getEndTime()}",
+                    viewModel.getEndTime(),
                     fontWeight = FontWeight.Normal,
                     fontSize = 12.sp
                 )
@@ -180,14 +173,33 @@ fun FlightStatusCard(viewModel: DetailsViewModel) {
                     fontSize = 16.sp
                 )
                 Text(
-                    "in ${viewModel.getDuration()}",
+                    viewModel.getDuration(),
                     fontWeight = FontWeight.W500,
                     fontSize = 16.sp
                 )
             }
             LinearProgressIndicator(
                 progress = {
-                    0.0F
+                    GlobalScope.launch {
+                        delay(2000)
+                        val now = Duration.between(
+                            LocalDateTime.now(),
+                            viewModel.flightData.value.departDate
+                        ).toMillis()
+
+                        if (LocalDateTime.now() < viewModel.flightData.value.departDate) {
+                            viewModel.progress.floatValue = 0.0F
+                            return@launch
+                        }
+
+                        val duration = viewModel.flightData.value.duration.toMillis()
+
+                        val current = now.toFloat() / duration.toFloat()
+
+                        viewModel.progress.floatValue = current.absoluteValue
+                        delay(10000) // Improve performance
+                    }
+                    viewModel.progress.floatValue
                 },
                 modifier = Modifier
                     .fillMaxWidth(),
@@ -199,7 +211,7 @@ fun FlightStatusCard(viewModel: DetailsViewModel) {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SmallAppBarWithDelete(
-    text:String,
+    text: String,
     navController: NavController,
     openDialog: MutableState<Boolean>,
 ) {
@@ -290,9 +302,9 @@ fun DeleteDialog(
                     }
                     TextButton(
                         onClick = {
-                        GlobalScope.launch(Dispatchers.IO) {
-                            flightDataDao.deleteFlight(flightData.value)
-                        }
+                            GlobalScope.launch(Dispatchers.IO) {
+                                flightDataDao.deleteFlight(flightData.value)
+                            }
                             openDialog.value = false
                             navController.navigateUp()
                         },

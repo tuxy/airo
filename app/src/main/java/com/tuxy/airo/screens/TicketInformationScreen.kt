@@ -37,7 +37,7 @@ fun TicketInformationView(
     Scaffold(
         modifier = Modifier.fillMaxSize()
     ) { innerPadding ->
-        Column( modifier = Modifier.padding(innerPadding) ) {
+        Column(modifier = Modifier.padding(innerPadding)) {
             SmallAppBar(viewModel.flightData.value.callSign, navController)
             MainTicketView(viewModel.flightData.value)
         }
@@ -66,7 +66,7 @@ fun MainTicketView(flightData: FlightData) {
                     contentScale = ContentScale.Crop,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .aspectRatio(1f/1f)
+                        .aspectRatio(1f / 1f)
                 )
             }
         }

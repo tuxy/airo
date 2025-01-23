@@ -53,7 +53,13 @@ fun DatePickerView(
                 onClick = {
                     viewModel.loading = true
                     GlobalScope.launch(Dispatchers.Main) {
-                        getData(flightNumber, data, getDateAsString(timeMillis), viewModel.toasts, viewModel.key)
+                        getData(
+                            flightNumber,
+                            data,
+                            getDateAsString(timeMillis),
+                            viewModel.toasts,
+                            viewModel.key
+                        )
                         joinAll()
                         viewModel.loading = false
                         navController.navigateUp()
@@ -68,7 +74,7 @@ fun DatePickerView(
         Column(
             modifier = Modifier.padding(innerPadding)
         ) {
-            if(viewModel.loading) {
+            if (viewModel.loading) {
                 LinearProgressIndicator(
                     modifier = Modifier.fillMaxWidth()
                 )

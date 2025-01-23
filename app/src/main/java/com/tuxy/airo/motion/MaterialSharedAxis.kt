@@ -79,7 +79,7 @@ fun materialSharedAxisYIn(
 fun materialSharedAxisYOut(
     targetOffsetY: (fullWidth: Int) -> Int,
     durationMillis: Int = MotionConstants.DEFAULT_MOTION_DURATION,
-): ExitTransition = slideOutVertically (
+): ExitTransition = slideOutVertically(
     animationSpec = tween(
         durationMillis = durationMillis,
         easing = FastOutSlowInEasing

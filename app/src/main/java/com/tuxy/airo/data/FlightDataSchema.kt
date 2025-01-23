@@ -1,4 +1,5 @@
 package com.tuxy.airo.data
+
 import com.beust.klaxon.Json
 import com.beust.klaxon.Klaxon
 
@@ -12,7 +13,7 @@ class Root(elements: Collection<RootElement>) : ArrayList<RootElement>(elements)
     }
 }
 
-data class RootElement (
+data class RootElement(
     val greatCircleDistance: GreatCircleDistance,
     val departure: Flight,
     val arrival: Flight,
@@ -27,12 +28,12 @@ data class RootElement (
     val airline: Airline
 )
 
-data class Aircraft (
+data class Aircraft(
     val model: String,
     val image: Image
 )
 
-data class Image (
+data class Image(
     val url: String,
     val webUrl: String,
     val author: String,
@@ -42,23 +43,23 @@ data class Image (
     val htmlAttributions: List<String>
 )
 
-data class Airline (
+data class Airline(
     val name: String,
     val iata: String,
     val icao: String
 )
 
-data class Flight (
+data class Flight(
     val airport: Airport,
     val scheduledTime: EdTime = EdTime("", ""),
     val predictedTime: EdTime = EdTime("", ""),
-    val revisedTime: EdTime= EdTime("", ""),
+    val revisedTime: EdTime = EdTime("", ""),
     val terminal: String = "N/A",
     val gate: String = "N/A",
     val quality: List<String>
 )
 
-data class Airport (
+data class Airport(
     val icao: String,
     val iata: String,
     val name: String,
@@ -69,17 +70,17 @@ data class Airport (
     val timeZone: String
 )
 
-data class Location (
+data class Location(
     val lat: Double,
     val lon: Double
 )
 
-data class EdTime (
+data class EdTime(
     val utc: String,
     val local: String
 )
 
-data class GreatCircleDistance (
+data class GreatCircleDistance(
     val meter: Double,
     val km: Double,
     val mile: Double,

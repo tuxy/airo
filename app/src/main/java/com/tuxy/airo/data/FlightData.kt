@@ -74,10 +74,10 @@ interface FlightDataDao {
 
 @Database(entities = [FlightData::class], version = 1, exportSchema = false)
 @TypeConverters(Converters::class)
-abstract class FlightDataBase: RoomDatabase() {
+abstract class FlightDataBase : RoomDatabase() {
     abstract fun flightDataDao(): FlightDataDao
 
-    companion object{
+    companion object {
         @Volatile
         private var Instance: FlightDataBase? = null
 

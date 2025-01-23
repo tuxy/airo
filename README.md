@@ -5,6 +5,7 @@
 Because RIP App in the Air
 
 ## Current features
+
 - Adding, removing flights using [aerodatabox's](https://aerodatabox.com/) api (API KEY IS NEEDED)
     - Adding flights with schedules 8 months in advance
 - Route map and progress (WIP)
@@ -12,6 +13,7 @@ Because RIP App in the Air
 - Flights organised by date (WIP)
 
 ## TODO before release / Roadmap
+
 - Functional progress indication for flight
 - Flights with date headers, for grouping transfers
 - Implement check-in and boarding timings for progress bar
