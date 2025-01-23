@@ -29,4 +29,9 @@
     <string name="apply_settings">Apply settings</string>
     <string name="api_key">API Key</string>
     <string name="seat">Seat</string>
+    <string name="first_class">First Class</string>
+    <string name="business_class">Business</string>
+    <string name="premium_class">Premium Economy</string>
+    <string name="economy_class">Economy</string>
+    <string name="other">Other/Unknown</string>
 </resources>
