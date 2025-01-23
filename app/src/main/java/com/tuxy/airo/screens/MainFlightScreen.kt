@@ -63,8 +63,8 @@ fun MainFlightView(
     navController: NavController,
     flightDataDao: FlightDataDao
 ) {
-    val viewModelFactory = MainFlightViewModel.Factory(flightDataDao)
-    val viewModel: MainFlightViewModel = viewModel(factory = viewModelFactory)
+    val viewModel = viewModel<MainFlightViewModel>()
+    viewModel.loadData(flightDataDao)
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),
@@ -91,8 +91,8 @@ fun MainFlightView(
                     .wrapContentHeight()
                     .heightIn(max = 2000.dp)
             ) {
-                items(viewModel.flightData.value) { flight ->
-                    FlightCard(navController, flight)
+                items(viewModel.flightData) { flight ->
+                    FlightCard(navController, flight, viewModel)
                 }
             }
         }
@@ -103,10 +103,9 @@ fun MainFlightView(
 @Composable
 fun FlightCard(
     navController: NavController,
-    flightData: FlightData
+    flightData: FlightData,
+    viewModel: MainFlightViewModel
 ) {
-    val progress = remember { mutableFloatStateOf(0.0F) }
-
     Column(
         modifier = Modifier
             .padding(horizontal = 16.dp, vertical = 8.dp)
@@ -150,7 +149,7 @@ fun FlightCard(
                                 .toMillis()
 
                             if (LocalDateTime.now() < flightData.departDate) {
-                                progress.floatValue = 0.0F
+                                viewModel.progress.floatValue = 0.0F
                                 return@launch
                             }
 
@@ -158,10 +157,10 @@ fun FlightCard(
 
                             val current = now.toFloat() / duration.toFloat()
 
-                            progress.floatValue = current.absoluteValue
+                            viewModel.progress.floatValue = current.absoluteValue
                             delay(10000)
                         }
-                        progress.floatValue
+                        viewModel.progress.floatValue
                     },
                     modifier = Modifier
                         .padding(16.dp)
