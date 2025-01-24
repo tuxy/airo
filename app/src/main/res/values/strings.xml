@@ -39,4 +39,5 @@
     <string name="class_s">Class</string>
     <string name="passenger_name">Passenger name</string>
     <string name="switch_ticket">Switch ticket types</string>
+    <string name="allow_camera_toast">Please allow camera permission</string>
 </resources>

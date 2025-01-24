@@ -114,9 +114,7 @@ fun parseData(jsonRoot: Root): FlightData {
             parseDateTime(jsonRoot[0].departure.scheduledTime.utc),
             parseDateTime(jsonRoot[0].arrival.scheduledTime.utc)
         ),
-        ticketSeat = "N/A", // TODO
         ticketData = "N/A", // TODO
-        ticketQr = "N/A", // TODO
         ticketGate = jsonRoot[0].departure.gate,
         ticketTerminal = jsonRoot[0].departure.terminal,
         aircraftName = jsonRoot[0].aircraft.model,

@@ -250,7 +250,7 @@ fun FlightInformationInteract(navController: NavController, flightData: FlightDa
         ListItem(
             modifier = Modifier.clickable(onClick = { navController.navigate("${Screen.TicketInformationScreen.route}/${flightData.id}") }),
             headlineContent = { Text(stringResource(R.string.ticket)) },
-            supportingContent = { Text(flightData.ticketSeat) }
+            supportingContent = { Text("Placeholder") } // TODO
         )
         ListItem(
             modifier = Modifier.clickable(onClick = { navController.navigate("${Screen.AircraftInformationScreen.route}/${flightData.id}") }),

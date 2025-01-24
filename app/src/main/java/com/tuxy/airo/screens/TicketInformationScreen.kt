@@ -1,5 +1,7 @@
 package com.tuxy.airo.screens
 
+import android.util.Log
+import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -24,37 +26,49 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
-import androidx.navigation.compose.rememberNavController
 import coil3.compose.AsyncImage
+import com.journeyapps.barcodescanner.ScanContract
 import com.tuxy.airo.R
 import com.tuxy.airo.composables.BoldDepartureAndDestinationText
 import com.tuxy.airo.composables.LargeTopSmallBottom
 import com.tuxy.airo.data.FlightData
 import com.tuxy.airo.data.FlightDataDao
-import com.tuxy.airo.viewmodel.StandardDataViewModel
+import com.tuxy.airo.viewmodel.TicketViewModel
+import kotlinx.coroutines.DelicateCoroutinesApi
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, DelicateCoroutinesApi::class)
 @Composable
 fun TicketInformationView(
     navController: NavController,
     id: String,
     flightDataDao: FlightDataDao
 ) {
-    val viewModelFactory = StandardDataViewModel.Factory(flightDataDao, id)
-    val viewModel: StandardDataViewModel = viewModel(factory = viewModelFactory)
+    val viewModelFactory = TicketViewModel.Factory(flightDataDao, id, LocalContext.current)
+    val viewModel: TicketViewModel = viewModel(factory = viewModelFactory)
 
-    val expanded = remember { mutableStateOf(false) }
+    val barCodeLauncher = rememberLauncherForActivityResult(ScanContract()) {
+            result ->
+        if( result.contents == null ) {
+            Log.d("Camera", "Cancelled")
+        } else {
+            viewModel.flightData.value.ticketData = result.contents
+            GlobalScope.launch(Dispatchers.IO) {
+                flightDataDao.updateFlight(viewModel.flightData.value)
+            }
+        }
+    }
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),
@@ -69,7 +83,7 @@ fun TicketInformationView(
                 }
             },
             actions = {
-                IconButton(onClick = { expanded.value = true }) {
+                IconButton(onClick = {  }) {
                     Icon(
                         imageVector = Icons.Filled.Delete,
                         contentDescription = stringResource(R.string.delete)
@@ -78,7 +92,16 @@ fun TicketInformationView(
             }
         ) },
         floatingActionButton = {
-            ExtendedFloatingActionButton(onClick = {}) {
+            ExtendedFloatingActionButton(onClick = {
+                if(viewModel.hasCameraPermission) {
+//                    navController.navigate("${Screen.CameraScreen.route}/${id}")
+                    viewModel.showCamera(barCodeLauncher)
+                } else {
+                    if(!viewModel.hasCameraPermission) {
+                        viewModel.toast.show()
+                    }
+                }
+            }) {
                 Icon(
                     imageVector = Icons.Filled.Create,
                     contentDescription = stringResource(R.string.add_ticket)
@@ -126,7 +149,7 @@ fun MainTicketView(flightData: FlightData) {
             ) {
                 LargeTopSmallBottom(stringResource(R.string.terminal), flightData.ticketTerminal)
                 LargeTopSmallBottom(stringResource(R.string.gate), flightData.ticketGate)
-                LargeTopSmallBottom(stringResource(R.string.seat), flightData.ticketSeat)
+                LargeTopSmallBottom(stringResource(R.string.seat), "Placeholder")
                 LargeTopSmallBottom(stringResource(R.string.class_s), "Business")
             }
             Row(
@@ -141,7 +164,7 @@ fun MainTicketView(flightData: FlightData) {
         Box(
             modifier = Modifier
                 .padding(horizontal = 64.dp)
-                .padding(vertical = 64.dp)
+                .padding(vertical = 32.dp)
         ) {
             Box(
                 modifier = Modifier

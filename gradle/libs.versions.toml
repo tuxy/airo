@@ -1,7 +1,12 @@
 [versions]
 agp = "8.7.3"
 browser = "1.8.0"
+cameraLifecycle = "1.4.1"
+cameraExtensions = "1.4.1"
+cameraView = "1.4.1"
+cameraCamera2 = "1.4.1"
 coilNetworkOkhttp = "3.0.4"
+core = "3.5.3"
 datastorePreferences = "1.1.2"
 klaxon = "5.5"
 kotlin = "2.0.0"
@@ -15,12 +20,16 @@ activityCompose = "1.8.0"
 composeBom = "2024.04.01"
 mapcompose = "2.12.12"
 navigationCompose = "2.8.5"
-osmdroidAndroid = "6.1.16"
 roomCompiler = "2.6.1"
+zxingAndroidEmbedded = "4.3.0"
 
 [libraries]
 androidx-activity-ktx = { module = "androidx.activity:activity-ktx" }
 androidx-browser = { module = "androidx.browser:browser", version.ref = "browser" }
+androidx-camera-camera2 = { module = "androidx.camera:camera-camera2", version.ref = "cameraCamera2" }
+androidx-camera-extensions = { module = "androidx.camera:camera-extensions", version.ref = "cameraExtensions" }
+androidx-camera-lifecycle = { module = "androidx.camera:camera-lifecycle", version.ref = "cameraLifecycle" }
+androidx-camera-view = { module = "androidx.camera:camera-view", version.ref = "cameraView" }
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
 androidx-datastore-preferences = { module = "androidx.datastore:datastore-preferences", version.ref = "datastorePreferences" }
 androidx-navigation-compose = { module = "androidx.navigation:navigation-compose", version.ref = "navigationCompose" }
@@ -33,6 +42,7 @@ androidx-room-ktx = { module = "androidx.room:room-ktx", version.ref = "roomComp
 androidx-room-runtime = { module = "androidx.room:room-runtime", version.ref = "roomCompiler" }
 coil-compose = { module = "io.coil-kt.coil3:coil-compose", version.ref = "coilNetworkOkhttp" }
 coil-network-okhttp = { module = "io.coil-kt.coil3:coil-network-okhttp", version.ref = "coilNetworkOkhttp" }
+core = { module = "com.google.zxing:core", version.ref = "core" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }
 androidx-junit = { group = "androidx.test.ext", name = "junit", version.ref = "junitVersion" }
 androidx-espresso-core = { group = "androidx.test.espresso", name = "espresso-core", version.ref = "espressoCore" }
@@ -49,6 +59,7 @@ klaxon = { module = "com.beust:klaxon", version.ref = "klaxon" }
 kotlinx-datetime = { module = "org.jetbrains.kotlinx:kotlinx-datetime", version.ref = "kotlinxDatetime" }
 kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlinxSerializationJson" }
 mapcompose = { module = "ovh.plrapps:mapcompose", version.ref = "mapcompose" }
+zxing-android-embedded = { module = "com.journeyapps:zxing-android-embedded", version.ref = "zxingAndroidEmbedded" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
