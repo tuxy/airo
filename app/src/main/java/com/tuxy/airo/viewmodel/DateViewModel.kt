@@ -17,7 +17,11 @@ class DateViewModel(context: Context) : ViewModel() {
     private val dataStore = UserPreferences(context)
     val toasts = arrayOf(
         Toast.makeText(context, context.resources.getString(R.string.no_api), Toast.LENGTH_SHORT),
-        Toast.makeText(context, context.resources.getString(R.string.invalid_api_network), Toast.LENGTH_SHORT),
+        Toast.makeText(
+            context,
+            context.resources.getString(R.string.invalid_api_network),
+            Toast.LENGTH_SHORT
+        ),
         Toast.makeText(context, context.resources.getString(R.string.no_flight), Toast.LENGTH_SHORT)
     )
     var loading by mutableStateOf(false)

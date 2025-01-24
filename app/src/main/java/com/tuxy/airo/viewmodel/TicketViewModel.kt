@@ -3,6 +3,7 @@ package com.tuxy.airo.viewmodel
 import android.Manifest
 import android.content.Context
 import android.content.pm.PackageManager
+import android.graphics.Color
 import android.widget.Toast
 import androidx.activity.compose.ManagedActivityResultLauncher
 import androidx.compose.runtime.getValue
@@ -11,12 +12,17 @@ import androidx.compose.runtime.setValue
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
+import coil3.Bitmap
+import com.google.zxing.BarcodeFormat
+import com.google.zxing.qrcode.QRCodeWriter
 import com.journeyapps.barcodescanner.ScanIntentResult
 import com.journeyapps.barcodescanner.ScanOptions
 import com.tuxy.airo.R
 import com.tuxy.airo.data.FlightData
 import com.tuxy.airo.data.FlightDataDao
+import com.tuxy.airo.data.IataParserData
 import com.tuxy.airo.data.singleIntoMut
+
 
 @Suppress("UNCHECKED_CAST")
 class TicketViewModel(
@@ -25,7 +31,12 @@ class TicketViewModel(
     context: Context,
 ) : ViewModel() {
     var flightData = mutableStateOf(FlightData())
-    val toast = Toast.makeText(context, context.resources.getString(R.string.allow_camera_toast), Toast.LENGTH_LONG)
+    var ticketData by mutableStateOf(IataParserData())
+    val toast = Toast.makeText(
+        context,
+        context.resources.getString(R.string.allow_camera_toast),
+        Toast.LENGTH_LONG
+    )
 
     var hasCameraPermission by mutableStateOf(
         ContextCompat.checkSelfPermission(
@@ -34,12 +45,20 @@ class TicketViewModel(
         ) == PackageManager.PERMISSION_GRANTED
     )
 
+    fun getData(context: Context) {
+        ticketData = IataParserData().parseData(flightData.value.ticketData, context)
+    }
+
     init {
         singleIntoMut(
             flightData,
             flightDataDao,
             id
         ) // On initialisation, pass db data into flightData
+    }
+
+    fun isDataPopulated(): Boolean {
+        return flightData.value.ticketData != ""
     }
 
     fun showCamera(barCodeLauncher: ManagedActivityResultLauncher<ScanOptions, ScanIntentResult>) {
@@ -53,6 +72,25 @@ class TicketViewModel(
         options.setOrientationLocked(false)
 
         barCodeLauncher.launch(options)
+    }
+
+    fun getQrCode(): Bitmap {
+        val writer = QRCodeWriter()
+        val bitMatrix = writer.encode(flightData.value.ticketData, BarcodeFormat.QR_CODE, 400, 400)
+
+        val w = bitMatrix.width
+        val h = bitMatrix.height
+        val pixels = IntArray(w * h)
+        for (y in 0 until h) {
+            for (x in 0 until w) {
+                pixels[y * w + x] = if (bitMatrix[x, y]) Color.BLACK else Color.WHITE
+            }
+        }
+
+        val bitmap =
+            Bitmap.createBitmap(w, h, android.graphics.Bitmap.Config.ARGB_8888)
+        bitmap.setPixels(pixels, 0, w, 0, 0, w, h)
+        return bitmap
     }
 
     // Factory

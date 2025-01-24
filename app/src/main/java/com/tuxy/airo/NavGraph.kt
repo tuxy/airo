@@ -8,7 +8,6 @@ import com.tuxy.airo.data.FlightDataDao
 import com.tuxy.airo.motion.materialSharedAxisXIn
 import com.tuxy.airo.motion.materialSharedAxisXOut
 import com.tuxy.airo.screens.AircraftInformationView
-import com.tuxy.airo.screens.CameraView
 import com.tuxy.airo.screens.DatePickerView
 import com.tuxy.airo.screens.FlightDetailsView
 import com.tuxy.airo.screens.MainFlightView
@@ -74,15 +73,6 @@ fun SetupNavGraph( // Transitions taken from Read You's repository
                 navController,
                 backStackEntry.arguments?.getString("id").toString(),
                 flightDataDao,
-            )
-        }
-
-        // Ticket scan screen
-        composable(route = "${Screen.CameraScreen.route}/{id}") { backStackEntry ->
-            CameraView(
-                navController,
-                backStackEntry.arguments?.getString("id").toString(),
-                flightDataDao
             )
         }
     }

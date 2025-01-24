@@ -32,8 +32,6 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.mutableFloatStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -183,8 +181,8 @@ fun TicketInformationCard(flight: FlightData) {
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
         LargeTopSmallBottom(stringResource(R.string.flight), flight.callSign)
-        LargeTopSmallBottom(stringResource(R.string.terminal), flight.ticketTerminal)
-        LargeTopSmallBottom(stringResource(R.string.gate), flight.ticketGate)
+        LargeTopSmallBottom(stringResource(R.string.terminal), flight.terminal)
+        LargeTopSmallBottom(stringResource(R.string.gate), flight.gate)
         Spacer(modifier = Modifier.width(16.dp))
         AsyncImage(
             model = "https://raw.githubusercontent.com/Jxck-S/airline-logos/main/radarbox_logos/${flight.airlineIcao}.png",

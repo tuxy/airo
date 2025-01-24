@@ -6,7 +6,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
@@ -21,7 +20,6 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
@@ -42,11 +40,13 @@ import com.tuxy.airo.composables.BoldDepartureAndDestinationText
 import com.tuxy.airo.composables.LargeTopSmallBottom
 import com.tuxy.airo.data.FlightData
 import com.tuxy.airo.data.FlightDataDao
+import com.tuxy.airo.data.IataParserData
 import com.tuxy.airo.viewmodel.TicketViewModel
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
+import java.time.format.DateTimeFormatter
 
 @OptIn(ExperimentalMaterial3Api::class, DelicateCoroutinesApi::class)
 @Composable
@@ -57,13 +57,17 @@ fun TicketInformationView(
 ) {
     val viewModelFactory = TicketViewModel.Factory(flightDataDao, id, LocalContext.current)
     val viewModel: TicketViewModel = viewModel(factory = viewModelFactory)
+    val context = LocalContext.current
 
-    val barCodeLauncher = rememberLauncherForActivityResult(ScanContract()) {
-            result ->
-        if( result.contents == null ) {
+    viewModel.getData(context)
+
+    val barCodeLauncher = rememberLauncherForActivityResult(ScanContract()) { result ->
+        if (result.contents == null) {
             Log.d("Camera", "Cancelled")
         } else {
+            Log.d("Camera", result.contents)
             viewModel.flightData.value.ticketData = result.contents
+            viewModel.getData(context)
             GlobalScope.launch(Dispatchers.IO) {
                 flightDataDao.updateFlight(viewModel.flightData.value)
             }
@@ -72,32 +76,33 @@ fun TicketInformationView(
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),
-        topBar = { TopAppBar(
-            title = { Text("UA45") },
-            navigationIcon = {
-                IconButton(onClick = { navController.navigateUp() }) {
-                    Icon(
-                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                        contentDescription = stringResource(R.string.back)
-                    )
+        topBar = {
+            TopAppBar(
+                title = { Text(viewModel.flightData.value.callSign) },
+                navigationIcon = {
+                    IconButton(onClick = { navController.navigateUp() }) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = stringResource(R.string.back)
+                        )
+                    }
+                },
+                actions = {
+                    IconButton(onClick = { }) {
+                        Icon(
+                            imageVector = Icons.Filled.Delete,
+                            contentDescription = stringResource(R.string.delete)
+                        )
+                    }
                 }
-            },
-            actions = {
-                IconButton(onClick = {  }) {
-                    Icon(
-                        imageVector = Icons.Filled.Delete,
-                        contentDescription = stringResource(R.string.delete)
-                    )
-                }
-            }
-        ) },
+            )
+        },
         floatingActionButton = {
             ExtendedFloatingActionButton(onClick = {
-                if(viewModel.hasCameraPermission) {
-//                    navController.navigate("${Screen.CameraScreen.route}/${id}")
+                if (viewModel.hasCameraPermission) {
                     viewModel.showCamera(barCodeLauncher)
                 } else {
-                    if(!viewModel.hasCameraPermission) {
+                    if (!viewModel.hasCameraPermission) {
                         viewModel.toast.show()
                     }
                 }
@@ -110,15 +115,25 @@ fun TicketInformationView(
             }
         }
     ) { innerPadding ->
-        Column(modifier = Modifier.padding(innerPadding)) {
-            MainTicketView(viewModel.flightData.value)
+        if (viewModel.isDataPopulated()) { // If there is no ticket, then show an empty screen
+            Column(modifier = Modifier.padding(innerPadding)) {
+                MainTicketView(viewModel.ticketData, viewModel.flightData.value, viewModel)
+//                if(viewModel.ticketData != IataParserData()) {
+//                    MainTicketView(viewModel.ticketData, viewModel.flightData.value)
+//                } else {
+//                    Toast.makeText(LocalContext.current, stringResource(R.string.invalid_pass), Toast.LENGTH_LONG).show()
+//                }
+            }
         }
     }
 }
 
-@OptIn(ExperimentalLayoutApi::class)
 @Composable
-fun MainTicketView(flightData: FlightData) {
+fun MainTicketView(
+    iataParserData: IataParserData,
+    flightData: FlightData,
+    viewModel: TicketViewModel
+) {
     Column(
         modifier = Modifier,
     ) {
@@ -147,10 +162,17 @@ fun MainTicketView(flightData: FlightData) {
                     .fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
             ) {
-                LargeTopSmallBottom(stringResource(R.string.terminal), flightData.ticketTerminal)
-                LargeTopSmallBottom(stringResource(R.string.gate), flightData.ticketGate)
-                LargeTopSmallBottom(stringResource(R.string.seat), "Placeholder")
-                LargeTopSmallBottom(stringResource(R.string.class_s), "Business")
+                LargeTopSmallBottom(
+                    stringResource(R.string.date), iataParserData.date.format(
+                        DateTimeFormatter.ofPattern("dd MMM")
+                    )
+                )
+                LargeTopSmallBottom(stringResource(R.string.gate), flightData.gate)
+                LargeTopSmallBottom(stringResource(R.string.seat), iataParserData.seat)
+                LargeTopSmallBottom(
+                    stringResource(R.string.class_s),
+                    iataParserData.getClass(iataParserData.flightClass, LocalContext.current)
+                )
             }
             Row(
                 modifier = Modifier
@@ -158,7 +180,14 @@ fun MainTicketView(flightData: FlightData) {
                     .fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
             ) {
-                LargeTopSmallBottom(stringResource(R.string.passenger_name), "John Doe")
+                LargeTopSmallBottom(
+                    stringResource(R.string.passenger_name),
+                    iataParserData.passengerName
+                )
+                LargeTopSmallBottom(
+                    stringResource(R.string.flight_number),
+                    "${iataParserData.carrier} ${iataParserData.flightNumber}"
+                )
             }
         }
         Box(
@@ -172,7 +201,7 @@ fun MainTicketView(flightData: FlightData) {
                     .background(Color.Gray)
             ) {
                 AsyncImage(
-                    model = "https://docs.zebra.com/content/dam/techpubs/media/scanners/common/1d-barcodes/sample-aztec.svg/_jcr_content/renditions/original",
+                    model = viewModel.getQrCode(),
                     contentDescription = "Ticket QR Code",
                     contentScale = ContentScale.Crop,
                     modifier = Modifier
@@ -181,13 +210,13 @@ fun MainTicketView(flightData: FlightData) {
                 )
             }
         }
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceEvenly
-        ) {
-            OutlinedButton(onClick = {}) {
-                Text(stringResource(R.string.switch_ticket))
-            }
-        }
+//        Row( // Right now, only aztec is used as the format
+//            modifier = Modifier.fillMaxWidth(),
+//            horizontalArrangement = Arrangement.SpaceEvenly
+//        ) {
+//            OutlinedButton(onClick = {}) {
+//                Text(stringResource(R.string.switch_ticket))
+//            }
+//        }
     }
 }

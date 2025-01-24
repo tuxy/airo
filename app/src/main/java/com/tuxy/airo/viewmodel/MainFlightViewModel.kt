@@ -5,7 +5,6 @@ import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProvider
 import com.tuxy.airo.data.FlightData
 import com.tuxy.airo.data.FlightDataDao
 import kotlinx.coroutines.DelicateCoroutinesApi

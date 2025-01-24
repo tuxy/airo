@@ -89,7 +89,11 @@ class DetailsViewModel(context: Context, flightDataDao: FlightDataDao, id: Strin
         if (status == context.getString(R.string.check_in)) {
             val correctedTime = time.minusHours(1)
 
-            return "${context.resources.getString(R.string.ends_at)} ${correctedTime.format(DateTimeFormatter.ofPattern("HH:mm"))}"
+            return "${context.resources.getString(R.string.ends_at)} ${
+                correctedTime.format(
+                    DateTimeFormatter.ofPattern("HH:mm")
+                )
+            }"
         }
 
         return ""
