@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">Airo</string>
+    <string name="app_name" translatable="false">Airo</string>
     <string name="aircraft_information">Aircraft Information</string>
     <string name="aircraft">Aircraft</string>
     <string name="seat_maps">Seat Maps</string>
@@ -42,4 +42,6 @@
     <string name="allow_camera_toast">Please allow camera permission</string>
     <string name="date">Date</string>
     <string name="invalid_pass">Invalid boarding pass</string>
+    <string name="qrcode_desc">Ticket barcode</string>
+    <string name="scan_promt">Scan boarding pass</string>
 </resources>

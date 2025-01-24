@@ -61,12 +61,12 @@ class TicketViewModel(
         return flightData.value.ticketData != ""
     }
 
-    fun showCamera(barCodeLauncher: ManagedActivityResultLauncher<ScanOptions, ScanIntentResult>) {
+    fun showCamera(barCodeLauncher: ManagedActivityResultLauncher<ScanOptions, ScanIntentResult>, context: Context) {
         val options = ScanOptions()
         options.setDesiredBarcodeFormats(
             ScanOptions.ALL_CODE_TYPES
         )
-        options.setPrompt("Scan")
+        options.setPrompt(context.resources.getString(R.string.scan_promt))
         options.setCameraId(0)
         options.setBeepEnabled(false)
         options.setOrientationLocked(false)

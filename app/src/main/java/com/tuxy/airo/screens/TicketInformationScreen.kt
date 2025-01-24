@@ -100,7 +100,7 @@ fun TicketInformationView(
         floatingActionButton = {
             ExtendedFloatingActionButton(onClick = {
                 if (viewModel.hasCameraPermission) {
-                    viewModel.showCamera(barCodeLauncher)
+                    viewModel.showCamera(barCodeLauncher, context)
                 } else {
                     if (!viewModel.hasCameraPermission) {
                         viewModel.toast.show()
@@ -202,7 +202,7 @@ fun MainTicketView(
             ) {
                 AsyncImage(
                     model = viewModel.getQrCode(),
-                    contentDescription = "Ticket QR Code",
+                    contentDescription = stringResource(R.string.qrcode_desc),
                     contentScale = ContentScale.Crop,
                     modifier = Modifier
                         .fillMaxWidth()
