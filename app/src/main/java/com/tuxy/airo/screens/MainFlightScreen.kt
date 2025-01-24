@@ -1,5 +1,6 @@
 package com.tuxy.airo.screens
 
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -37,8 +38,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
@@ -56,8 +59,11 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.time.Duration
 import java.time.LocalDateTime
+import java.time.ZoneOffset
+import java.time.format.DateTimeFormatter
 import kotlin.math.absoluteValue
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun MainFlightView(
     navController: NavController,
@@ -91,8 +97,14 @@ fun MainFlightView(
                     .wrapContentHeight()
                     .heightIn(max = 2000.dp)
             ) {
-                items(viewModel.flightData) { flight ->
-                    FlightCard(navController, flight, viewModel)
+                viewModel.flights.forEach { (header, items) ->
+                    stickyHeader {
+                        DateHeader(LocalDateTime.ofEpochSecond(header.toLong(), 0, ZoneOffset.UTC))
+                    }
+
+                    items(items) { flight ->
+                        FlightCard(navController, flight, viewModel)
+                    }
                 }
             }
         }
@@ -191,6 +203,23 @@ fun TicketInformationCard(flight: FlightData) {
             modifier = Modifier
                 .size(32.dp)
                 .clip(CircleShape)
+        )
+    }
+}
+
+@Composable
+fun DateHeader(time: LocalDateTime) {
+    Row(
+        modifier = Modifier
+            .padding(horizontal = 20.dp, vertical = 16.dp)
+            .fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.Bottom
+    ) {
+        Text(
+            time.format(DateTimeFormatter.ofPattern("dd MMM")),
+            fontSize = 24.sp,
+            fontWeight = FontWeight.W500
         )
     }
 }
