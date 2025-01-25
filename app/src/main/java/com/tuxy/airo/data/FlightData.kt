@@ -16,6 +16,7 @@ import androidx.room.TypeConverters
 import androidx.room.Update
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import java.time.Duration
 import java.time.LocalDateTime
@@ -91,8 +92,13 @@ abstract class FlightDataBase : RoomDatabase() {
 }
 
 @OptIn(DelicateCoroutinesApi::class)
-fun singleIntoMut(flightData: MutableState<FlightData>, flightDataDao: FlightDataDao, id: String) {
-    GlobalScope.launch {
+fun singleIntoMut(
+    flightData: MutableState<FlightData>,
+    flightDataDao: FlightDataDao,
+    id: String
+): Job {
+    val job = GlobalScope.launch {
         flightData.value = flightDataDao.readSingle(id)
     }
+    return job
 }

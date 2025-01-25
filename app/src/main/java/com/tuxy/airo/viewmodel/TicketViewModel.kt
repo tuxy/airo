@@ -22,9 +22,12 @@ import com.tuxy.airo.data.FlightData
 import com.tuxy.airo.data.FlightDataDao
 import com.tuxy.airo.data.IataParserData
 import com.tuxy.airo.data.singleIntoMut
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
 
 
-@Suppress("UNCHECKED_CAST")
+@Suppress("UNCHECKED_CAST", "OPT_IN_USAGE")
 class TicketViewModel(
     flightDataDao: FlightDataDao,
     id: String,
@@ -36,7 +39,7 @@ class TicketViewModel(
         context,
         context.resources.getString(R.string.allow_camera_toast),
         Toast.LENGTH_LONG
-    )
+    )!!
 
     var hasCameraPermission by mutableStateOf(
         ContextCompat.checkSelfPermission(
@@ -45,23 +48,46 @@ class TicketViewModel(
         ) == PackageManager.PERMISSION_GRANTED
     )
 
-    fun getData(context: Context) {
+    private fun getData(context: Context) {
         ticketData = IataParserData().parseData(flightData.value.ticketData, context)
     }
 
+    fun updateData(result: String, flightDataDao: FlightDataDao, context: Context) {
+        flightData.value.ticketData = result
+        ticketData = IataParserData().parseData(result, context)
+        GlobalScope.launch(Dispatchers.IO) {
+            flightDataDao.updateFlight(flightData.value)
+        }
+    }
+
+    fun deleteData(flightDataDao: FlightDataDao, context: Context) {
+        flightData.value.ticketData = ""
+        getData(context)
+        GlobalScope.launch(Dispatchers.IO) {
+            flightDataDao.updateFlight(flightData.value)
+        }
+    }
+
     init {
-        singleIntoMut(
-            flightData,
-            flightDataDao,
-            id
-        ) // On initialisation, pass db data into flightData
+        GlobalScope.launch(Dispatchers.IO) {
+            val job = singleIntoMut(
+                flightData,
+                flightDataDao,
+                id
+            ) // On initialisation, pass db data into flightData
+            job.join()
+            getData(context)
+        }
     }
 
     fun isDataPopulated(): Boolean {
         return flightData.value.ticketData != ""
     }
 
-    fun showCamera(barCodeLauncher: ManagedActivityResultLauncher<ScanOptions, ScanIntentResult>, context: Context) {
+    fun showCamera(
+        barCodeLauncher: ManagedActivityResultLauncher<ScanOptions, ScanIntentResult>,
+        context: Context
+    ) {
         val options = ScanOptions()
         options.setDesiredBarcodeFormats(
             ScanOptions.ALL_CODE_TYPES

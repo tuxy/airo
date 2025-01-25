@@ -1,21 +1,24 @@
 package com.tuxy.airo.screens
 
-import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.Create
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.outlined.Info
+import androidx.compose.material3.Card
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.Icon
@@ -30,6 +33,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
@@ -42,13 +46,9 @@ import com.tuxy.airo.data.FlightData
 import com.tuxy.airo.data.FlightDataDao
 import com.tuxy.airo.data.IataParserData
 import com.tuxy.airo.viewmodel.TicketViewModel
-import kotlinx.coroutines.DelicateCoroutinesApi
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.launch
 import java.time.format.DateTimeFormatter
 
-@OptIn(ExperimentalMaterial3Api::class, DelicateCoroutinesApi::class)
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TicketInformationView(
     navController: NavController,
@@ -59,18 +59,9 @@ fun TicketInformationView(
     val viewModel: TicketViewModel = viewModel(factory = viewModelFactory)
     val context = LocalContext.current
 
-    viewModel.getData(context)
-
     val barCodeLauncher = rememberLauncherForActivityResult(ScanContract()) { result ->
-        if (result.contents == null) {
-            Log.d("Camera", "Cancelled")
-        } else {
-            Log.d("Camera", result.contents)
-            viewModel.flightData.value.ticketData = result.contents
-            viewModel.getData(context)
-            GlobalScope.launch(Dispatchers.IO) {
-                flightDataDao.updateFlight(viewModel.flightData.value)
-            }
+        if (result.contents != null) {
+            viewModel.updateData(result.contents, flightDataDao, context)
         }
     }
 
@@ -88,7 +79,9 @@ fun TicketInformationView(
                     }
                 },
                 actions = {
-                    IconButton(onClick = { }) {
+                    IconButton(onClick = {
+                        viewModel.deleteData(flightDataDao, context)
+                    }) {
                         Icon(
                             imageVector = Icons.Filled.Delete,
                             contentDescription = stringResource(R.string.delete)
@@ -117,6 +110,26 @@ fun TicketInformationView(
     ) { innerPadding ->
         if (viewModel.isDataPopulated()) { // If there is no ticket, then show an empty screen
             Column(modifier = Modifier.padding(innerPadding)) {
+                if (!viewModel.ticketData.eTicketIndicator) {
+                    Card(
+                        modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 16.dp)
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(
+                                modifier = Modifier.padding(start = 16.dp),
+                                imageVector = Icons.Outlined.Info,
+                                contentDescription = stringResource(R.string.info)
+                            )
+                            Column(Modifier.padding(16.dp)) {
+                                Text("Warning", fontWeight = FontWeight.Bold)
+                                Spacer(Modifier.height(4.dp))
+                                Text("This ticket is not an E-ticket, so it may not be recognised")
+                            }
+                        }
+                    }
+                }
                 MainTicketView(viewModel.ticketData, viewModel.flightData.value, viewModel)
 //                if(viewModel.ticketData != IataParserData()) {
 //                    MainTicketView(viewModel.ticketData, viewModel.flightData.value)
@@ -139,7 +152,7 @@ fun MainTicketView(
     ) {
         Row(
             modifier = Modifier
-                .padding(28.dp)
+                .padding(horizontal = 24.dp, vertical = 16.dp)
                 .fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.Bottom
@@ -171,7 +184,7 @@ fun MainTicketView(
                 LargeTopSmallBottom(stringResource(R.string.seat), iataParserData.seat)
                 LargeTopSmallBottom(
                     stringResource(R.string.class_s),
-                    iataParserData.getClass(iataParserData.flightClass, LocalContext.current)
+                    iataParserData.flightClass
                 )
             }
             Row(
@@ -193,7 +206,7 @@ fun MainTicketView(
         Box(
             modifier = Modifier
                 .padding(horizontal = 64.dp)
-                .padding(vertical = 32.dp)
+                .padding(vertical = 4.dp)
         ) {
             Box(
                 modifier = Modifier

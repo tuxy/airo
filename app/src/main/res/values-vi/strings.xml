@@ -45,4 +45,5 @@
     <string name="invalid_pass">Thẻ lên máy bay không hợp lệ</string>
     <string name="qrcode_desc">Mã vé</string>
     <string name="scan_promt">Quét thẻ lên máy bay</string>
+    <string name="info">Thông tin</string>
 </resources>

@@ -19,7 +19,7 @@ class SettingsViewModel(context: Context) : ViewModel() {
     @OptIn(DelicateCoroutinesApi::class)
     fun saveKey(value: String) {
         GlobalScope.launch {
-            dataStore.saveApiKey(value)
+            dataStore.saveValueToKey("API_KEY", value)
         }
     }
 

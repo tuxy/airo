@@ -27,7 +27,7 @@ data class IataParserData(
                 carrier = barcode.substring(36, 38),
                 flightNumber = barcode.substring(39, 43),
                 date = getDay(barcode.substring(44, 47)),
-                flightClass = getClass(barcode.substring(47, 48), context),
+                flightClass = getClass(barcode.substring(47, 48).toCharArray()[0], context),
                 seat = barcode.substring(48, 52),
             )
         } catch (e: Exception) {
@@ -47,14 +47,14 @@ data class IataParserData(
         ) // Year doesn't really matter, it's the day that does
     }
 
-    fun getClass(string: String, context: Context): String {
+    fun getClass(char: Char, context: Context): String {
         val classes = arrayOf(
-            arrayOf("A", "F", "P"), // First Class
-            arrayOf("C", "D", "I", "J", "Z"), // Business class
-            arrayOf("E", "W"), // Premium Economy
-            arrayOf("B", "H", "K", "L", "M", "N", "Q", "S", "T", "V", "X", "Y"), // Economy
+            arrayOf('A', 'F', 'P'), // First Class
+            arrayOf('C', 'D', 'I', 'J', 'Z'), // Business class
+            arrayOf('E', 'W'), // Premium Economy
+            arrayOf('B', 'H', 'K', 'L', 'M', 'N', 'Q', 'S', 'T', 'V', 'X', 'Y'), // Economy
         )
-        return when (string) {
+        return when (char) {
             in classes[0] -> context.resources.getString(R.string.first_class)
             in classes[1] -> context.resources.getString(R.string.business_class)
             in classes[2] -> context.resources.getString(R.string.premium_class)
