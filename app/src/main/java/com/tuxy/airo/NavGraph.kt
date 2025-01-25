@@ -72,7 +72,7 @@ fun SetupNavGraph( // Transitions taken from Read You's repository
             TicketInformationView(
                 navController,
                 backStackEntry.arguments?.getString("id").toString(),
-                flightDataDao
+                flightDataDao,
             )
         }
     }

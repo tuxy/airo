@@ -1,5 +1,6 @@
 package com.tuxy.airo.screens
 
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -32,15 +33,15 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.mutableFloatStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
@@ -58,15 +59,18 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.time.Duration
 import java.time.LocalDateTime
+import java.time.ZoneOffset
+import java.time.format.DateTimeFormatter
 import kotlin.math.absoluteValue
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun MainFlightView(
     navController: NavController,
     flightDataDao: FlightDataDao
 ) {
-    val viewModelFactory = MainFlightViewModel.Factory(flightDataDao)
-    val viewModel: MainFlightViewModel = viewModel(factory = viewModelFactory)
+    val viewModel = viewModel<MainFlightViewModel>()
+    viewModel.loadData(flightDataDao)
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),
@@ -93,8 +97,14 @@ fun MainFlightView(
                     .wrapContentHeight()
                     .heightIn(max = 2000.dp)
             ) {
-                items(viewModel.flightData.value) { flight ->
-                    FlightCard(navController, flight)
+                viewModel.flights.forEach { (header, items) ->
+                    stickyHeader {
+                        DateHeader(LocalDateTime.ofEpochSecond(header.toLong(), 0, ZoneOffset.UTC))
+                    }
+
+                    items(items) { flight ->
+                        FlightCard(navController, flight, viewModel)
+                    }
                 }
             }
         }
@@ -105,10 +115,9 @@ fun MainFlightView(
 @Composable
 fun FlightCard(
     navController: NavController,
-    flightData: FlightData
+    flightData: FlightData,
+    viewModel: MainFlightViewModel
 ) {
-    val progress = remember { mutableFloatStateOf(0.0F) }
-
     Column(
         modifier = Modifier
             .padding(horizontal = 16.dp, vertical = 8.dp)
@@ -152,7 +161,7 @@ fun FlightCard(
                                 .toMillis()
 
                             if (LocalDateTime.now() < flightData.departDate) {
-                                progress.floatValue = 0.0F
+                                viewModel.progress.floatValue = 0.0F
                                 return@launch
                             }
 
@@ -160,10 +169,10 @@ fun FlightCard(
 
                             val current = now.toFloat() / duration.toFloat()
 
-                            progress.floatValue = current.absoluteValue
+                            viewModel.progress.floatValue = current.absoluteValue
                             delay(10000)
                         }
-                        progress.floatValue
+                        viewModel.progress.floatValue
                     },
                     modifier = Modifier
                         .padding(16.dp)
@@ -184,8 +193,8 @@ fun TicketInformationCard(flight: FlightData) {
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
         LargeTopSmallBottom(stringResource(R.string.flight), flight.callSign)
-        LargeTopSmallBottom(stringResource(R.string.terminal), flight.ticketTerminal)
-        LargeTopSmallBottom(stringResource(R.string.gate), flight.ticketGate)
+        LargeTopSmallBottom(stringResource(R.string.terminal), flight.terminal)
+        LargeTopSmallBottom(stringResource(R.string.gate), flight.gate)
         Spacer(modifier = Modifier.width(16.dp))
         AsyncImage(
             model = "https://raw.githubusercontent.com/Jxck-S/airline-logos/main/radarbox_logos/${flight.airlineIcao}.png",
@@ -194,6 +203,23 @@ fun TicketInformationCard(flight: FlightData) {
             modifier = Modifier
                 .size(32.dp)
                 .clip(CircleShape)
+        )
+    }
+}
+
+@Composable
+fun DateHeader(time: LocalDateTime) {
+    Row(
+        modifier = Modifier
+            .padding(horizontal = 20.dp, vertical = 16.dp)
+            .fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.Bottom
+    ) {
+        Text(
+            time.format(DateTimeFormatter.ofPattern("dd MMM")),
+            fontSize = 24.sp,
+            fontWeight = FontWeight.W500
         )
     }
 }

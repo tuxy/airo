@@ -20,9 +20,9 @@ class UserPreferences(private val context: Context) {
             preferences[API_KEY] ?: ""
         }
 
-    suspend fun saveApiKey(key: String) {
+    suspend fun saveValueToKey(key: String, value: String) {
         context.dataStore.edit { preferences ->
-            preferences[API_KEY] = key
+            preferences[stringPreferencesKey(key)] = value
         }
     }
 }

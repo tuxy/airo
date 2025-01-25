@@ -16,6 +16,7 @@ import androidx.room.TypeConverters
 import androidx.room.Update
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import java.time.Duration
 import java.time.LocalDateTime
@@ -35,11 +36,9 @@ data class FlightData(
     val arriveDate: LocalDateTime = LocalDateTime.of(2000, 1, 1, 1, 1, 1, 1),
     val duration: Duration = Duration.between(LocalDateTime.now(), LocalDateTime.now()),
     val toName: String = "",
-    val ticketSeat: String = "",
-    val ticketData: String = "",
-    val ticketQr: String = "",
-    val ticketGate: String = "",
-    val ticketTerminal: String = "",
+    var ticketData: String = "",
+    val gate: String = "",
+    val terminal: String = "",
     val aircraftName: String = "",
     val aircraftUri: String = "",
     val author: String = "",
@@ -93,8 +92,13 @@ abstract class FlightDataBase : RoomDatabase() {
 }
 
 @OptIn(DelicateCoroutinesApi::class)
-fun singleIntoMut(flightData: MutableState<FlightData>, flightDataDao: FlightDataDao, id: String) {
-    GlobalScope.launch {
+fun singleIntoMut(
+    flightData: MutableState<FlightData>,
+    flightDataDao: FlightDataDao,
+    id: String
+): Job {
+    val job = GlobalScope.launch {
         flightData.value = flightDataDao.readSingle(id)
     }
+    return job
 }

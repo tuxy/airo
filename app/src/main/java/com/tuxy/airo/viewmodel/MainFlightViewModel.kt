@@ -1,31 +1,40 @@
 package com.tuxy.airo.viewmodel
 
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProvider
 import com.tuxy.airo.data.FlightData
 import com.tuxy.airo.data.FlightDataDao
+import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
+import java.time.ZoneOffset
 
-@Suppress("OPT_IN_USAGE")
-class MainFlightViewModel(flightDataDao: FlightDataDao) : ViewModel() {
-    var flightData = mutableStateOf(emptyList<FlightData>()) // Initialise empty viewmodel
+class MainFlightViewModel() : ViewModel() {
+    var flightData by mutableStateOf(emptyList<FlightData>()) // Initialise empty viewmodel
+        private set
+    var progress = mutableFloatStateOf(0.0F)
         private set
 
-    init {
-        GlobalScope.launch {
-            flightData.value = flightDataDao.readAll()
-        } // On initialisation, pass db data into flightData
-    }
+    // Group by 3 days
+    var flights = flightData.groupBy { flight ->
+        Math.round(
+            flight.departDate.toEpochSecond(ZoneOffset.UTC).toDouble() / 172800
+        ) * 172800
+    }.toSortedMap()
 
-    // Factory
-    @Suppress("UNCHECKED_CAST")
-    class Factory(
-        private val flightDataDao: FlightDataDao,
-    ) : ViewModelProvider.NewInstanceFactory() {
-        override fun <T : ViewModel> create(modelClass: Class<T>): T {
-            return MainFlightViewModel(flightDataDao) as T
+    @OptIn(DelicateCoroutinesApi::class)
+    fun loadData(flightDataDao: FlightDataDao) {
+        GlobalScope.launch {
+            flightData = flightDataDao.readAll()
+            // Group by 3 days
+            flights = flightData.groupBy { flight ->
+                Math.round(
+                    flight.departDate.toEpochSecond(ZoneOffset.UTC).toDouble() / 172800
+                ) * 172800
+            }.toSortedMap()
         }
     }
 }
