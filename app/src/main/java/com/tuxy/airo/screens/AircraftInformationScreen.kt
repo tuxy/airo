@@ -10,7 +10,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.automirrored.filled.OpenInNew
 import androidx.compose.material3.Icon
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.Scaffold
@@ -84,7 +84,7 @@ fun AircraftListView(
                     viewModel.openWebpage(context, "https://aerolopa.com/${flightData.callSign}")
                 },
             headlineContent = { Text(stringResource(R.string.seat_maps)) },
-            trailingContent = { Icon(Icons.Filled.Info, "") }
+            trailingContent = { Icon(Icons.AutoMirrored.Filled.OpenInNew, "") }
         )
         ListItem(
             modifier = Modifier
@@ -92,7 +92,12 @@ fun AircraftListView(
                     viewModel.openWebpage(context, flightData.authorUri)
                 },
             headlineContent = { Text(stringResource(R.string.author)) },
-            trailingContent = { Icon(Icons.Filled.Info, stringResource(R.string.empty)) }
+            trailingContent = {
+                Icon(
+                    Icons.AutoMirrored.Filled.OpenInNew,
+                    stringResource(R.string.empty)
+                )
+            }
         )
     }
 }

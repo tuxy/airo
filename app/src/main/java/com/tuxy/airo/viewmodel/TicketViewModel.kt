@@ -86,8 +86,16 @@ class TicketViewModel(
 
     fun showCamera(
         barCodeLauncher: ManagedActivityResultLauncher<ScanOptions, ScanIntentResult>,
+        permissionLauncher: ManagedActivityResultLauncher<String, Boolean>,
         context: Context
     ) {
+        permissionLauncher.launch(Manifest.permission.CAMERA)
+
+        if (!hasCameraPermission) {
+            toast.show()
+            return
+        }
+
         val options = ScanOptions()
         options.setDesiredBarcodeFormats(
             ScanOptions.ALL_CODE_TYPES

@@ -69,14 +69,15 @@ fun RouteBar(flightData: FlightData) {
         modifier = Modifier
             .padding(16.dp)
             .fillMaxWidth(),
-        horizontalArrangement = Arrangement.SpaceBetween
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
     ) {
-        DepartureAndDestinationText(flightData.from, flightData.fromName)
+        BoldDepartureAndDestinationText(flightData.from, flightData.fromName, Alignment.Start)
         Icon(
             imageVector = Icons.AutoMirrored.Filled.ArrowForward,
             contentDescription = stringResource(R.string.to)
         )
-        DepartureAndDestinationText(flightData.to, flightData.toName)
+        BoldDepartureAndDestinationText(flightData.to, flightData.toName, Alignment.End)
     }
 }
 
@@ -115,7 +116,7 @@ fun DepartureAndDestinationText(icao: String, fullName: String) {
 fun BoldDepartureAndDestinationText(
     icao: String,
     fullName: String,
-    alignment: Alignment.Horizontal
+    alignment: Alignment.Horizontal,
 ) {
     Column(
         modifier = Modifier.defaultMinSize(minWidth = 64.dp),

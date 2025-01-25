@@ -1,9 +1,13 @@
 package com.tuxy.airo.viewmodel
 
 import android.content.Context
-import androidx.compose.material3.Badge
+import androidx.compose.foundation.layout.size
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.LocationOn
+import androidx.compose.material3.Icon
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.ViewModel
@@ -119,16 +123,6 @@ class DetailsViewModel(context: Context, flightDataDao: FlightDataDao, id: Strin
     @OptIn(DelicateCoroutinesApi::class)
     val mapState = MapState(6, mapSize, mapSize).apply {
         addLayer(tileStreamProvider)
-        addMarker("origin", x = flightData.value.mapOriginX, y = flightData.value.mapOriginY) {
-            Badge(contentColor = Color.Black, containerColor = Color.Black)
-        }
-        addMarker(
-            "destination",
-            x = flightData.value.mapDestinationX,
-            y = flightData.value.mapDestinationY
-        ) {
-            Badge(contentColor = Color.Black, containerColor = Color.Black)
-        }
         GlobalScope.launch {
             scrollTo(
                 avr(flightData.value.mapOriginX, flightData.value.mapDestinationX),
@@ -140,11 +134,35 @@ class DetailsViewModel(context: Context, flightDataDao: FlightDataDao, id: Strin
                     flightData.value.mapDestinationY
                 )
             )
-            addPath("route", color = Color.Black, width = 2.dp) {
+            addPath("route", color = Color.DarkGray, width = 2.dp) {
                 addPoint(x = flightData.value.mapOriginX, y = flightData.value.mapOriginY - 0.0007)
                 addPoint(
                     x = flightData.value.mapDestinationX,
                     y = flightData.value.mapDestinationY - 0.0007
+                )
+            }
+            addMarker(
+                "origin",
+                x = flightData.value.mapOriginX,
+                y = flightData.value.mapOriginY,
+            ) {
+                Icon(
+                    Icons.Filled.LocationOn,
+                    "",
+                    modifier = Modifier.size(16.dp),
+                    tint = Color.DarkGray
+                )
+            }
+            addMarker(
+                "destination",
+                x = flightData.value.mapDestinationX,
+                y = flightData.value.mapDestinationY,
+            ) {
+                Icon(
+                    Icons.Filled.LocationOn,
+                    "",
+                    modifier = Modifier.size(16.dp),
+                    tint = Color.DarkGray
                 )
             }
         }

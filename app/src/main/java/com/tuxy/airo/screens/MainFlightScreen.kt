@@ -21,6 +21,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.FlightTakeoff
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -36,9 +37,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -90,21 +93,48 @@ fun MainFlightView(
                 .height(2000.dp)
                 .verticalScroll(rememberScrollState())
         ) {
-            LazyColumn(
-                modifier = Modifier
-                    .padding(innerPadding)
-                    .fillMaxWidth()
-                    .wrapContentHeight()
-                    .heightIn(max = 2000.dp)
-            ) {
-                viewModel.flights.forEach { (header, items) ->
-                    stickyHeader {
-                        DateHeader(LocalDateTime.ofEpochSecond(header.toLong(), 0, ZoneOffset.UTC))
-                    }
+            if (!viewModel.flights.isEmpty()) {
+                LazyColumn(
+                    modifier = Modifier
+                        .padding(innerPadding)
+                        .fillMaxWidth()
+                        .wrapContentHeight()
+                        .heightIn(max = 2000.dp)
+                ) {
+                    viewModel.flights.forEach { (header, items) ->
+                        stickyHeader {
+                            DateHeader(
+                                LocalDateTime.ofEpochSecond(
+                                    header.toLong(),
+                                    0,
+                                    ZoneOffset.UTC
+                                )
+                            )
+                        }
 
-                    items(items) { flight ->
-                        FlightCard(navController, flight, viewModel)
+                        items(items) { flight ->
+                            FlightCard(navController, flight, viewModel)
+                        }
                     }
+                }
+            } else {
+                Column(
+                    modifier = Modifier.fillMaxSize(),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                ) {
+                    Spacer(Modifier.height(360.dp))
+                    Icon(
+                        modifier = Modifier.size(100.dp),
+                        imageVector = Icons.Filled.FlightTakeoff,
+                        contentDescription = stringResource(R.string.add_flight),
+                        tint = Color.Gray
+                    )
+                    Text(
+                        stringResource(R.string.no_flight_smile),
+                        color = Color.Gray,
+                        modifier = Modifier.padding(24.dp),
+                        textAlign = TextAlign.Center
+                    )
                 }
             }
         }
@@ -140,7 +170,7 @@ fun FlightCard(
                         .padding(16.dp)
                         .fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.Bottom
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
                     BoldDepartureAndDestinationText(
                         flightData.from,

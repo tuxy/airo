@@ -45,4 +45,10 @@
     <string name="qrcode_desc">Ticket barcode</string>
     <string name="scan_promt">Scan boarding pass</string>
     <string name="info">Information</string>
+    <string name="copy">Copy</string>
+    <string name="copy_reference">Copy booking reference</string>
+    <string name="warning">Warning</string>
+    <string name="not_e_ticket">This ticket is not supported </string>
+    <string name="no_ticket">No ticket found. Scan ticket with the add ticket button.</string>
+    <string name="no_flight_smile">No flights :)</string>
 </resources>

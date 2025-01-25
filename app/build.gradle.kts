@@ -59,6 +59,9 @@ dependencies {
     implementation(libs.kotlinx.datetime)
     implementation(libs.androidx.activity.ktx)
 
+    // more icons
+    implementation(libs.androidx.material.icons.extended)
+
     // room
     ksp(libs.androidx.room.compiler)
     implementation(libs.androidx.room.runtime)

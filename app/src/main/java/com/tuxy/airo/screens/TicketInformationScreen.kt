@@ -1,6 +1,7 @@
 package com.tuxy.airo.screens
 
 import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -12,17 +13,22 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.AirplaneTicket
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
-import androidx.compose.material.icons.filled.Create
+import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.QrCode
 import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material3.Card
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
@@ -31,9 +37,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
@@ -64,6 +73,12 @@ fun TicketInformationView(
             viewModel.updateData(result.contents, flightDataDao, context)
         }
     }
+    val permissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission(),
+        onResult = { granted ->
+            viewModel.hasCameraPermission = granted
+        }
+    )
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),
@@ -93,7 +108,8 @@ fun TicketInformationView(
         floatingActionButton = {
             ExtendedFloatingActionButton(onClick = {
                 if (viewModel.hasCameraPermission) {
-                    viewModel.showCamera(barCodeLauncher, context)
+
+                    viewModel.showCamera(barCodeLauncher, permissionLauncher, context)
                 } else {
                     if (!viewModel.hasCameraPermission) {
                         viewModel.toast.show()
@@ -101,9 +117,10 @@ fun TicketInformationView(
                 }
             }) {
                 Icon(
-                    imageVector = Icons.Filled.Create,
+                    imageVector = Icons.Filled.QrCode,
                     contentDescription = stringResource(R.string.add_ticket)
                 )
+                Spacer(Modifier.width(4.dp))
                 Text(stringResource(R.string.add_ticket))
             }
         }
@@ -112,7 +129,9 @@ fun TicketInformationView(
             Column(modifier = Modifier.padding(innerPadding)) {
                 if (!viewModel.ticketData.eTicketIndicator) {
                     Card(
-                        modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 16.dp)
+                        modifier = Modifier
+                            .padding(start = 16.dp, end = 16.dp)
+                            .fillMaxWidth()
                     ) {
                         Row(
                             verticalAlignment = Alignment.CenterVertically
@@ -123,9 +142,9 @@ fun TicketInformationView(
                                 contentDescription = stringResource(R.string.info)
                             )
                             Column(Modifier.padding(16.dp)) {
-                                Text("Warning", fontWeight = FontWeight.Bold)
+                                Text(stringResource(R.string.warning), fontWeight = FontWeight.Bold)
                                 Spacer(Modifier.height(4.dp))
-                                Text("This ticket is not an E-ticket, so it may not be recognised")
+                                Text(stringResource(R.string.not_e_ticket))
                             }
                         }
                     }
@@ -137,6 +156,25 @@ fun TicketInformationView(
 //                    Toast.makeText(LocalContext.current, stringResource(R.string.invalid_pass), Toast.LENGTH_LONG).show()
 //                }
             }
+        } else {
+            Column(
+                modifier = Modifier.fillMaxSize(),
+                horizontalAlignment = Alignment.CenterHorizontally,
+            ) {
+                Spacer(Modifier.height(360.dp))
+                Icon(
+                    modifier = Modifier.size(100.dp),
+                    imageVector = Icons.AutoMirrored.Filled.AirplaneTicket,
+                    contentDescription = stringResource(R.string.add_ticket),
+                    tint = Color.Gray
+                )
+                Text(
+                    stringResource(R.string.no_ticket),
+                    color = Color.Gray,
+                    modifier = Modifier.padding(32.dp),
+                    textAlign = TextAlign.Center
+                )
+            }
         }
     }
 }
@@ -147,6 +185,8 @@ fun MainTicketView(
     flightData: FlightData,
     viewModel: TicketViewModel
 ) {
+    val clipboard = LocalClipboardManager.current
+
     Column(
         modifier = Modifier,
     ) {
@@ -206,7 +246,7 @@ fun MainTicketView(
         Box(
             modifier = Modifier
                 .padding(horizontal = 64.dp)
-                .padding(vertical = 4.dp)
+                .padding(vertical = 20.dp)
         ) {
             Box(
                 modifier = Modifier
@@ -223,13 +263,23 @@ fun MainTicketView(
                 )
             }
         }
-//        Row( // Right now, only aztec is used as the format
-//            modifier = Modifier.fillMaxWidth(),
-//            horizontalArrangement = Arrangement.SpaceEvenly
-//        ) {
-//            OutlinedButton(onClick = {}) {
-//                Text(stringResource(R.string.switch_ticket))
-//            }
-//        }
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceEvenly
+        ) {
+            OutlinedButton(onClick = { clipboard.setText(AnnotatedString(iataParserData.bookingReference)) }) {
+                Row(
+                    Modifier.padding(4.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(
+                        imageVector = Icons.Filled.ContentCopy,
+                        contentDescription = stringResource(R.string.copy)
+                    )
+                    Spacer(Modifier.width(4.dp))
+                    Text(stringResource(R.string.copy_reference))
+                }
+            }
+        }
     }
 }

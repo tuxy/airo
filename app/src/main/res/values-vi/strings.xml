@@ -46,4 +46,10 @@
     <string name="qrcode_desc">Mã vé</string>
     <string name="scan_promt">Quét thẻ lên máy bay</string>
     <string name="info">Thông tin</string>
+    <string name="copy">Sao chép</string>
+    <string name="copy_reference">Sao chép mã đặt chỗ</string>
+    <string name="warning">Lưu ý</string>
+    <string name="not_e_ticket">Vé này không được hỗ trợ</string>
+    <string name="no_ticket">Không tìm thấy vé nào. Quét vé với nút quét thể lên máy bay</string>
+    <string name="no_flight_smile">Không có chuyến bay nào :)</string>
 </resources>
