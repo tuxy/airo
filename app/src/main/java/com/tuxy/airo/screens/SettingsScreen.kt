@@ -74,7 +74,6 @@ fun SettingsView( // TODO Implement notification permissions
 @Composable
 fun Setting(name: String) {
     val value = remember { mutableStateOf(true) }
-
     Row(
         modifier = Modifier
             .fillMaxWidth()

@@ -3,6 +3,7 @@ package com.tuxy.airo.screens
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material3.DatePicker
@@ -16,8 +17,10 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.tuxy.airo.R
@@ -30,21 +33,19 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.joinAll
 import kotlinx.coroutines.launch
-import java.text.SimpleDateFormat
-import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class, DelicateCoroutinesApi::class)
 @Composable
 fun DatePickerView(
     navController: NavController,
     flightNumber: String,
-    data: FlightDataDao
+    flightDataDao: FlightDataDao
 ) {
     val datePickerState = rememberDatePickerState(initialDisplayMode = DisplayMode.Picker)
-    val timeMillis = maybe(datePickerState.selectedDateMillis)
-
     val viewModelFactory = DateViewModel.Factory(LocalContext.current)
     val viewModel: DateViewModel = viewModel(factory = viewModelFactory)
+
+    val timeMillis = viewModel.maybe(datePickerState.selectedDateMillis)
 
     viewModel.GetKey() // Get key from data store
 
@@ -55,10 +56,10 @@ fun DatePickerView(
                 onClick = {
                     viewModel.loading = true
                     GlobalScope.launch(Dispatchers.Main) {
-                        getData(
+                        getData( // FlightRequest.kt
                             flightNumber,
-                            data,
-                            getDateAsString(timeMillis),
+                            flightDataDao,
+                            viewModel.getDateAsString(timeMillis),
                             viewModel.toasts,
                             viewModel.key
                         )
@@ -82,17 +83,11 @@ fun DatePickerView(
                 )
             }
             DatePicker(
+                modifier = Modifier
+                    .padding(16.dp)
+                    .clip(RoundedCornerShape(28.dp)),
                 state = datePickerState
             )
         }
     }
-}
-
-fun maybe(time: Long?): Long {
-    return time ?: 0
-}
-
-fun getDateAsString(time: Long): String {
-    val dateFormat = SimpleDateFormat("yyyy-MM-DD", Locale.UK)
-    return dateFormat.format(time)
 }

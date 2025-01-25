@@ -11,11 +11,13 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import com.tuxy.airo.R
 import com.tuxy.airo.data.UserPreferences
+import java.text.SimpleDateFormat
+import java.util.Locale
 
 @Suppress("UNCHECKED_CAST")
 class DateViewModel(context: Context) : ViewModel() {
     private val dataStore = UserPreferences(context)
-    val toasts = arrayOf(
+    val toasts = arrayOf( // Toasts on error
         Toast.makeText(context, context.resources.getString(R.string.no_api), Toast.LENGTH_SHORT),
         Toast.makeText(
             context,
@@ -27,9 +29,18 @@ class DateViewModel(context: Context) : ViewModel() {
     var loading by mutableStateOf(false)
     var key by mutableStateOf("")
 
-    @Composable
+    @Composable // Definitely not a composable, but it works to get API Key
     fun GetKey() {
         key = dataStore.getApiKey.collectAsState(initial = "").value
+    }
+
+    fun maybe(time: Long?): Long {
+        return time ?: 0
+    }
+
+    fun getDateAsString(time: Long): String {
+        val dateFormat = SimpleDateFormat("yyyy-MM-DD", Locale.UK)
+        return dateFormat.format(time)
     }
 
     // Factory
