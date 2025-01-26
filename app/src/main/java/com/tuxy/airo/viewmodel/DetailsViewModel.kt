@@ -124,23 +124,6 @@ class DetailsViewModel(context: Context, flightDataDao: FlightDataDao, id: Strin
     val mapState = MapState(6, mapSize, mapSize).apply {
         addLayer(tileStreamProvider)
         GlobalScope.launch {
-            scrollTo(
-                avr(flightData.value.mapOriginX, flightData.value.mapDestinationX),
-                avr(flightData.value.mapOriginY, flightData.value.mapDestinationY),
-                calculateScale(
-                    flightData.value.mapOriginX,
-                    flightData.value.mapOriginY,
-                    flightData.value.mapDestinationX,
-                    flightData.value.mapDestinationY
-                )
-            )
-            addPath("route", color = Color.DarkGray, width = 2.dp) {
-                addPoint(x = flightData.value.mapOriginX, y = flightData.value.mapOriginY - 0.0007)
-                addPoint(
-                    x = flightData.value.mapDestinationX,
-                    y = flightData.value.mapDestinationY - 0.0007
-                )
-            }
             addMarker(
                 "origin",
                 x = flightData.value.mapOriginX,
@@ -165,6 +148,23 @@ class DetailsViewModel(context: Context, flightDataDao: FlightDataDao, id: Strin
                     tint = Color.DarkGray
                 )
             }
+            addPath("route", color = Color.DarkGray, width = 2.dp) {
+                addPoint(x = flightData.value.mapOriginX, y = flightData.value.mapOriginY - 0.0007)
+                addPoint(
+                    x = flightData.value.mapDestinationX,
+                    y = flightData.value.mapDestinationY - 0.0007
+                )
+            }
+            scrollTo(
+                avr(flightData.value.mapOriginX, flightData.value.mapDestinationX),
+                avr(flightData.value.mapOriginY, flightData.value.mapDestinationY),
+                calculateScale(
+                    flightData.value.mapOriginX,
+                    flightData.value.mapOriginY,
+                    flightData.value.mapDestinationX,
+                    flightData.value.mapDestinationY
+                )
+            )
         }
     }
 
