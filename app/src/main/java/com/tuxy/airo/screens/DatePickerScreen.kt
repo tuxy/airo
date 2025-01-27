@@ -57,7 +57,7 @@ fun DatePickerView(
                     viewModel.loading = true
                     GlobalScope.launch(Dispatchers.Main) {
                         getData( // FlightRequest.kt
-                            flightNumber,
+                            viewModel.formatFlightNumber(flightNumber),
                             flightDataDao,
                             viewModel.getDateAsString(timeMillis),
                             viewModel.toasts,

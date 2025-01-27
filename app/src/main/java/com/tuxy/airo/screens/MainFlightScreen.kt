@@ -101,19 +101,26 @@ fun MainFlightView(
                         .wrapContentHeight()
                         .heightIn(max = 2000.dp)
                 ) {
-                    viewModel.flights.forEach { (header, items) ->
+                    viewModel.flights.forEach { (header, flights) ->
+
+                        val unsortedFlights = flights.groupBy { flight ->
+                            flight.departDate.toEpochSecond(ZoneOffset.UTC).toDouble()
+                        }.toSortedMap()
+
                         stickyHeader {
                             DateHeader(
                                 LocalDateTime.ofEpochSecond(
-                                    header.toLong(),
+                                    header.toLong(), // Grouped date
                                     0,
                                     ZoneOffset.UTC
                                 )
                             )
                         }
 
-                        items(items) { flight ->
-                            FlightCard(navController, flight, viewModel)
+                        unsortedFlights.forEach { (_, flights) -> // Another list, with un-rounded values (Performance?)
+                            items(flights) { flight ->
+                                FlightCard(navController, flight, viewModel)
+                            }
                         }
                     }
                 }

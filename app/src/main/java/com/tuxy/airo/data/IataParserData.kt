@@ -31,7 +31,6 @@ data class IataParserData(
                 seat = barcode.substring(48, 52),
             )
         } catch (e: Exception) {
-            e.printStackTrace()
             return IataParserData()
         }
     }

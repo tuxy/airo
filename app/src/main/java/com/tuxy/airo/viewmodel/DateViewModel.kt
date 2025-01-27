@@ -43,6 +43,14 @@ class DateViewModel(context: Context) : ViewModel() {
         return dateFormat.format(time)
     }
 
+    fun formatFlightNumber(string: String): String {
+        val splitString = string.split("[- ]")
+        if (splitString.size == 2) {
+            return "${splitString[0]}${splitString[1]}"
+        }
+        return string
+    }
+
     // Factory
     class Factory(
         private val context: Context,
