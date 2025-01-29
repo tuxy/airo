@@ -1,7 +1,7 @@
 package com.tuxy.airo.screens
 
 import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -70,15 +70,10 @@ fun TicketInformationView(
 
     val barCodeLauncher = rememberLauncherForActivityResult(ScanContract()) { result ->
         if (result.contents != null) {
-            viewModel.updateData(result.contents, flightDataDao, context)
+            viewModel.ticketString = result.contents
+            viewModel.updateData(flightDataDao, context)
         }
     }
-    val permissionLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.RequestPermission(),
-        onResult = { granted ->
-            viewModel.hasCameraPermission = granted
-        }
-    )
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),
@@ -108,8 +103,7 @@ fun TicketInformationView(
         floatingActionButton = {
             ExtendedFloatingActionButton(onClick = {
                 if (viewModel.hasCameraPermission) {
-
-                    viewModel.showCamera(barCodeLauncher, permissionLauncher, context)
+                    viewModel.showCamera(barCodeLauncher, context)
                 } else {
                     if (!viewModel.hasCameraPermission) {
                         viewModel.toast.show()
@@ -125,9 +119,9 @@ fun TicketInformationView(
             }
         }
     ) { innerPadding ->
-        if (viewModel.isDataPopulated()) { // If there is no ticket, then show an empty screen
+        AnimatedVisibility(viewModel.isDataPopulated()) { // If there is no ticket, then show an empty screen
             Column(modifier = Modifier.padding(innerPadding)) {
-                if (!viewModel.ticketData.eTicketIndicator) {
+                AnimatedVisibility(!viewModel.ticketData.eTicketIndicator) {
                     Card(
                         modifier = Modifier
                             .padding(start = 16.dp, end = 16.dp)
@@ -156,7 +150,8 @@ fun TicketInformationView(
 //                    Toast.makeText(LocalContext.current, stringResource(R.string.invalid_pass), Toast.LENGTH_LONG).show()
 //                }
             }
-        } else {
+        }
+        if (!viewModel.isDataPopulated()) {
             Column(
                 modifier = Modifier.fillMaxSize(),
                 horizontalAlignment = Alignment.CenterHorizontally,
@@ -253,14 +248,16 @@ fun MainTicketView(
                     .fillMaxWidth()
                     .background(Color.Gray)
             ) {
-                AsyncImage(
-                    model = viewModel.getQrCode(),
-                    contentDescription = stringResource(R.string.qrcode_desc),
-                    contentScale = ContentScale.Crop,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .aspectRatio(1f / 1f)
-                )
+                if (viewModel.isDataPopulated()) {
+                    AsyncImage(
+                        model = viewModel.getQrCode(),
+                        contentDescription = stringResource(R.string.qrcode_desc),
+                        contentScale = ContentScale.Crop,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .aspectRatio(1f / 1f)
+                    )
+                }
             }
         }
         Row(
