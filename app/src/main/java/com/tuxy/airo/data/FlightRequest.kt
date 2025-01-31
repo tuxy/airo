@@ -46,17 +46,18 @@ suspend fun getData(
         client.newCall(request).execute().use { response ->
             if (!response.isSuccessful) {
                 toasts[1].show() // Network Error toast
-                return@use // Stops from executing further
+                return@withContext // Stops from executing further
             }
             val jsonListResponse = response.body!!.string()
 
             try {
                 val jsonRoot = Root.fromJson(jsonListResponse)
-                data.addFlight(parseData(jsonRoot)) // If this errors, we give up
+                val flightData = parseData(jsonRoot) // Implement "flight already exists" check
+                data.addFlight(flightData) // If this errors, we give up
             } catch (e: KlaxonException) {
                 Log.e("ApiAccess", e.toString())
                 toasts[2].show() // flight not found
-                return@use // Stops from executing further
+                return@withContext // Stops from executing further
             }
         }
     }

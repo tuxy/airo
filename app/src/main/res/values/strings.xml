@@ -51,4 +51,5 @@
     <string name="not_e_ticket">This ticket is not supported </string>
     <string name="no_ticket">No ticket found. Scan ticket with the add ticket button.</string>
     <string name="no_flight_smile">No flights :)</string>
+    <string name="flight_exists">Flight already exists</string>
 </resources>

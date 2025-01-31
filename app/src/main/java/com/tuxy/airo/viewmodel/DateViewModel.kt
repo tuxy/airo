@@ -24,7 +24,16 @@ class DateViewModel(context: Context) : ViewModel() {
             context.resources.getString(R.string.invalid_api_network),
             Toast.LENGTH_SHORT
         ),
-        Toast.makeText(context, context.resources.getString(R.string.no_flight), Toast.LENGTH_SHORT)
+        Toast.makeText(
+            context,
+            context.resources.getString(R.string.no_flight),
+            Toast.LENGTH_SHORT
+        ),
+        Toast.makeText(
+            context,
+            context.resources.getString(R.string.flight_exists),
+            Toast.LENGTH_SHORT
+        )
     )
     var loading by mutableStateOf(false)
     var key by mutableStateOf("")
@@ -44,6 +53,7 @@ class DateViewModel(context: Context) : ViewModel() {
     }
 
     fun formatFlightNumber(string: String): String {
+        // Using " " or "-" as a space in between the carrier and flight number will be split either way
         val splitString = string.split("[- ]")
         if (splitString.size == 2) {
             return "${splitString[0]}${splitString[1]}"
