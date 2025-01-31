@@ -35,6 +35,7 @@ class TicketViewModel(
 ) : ViewModel() {
     var flightData = mutableStateOf(FlightData())
     var ticketData by mutableStateOf(IataParserData())
+    var ticketString by mutableStateOf(flightData.value.ticketData) // This is needed to monitor for changes
     val toast = Toast.makeText(
         context,
         context.resources.getString(R.string.allow_camera_toast),
@@ -52,15 +53,16 @@ class TicketViewModel(
         ticketData = IataParserData().parseData(flightData.value.ticketData, context)
     }
 
-    fun updateData(result: String, flightDataDao: FlightDataDao, context: Context) {
-        flightData.value.ticketData = result
-        ticketData = IataParserData().parseData(result, context)
+    fun updateData(flightDataDao: FlightDataDao, context: Context) {
+        flightData.value.ticketData = ticketString
+        getData(context)
         GlobalScope.launch(Dispatchers.IO) {
             flightDataDao.updateFlight(flightData.value)
         }
     }
 
     fun deleteData(flightDataDao: FlightDataDao, context: Context) {
+        ticketString = ""
         flightData.value.ticketData = ""
         getData(context)
         GlobalScope.launch(Dispatchers.IO) {
@@ -77,25 +79,18 @@ class TicketViewModel(
             ) // On initialisation, pass db data into flightData
             job.join()
             getData(context)
+            ticketString = flightData.value.ticketData
         }
     }
 
     fun isDataPopulated(): Boolean {
-        return flightData.value.ticketData != ""
+        return ticketString != ""
     }
 
     fun showCamera(
         barCodeLauncher: ManagedActivityResultLauncher<ScanOptions, ScanIntentResult>,
-        permissionLauncher: ManagedActivityResultLauncher<String, Boolean>,
         context: Context
     ) {
-        permissionLauncher.launch(Manifest.permission.CAMERA)
-
-        if (!hasCameraPermission) {
-            toast.show()
-            return
-        }
-
         val options = ScanOptions()
         options.setDesiredBarcodeFormats(
             ScanOptions.ALL_CODE_TYPES
@@ -110,7 +105,7 @@ class TicketViewModel(
 
     fun getQrCode(): Bitmap {
         val writer = QRCodeWriter()
-        val bitMatrix = writer.encode(flightData.value.ticketData, BarcodeFormat.QR_CODE, 400, 400)
+        val bitMatrix = writer.encode(ticketString, BarcodeFormat.QR_CODE, 400, 400)
 
         val w = bitMatrix.width
         val h = bitMatrix.height
