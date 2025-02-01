@@ -48,7 +48,7 @@ class TicketViewModel(
         ) == PackageManager.PERMISSION_GRANTED
     )
 
-    private fun getData(context: Context) {
+    private fun getTicketData(context: Context) {
         ticketData = IataParserData().parseData(flightData.value.ticketData, context)
     }
 
@@ -62,7 +62,7 @@ class TicketViewModel(
 
     fun deleteData(flightDataDao: FlightDataDao, context: Context) {
         flightData.value.ticketData = ""
-        getData(context)
+        getTicketData(context)
         GlobalScope.launch(Dispatchers.IO) {
             flightDataDao.updateFlight(flightData.value)
         }
@@ -76,7 +76,7 @@ class TicketViewModel(
                 id
             ) // On initialisation, pass db data into flightData
             job.join()
-            getData(context)
+            getTicketData(context)
         }
     }
 

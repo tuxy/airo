@@ -14,7 +14,7 @@ class Root(elements: Collection<RootElement>) : ArrayList<RootElement>(elements)
 }
 
 data class RootElement(
-    val greatCircleDistance: GreatCircleDistance,
+    val greatCircleDistance: GreatCircleDistance?,
     val departure: Flight,
     val arrival: Flight,
 
@@ -24,13 +24,14 @@ data class RootElement(
     val status: String,
     val codeshareStatus: String,
     val isCargo: Boolean,
-    val aircraft: Aircraft,
-    val airline: Airline
+    val aircraft: Aircraft?,
+    val airline: Airline?,
+    // TODO add live flight location, and then ignore it for error handling
 )
 
 data class Aircraft(
-    val model: String,
-    val image: Image
+    val model: String?,
+    val image: Image?
 )
 
 data class Image(
@@ -45,29 +46,29 @@ data class Image(
 
 data class Airline(
     val name: String,
-    val iata: String,
-    val icao: String
+    val iata: String?,
+    val icao: String?
 )
 
 data class Flight(
     val airport: Airport,
-    val scheduledTime: EdTime = EdTime("", ""),
-    val predictedTime: EdTime = EdTime("", ""),
-    val revisedTime: EdTime = EdTime("", ""),
-    val terminal: String = "N/A",
-    val gate: String = "N/A",
+    val scheduledTime: EdTime? = EdTime("", ""),
+    val predictedTime: EdTime? = EdTime("", ""),
+    val revisedTime: EdTime? = EdTime("", ""),
+    val terminal: String? = "N/A",
+    val gate: String? = "N/A",
     val quality: List<String>
 )
 
 data class Airport(
-    val icao: String,
-    val iata: String,
+    val icao: String?,
+    val iata: String?,
     val name: String,
-    val shortName: String,
-    val municipalityName: String,
-    val location: Location,
-    val countryCode: String,
-    val timeZone: String
+    val shortName: String?,
+    val municipalityName: String?,
+    val location: Location?,
+    val countryCode: String?,
+    val timeZone: String?
 )
 
 data class Location(

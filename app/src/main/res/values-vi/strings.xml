@@ -52,4 +52,5 @@
     <string name="not_e_ticket">Vé này không được hỗ trợ</string>
     <string name="no_ticket">Không tìm thấy vé nào. Quét vé với nút quét thể lên máy bay</string>
     <string name="no_flight_smile">Không có chuyến bay nào :)</string>
+    <string name="flight_exists">Chuyến bay đã tồn tại</string>
 </resources>

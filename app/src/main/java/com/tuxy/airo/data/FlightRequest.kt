@@ -52,7 +52,13 @@ suspend fun getData(
 
             try {
                 val jsonRoot = Root.fromJson(jsonListResponse)
-                data.addFlight(parseData(jsonRoot)) // If this errors, we give up
+                val flightData = parseData(jsonRoot)
+                // TODO Look through existing flights and compare without having to use api
+                if (data.queryExisting(flightData.departDate, flightData.callSign) > 0) {
+                    toasts[3].show() // flight already exists toast
+                    return@withContext
+                }
+                data.addFlight(flightData) // If this errors, we give up
             } catch (e: KlaxonException) {
                 Log.e("ApiAccess", e.toString())
                 toasts[2].show() // flight not found
@@ -63,13 +69,13 @@ suspend fun getData(
 }
 
 fun parseData(jsonRoot: Root): FlightData {
-    val departureTime = parseDateTime(jsonRoot[0].departure.scheduledTime.local)
-    val arrivalTime = parseDateTime(jsonRoot[0].arrival.scheduledTime.local)
+    val departureTime = parseDateTime(jsonRoot[0].departure.scheduledTime?.local!!)
+    val arrivalTime = parseDateTime(jsonRoot[0].arrival.scheduledTime?.local!!)
 
     // Normalised coordinates for origin airport
     val (projectedXOrigin, projectedYOrigin) = doProjection(
-        jsonRoot[0].departure.airport.location.lat,
-        jsonRoot[0].departure.airport.location.lon
+        jsonRoot[0].departure.airport.location?.lat!!,
+        jsonRoot[0].departure.airport.location?.lon!!
     )!!
     val xOrigin = normalize(
         projectedXOrigin,
@@ -84,8 +90,8 @@ fun parseData(jsonRoot: Root): FlightData {
 
     // Normalised coordinates for destination airport
     val (projectedXDest, projectedYDest) = doProjection(
-        jsonRoot[0].arrival.airport.location.lat,
-        jsonRoot[0].arrival.airport.location.lon
+        jsonRoot[0].arrival.airport.location?.lat!!,
+        jsonRoot[0].arrival.airport.location?.lon!!
     )!!
     val xDest = normalize(
         projectedXDest,
@@ -99,28 +105,29 @@ fun parseData(jsonRoot: Root): FlightData {
     )
 
     return FlightData(
+        // TODO error handling for parsing
         id = 0, // Auto-assigned id
         callSign = jsonRoot[0].number,
-        airline = jsonRoot[0].airline.name,
-        airlineIcao = jsonRoot[0].airline.icao,
-        airlineIata = jsonRoot[0].airline.iata,
-        from = jsonRoot[0].departure.airport.iata,
-        to = jsonRoot[0].arrival.airport.iata,
-        fromName = jsonRoot[0].departure.airport.shortName,
-        toName = jsonRoot[0].arrival.airport.shortName,
+        airline = jsonRoot[0].airline?.name!!,
+        airlineIcao = jsonRoot[0].airline?.icao ?: "N/A",
+        airlineIata = jsonRoot[0].airline?.iata ?: "N/A",
+        from = jsonRoot[0].departure.airport.iata!!,
+        to = jsonRoot[0].arrival.airport.iata!!,
+        fromName = jsonRoot[0].departure.airport.shortName!!,
+        toName = jsonRoot[0].arrival.airport.shortName!!,
         departDate = departureTime,
         arriveDate = arrivalTime,
         duration = Duration.between(
-            parseDateTime(jsonRoot[0].departure.scheduledTime.utc),
-            parseDateTime(jsonRoot[0].arrival.scheduledTime.utc)
+            parseDateTime(jsonRoot[0].departure.scheduledTime?.utc!!),
+            parseDateTime(jsonRoot[0].arrival.scheduledTime?.utc!!)
         ),
         // start of with no ticketData
-        gate = jsonRoot[0].departure.gate,
-        terminal = jsonRoot[0].departure.terminal,
-        aircraftName = jsonRoot[0].aircraft.model,
-        aircraftUri = jsonRoot[0].aircraft.image.url,
-        author = jsonRoot[0].aircraft.image.author,
-        authorUri = jsonRoot[0].aircraft.image.webUrl,
+        gate = jsonRoot[0].departure.gate!!,
+        terminal = jsonRoot[0].departure.terminal!!,
+        aircraftName = jsonRoot[0].aircraft?.model!!,
+        aircraftUri = jsonRoot[0].aircraft?.image?.url!!,
+        author = jsonRoot[0].aircraft?.image?.author!!,
+        authorUri = jsonRoot[0].aircraft?.image?.webUrl!!,
         mapOriginX = xOrigin,
         mapOriginY = yOrigin,
         mapDestinationX = xDest,
@@ -154,6 +161,7 @@ fun parseDateTime(time: String): LocalDateTime {
 
     return localDateTime!!
 }
+
 
 /* This is some sample json data for quick reference
 
