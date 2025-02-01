@@ -53,6 +53,7 @@ class DateViewModel(context: Context) : ViewModel() {
     }
 
     fun formatFlightNumber(string: String): String {
+        // Using " " or "-" as a space in between the carrier and flight number will be split either way
         val splitString = string.split("[- ]")
         if (splitString.size == 2) {
             return "${splitString[0]}${splitString[1]}"
