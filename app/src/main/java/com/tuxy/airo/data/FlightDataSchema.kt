@@ -30,24 +30,24 @@ data class RootElement(
 )
 
 data class Aircraft(
-    val model: String?,
+    val model: String? = "N/A",
     val image: Image?
 )
 
 data class Image(
-    val url: String,
-    val webUrl: String,
-    val author: String,
-    val title: String,
-    val description: String,
-    val license: String,
-    val htmlAttributions: List<String>
+    val url: String = "",
+    val webUrl: String = "",
+    val author: String = "N/A",
+    val title: String = "N/A",
+    val description: String = "N/A",
+    val license: String = "N/A",
+    val htmlAttributions: List<String> = listOf(),
 )
 
 data class Airline(
-    val name: String,
-    val iata: String?,
-    val icao: String?
+    val name: String = "N/A",
+    val iata: String? = "N/A",
+    val icao: String? = "N/A"
 )
 
 data class Flight(
@@ -72,13 +72,13 @@ data class Airport(
 )
 
 data class Location(
-    val lat: Double,
-    val lon: Double
+    val lat: Double = 0.0,
+    val lon: Double = 0.0
 )
 
-data class EdTime(
-    val utc: String,
-    val local: String
+data class EdTime( // Error handling?
+    val utc: String = "2000-01-01 00:00",
+    val local: String = "2000-01-01 00:00"
 )
 
 data class GreatCircleDistance(

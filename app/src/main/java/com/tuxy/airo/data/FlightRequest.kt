@@ -46,13 +46,16 @@ suspend fun getData(
         client.newCall(request).execute().use { response ->
             if (!response.isSuccessful) {
                 toasts[1].show() // Network Error toast
-                return@use // Stops from executing further
+                return@withContext // Stops from executing further
             }
             val jsonListResponse = response.body!!.string()
+            Log.d("ApiAccess", jsonListResponse)
 
             try {
                 val jsonRoot = Root.fromJson(jsonListResponse)
+                println(jsonRoot)
                 val flightData = parseData(jsonRoot)
+                Log.d("ApiAccess", flightData.toString())
                 // TODO Look through existing flights and compare without having to use api
                 if (data.queryExisting(flightData.departDate, flightData.callSign) > 0) {
                     toasts[3].show() // flight already exists toast
@@ -60,22 +63,22 @@ suspend fun getData(
                 }
                 data.addFlight(flightData) // If this errors, we give up
             } catch (e: KlaxonException) {
-                Log.e("ApiAccess", e.toString())
+                e.printStackTrace()
                 toasts[2].show() // flight not found
-                return@use // Stops from executing further
+                return@withContext // Stops from executing further
             }
         }
     }
 }
 
 fun parseData(jsonRoot: Root): FlightData {
-    val departureTime = parseDateTime(jsonRoot[0].departure.scheduledTime?.local!!)
-    val arrivalTime = parseDateTime(jsonRoot[0].arrival.scheduledTime?.local!!)
+    val departureTime = parseDateTime(jsonRoot[0].departure.scheduledTime.orEmpty().local)
+    val arrivalTime = parseDateTime(jsonRoot[0].arrival.scheduledTime.orEmpty().local)
 
     // Normalised coordinates for origin airport
     val (projectedXOrigin, projectedYOrigin) = doProjection(
-        jsonRoot[0].departure.airport.location?.lat!!,
-        jsonRoot[0].departure.airport.location?.lon!!
+        jsonRoot[0].departure.airport.location.orEmpty().lat,
+        jsonRoot[0].departure.airport.location.orEmpty().lon
     )!!
     val xOrigin = normalize(
         projectedXOrigin,
@@ -90,8 +93,8 @@ fun parseData(jsonRoot: Root): FlightData {
 
     // Normalised coordinates for destination airport
     val (projectedXDest, projectedYDest) = doProjection(
-        jsonRoot[0].arrival.airport.location?.lat!!,
-        jsonRoot[0].arrival.airport.location?.lon!!
+        jsonRoot[0].arrival.airport.location.orEmpty().lat,
+        jsonRoot[0].arrival.airport.location.orEmpty().lon
     )!!
     val xDest = normalize(
         projectedXDest,
@@ -108,31 +111,51 @@ fun parseData(jsonRoot: Root): FlightData {
         // TODO error handling for parsing
         id = 0, // Auto-assigned id
         callSign = jsonRoot[0].number,
-        airline = jsonRoot[0].airline?.name!!,
-        airlineIcao = jsonRoot[0].airline?.icao ?: "N/A",
-        airlineIata = jsonRoot[0].airline?.iata ?: "N/A",
-        from = jsonRoot[0].departure.airport.iata!!,
-        to = jsonRoot[0].arrival.airport.iata!!,
-        fromName = jsonRoot[0].departure.airport.shortName!!,
-        toName = jsonRoot[0].arrival.airport.shortName!!,
+        airline = jsonRoot[0].airline.orEmpty().name,
+        airlineIcao = jsonRoot[0].airline.orEmpty().icao ?: "N/A",
+        airlineIata = jsonRoot[0].airline.orEmpty().iata ?: "N/A",
+        from = jsonRoot[0].departure.airport.iata ?: "N/A",
+        to = jsonRoot[0].arrival.airport.iata ?: "N/A",
+        fromName = jsonRoot[0].departure.airport.shortName ?: "N/A",
+        toName = jsonRoot[0].arrival.airport.shortName ?: "N/A",
         departDate = departureTime,
         arriveDate = arrivalTime,
         duration = Duration.between(
-            parseDateTime(jsonRoot[0].departure.scheduledTime?.utc!!),
-            parseDateTime(jsonRoot[0].arrival.scheduledTime?.utc!!)
+            parseDateTime(jsonRoot[0].departure.scheduledTime.orEmpty().utc),
+            parseDateTime(jsonRoot[0].arrival.scheduledTime.orEmpty().utc)
         ),
         // start of with no ticketData
-        gate = jsonRoot[0].departure.gate!!,
-        terminal = jsonRoot[0].departure.terminal!!,
-        aircraftName = jsonRoot[0].aircraft?.model!!,
-        aircraftUri = jsonRoot[0].aircraft?.image?.url!!,
-        author = jsonRoot[0].aircraft?.image?.author!!,
-        authorUri = jsonRoot[0].aircraft?.image?.webUrl!!,
+        gate = jsonRoot[0].departure.gate ?: "N/A",
+        terminal = jsonRoot[0].departure.terminal ?: "N/A",
+        aircraftName = jsonRoot[0].aircraft.orEmpty().model ?: "N/A",
+        aircraftUri = jsonRoot[0].aircraft.orEmpty().image.orEmpty().url,
+        author = jsonRoot[0].aircraft.orEmpty().image.orEmpty().author,
+        authorUri = jsonRoot[0].aircraft.orEmpty().image.orEmpty().webUrl,
         mapOriginX = xOrigin,
         mapOriginY = yOrigin,
         mapDestinationX = xDest,
         mapDestinationY = yDest,
     )
+}
+
+fun Airline?.orEmpty(): Airline {
+    return this ?: Airline()
+}
+
+fun EdTime?.orEmpty(): EdTime {
+    return this ?: EdTime()
+}
+
+fun Aircraft?.orEmpty(): Aircraft {
+    return this ?: Aircraft(image = Image())
+}
+
+fun Image?.orEmpty(): Image {
+    return this ?: Image()
+}
+
+fun Location?.orEmpty(): Location {
+    return this ?: Location()
 }
 
 fun doProjection(latitude: Double, longitude: Double): Pair<Double, Double>? {
@@ -153,8 +176,8 @@ fun normalize(t: Double, min: Double, max: Double): Double {
 
 private const val X0 = -2.0037508342789248E7 // Constant for map projection
 
-
 fun parseDateTime(time: String): LocalDateTime {
+    // TODO, utilise UTC time and convert into local time instead of relying on localtime
     val pattern =
         DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mmXXXXX")!! // Ignore time-zone, as time is set to local by default
     val localDateTime = LocalDateTime.parse(time, pattern)
