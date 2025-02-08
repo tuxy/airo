@@ -52,4 +52,7 @@
     <string name="no_ticket">No ticket found. Scan ticket with the add ticket button.</string>
     <string name="no_flight_smile">No flights :)</string>
     <string name="flight_exists">Flight already exists</string>
+    <string name="airo_api_server">AiroAPI Server</string>
+    <string name="api_endpoint">API Endpoint Url</string>
+    <string name="direct_api">AeroDataBox</string>
 </resources>
