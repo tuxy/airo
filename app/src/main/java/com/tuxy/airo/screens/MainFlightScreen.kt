@@ -57,14 +57,11 @@ import com.tuxy.airo.data.FlightData
 import com.tuxy.airo.data.FlightDataDao
 import com.tuxy.airo.viewmodel.MainFlightViewModel
 import kotlinx.coroutines.DelicateCoroutinesApi
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
 import java.time.Duration
 import java.time.LocalDateTime
 import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
-import kotlin.math.absoluteValue
+import kotlin.math.abs
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
@@ -193,23 +190,14 @@ fun FlightCard(
                 TicketInformationCard(flightData)
                 LinearProgressIndicator(
                     progress = {
-                        GlobalScope.launch {
-                            val now = Duration.between(LocalDateTime.now(), flightData.departDate)
-                                .toMillis()
+                        val now = Duration.between(LocalDateTime.now(), flightData.departDate)
+                            .toMillis()
 
-                            if (LocalDateTime.now() < flightData.departDate) {
-                                viewModel.progress.floatValue = 0.0F
-                                return@launch
-                            }
-
-                            val duration = flightData.duration.toMillis()
-
-                            val current = now.toFloat() / duration.toFloat()
-
-                            viewModel.progress.floatValue = current.absoluteValue
-                            delay(10000)
+                        if (LocalDateTime.now() < flightData.departDate) {
+                            viewModel.progress.floatValue = 0.0F
                         }
-                        viewModel.progress.floatValue
+                        val duration = flightData.duration.toMillis()
+                        abs(now.toFloat() / duration.toFloat())
                     },
                     modifier = Modifier
                         .padding(16.dp)

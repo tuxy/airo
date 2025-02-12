@@ -2,10 +2,12 @@ package com.tuxy.airo.viewmodel
 
 import android.content.Context
 import android.net.Uri
+import android.widget.Toast
 import androidx.browser.customtabs.CustomTabsIntent
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
+import com.tuxy.airo.R
 import com.tuxy.airo.data.FlightData
 import com.tuxy.airo.data.FlightDataDao
 import com.tuxy.airo.data.singleIntoMut
@@ -23,11 +25,20 @@ class StandardDataViewModel(flightDataDao: FlightDataDao, id: String) : ViewMode
     }
 
     fun openWebpage(context: Context, url: String) {
-        val intent = CustomTabsIntent.Builder()
-            .setShowTitle(true) //
-            .setUrlBarHidingEnabled(true)
-            .build()
-        intent.launchUrl(context, Uri.parse(url))
+        try {
+            val intent = CustomTabsIntent.Builder()
+                .setShowTitle(true) //
+                .setUrlBarHidingEnabled(true)
+                .build()
+            intent.launchUrl(context, Uri.parse(url))
+        } catch (e: Exception) {
+            e.printStackTrace()
+            Toast.makeText(
+                context,
+                context.resources.getString(R.string.not_avail),
+                Toast.LENGTH_SHORT
+            ).show()
+        }
     }
 
     // Factory

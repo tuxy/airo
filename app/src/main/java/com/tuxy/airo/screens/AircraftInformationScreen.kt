@@ -77,6 +77,7 @@ fun AircraftListView(
     context: Context,
     viewModel: StandardDataViewModel
 ) {
+
     Column {
         ListItem(
             modifier = Modifier
@@ -89,7 +90,7 @@ fun AircraftListView(
         ListItem(
             modifier = Modifier
                 .clickable {
-                    viewModel.openWebpage(context, flightData.authorUri)
+                    viewModel.openWebpage(context, viewModel.flightData.value.authorUri)
                 },
             headlineContent = { Text(stringResource(R.string.author)) },
             trailingContent = {

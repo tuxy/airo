@@ -31,7 +31,7 @@ data class RootElement(
 
 data class Aircraft(
     val model: String? = "N/A",
-    val image: Image?
+    val image: Image? = Image()
 )
 
 data class Image(
@@ -41,7 +41,7 @@ data class Image(
     val title: String = "N/A",
     val description: String = "N/A",
     val license: String = "N/A",
-    val htmlAttributions: List<String> = listOf(),
+    val htmlAttributions: List<String> = emptyList<String>(),
 )
 
 data class Airline(

@@ -56,4 +56,7 @@
     <string name="airo_api_server">Server AiroAPI</string>
     <string name="api_endpoint">API Url</string>
     <string name="direct_api">AeroDataBox</string>
+    <string name="landing">Đang hạ cánh</string>
+    <string name="landed">Đã hạ cánh</string>
+    <string name="not_avail">Không có sẵn</string>
 </resources>

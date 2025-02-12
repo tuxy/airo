@@ -1,5 +1,6 @@
 package com.tuxy.airo.screens
 
+import android.util.Log
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -46,9 +47,14 @@ fun SettingsView( // TODO Implement notification permissions
     val viewModelFactory = SettingsViewModel.Factory(LocalContext.current)
     val viewModel: SettingsViewModel = viewModel(factory = viewModelFactory)
 
+    // Set up SegmentedButtons
     val options =
         listOf(stringResource(R.string.airo_api_server), stringResource(R.string.direct_api))
     var selectedIndex by remember { mutableIntStateOf(0) }
+
+    // Initialise settings (Don't get API key for security)
+    viewModel.currentEndpoint = viewModel.getValue("ENDPOINT")
+    viewModel.currentApiServer = viewModel.getValue("API_SERVER")
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),
@@ -56,9 +62,12 @@ fun SettingsView( // TODO Implement notification permissions
         floatingActionButton = {
             ExtendedFloatingActionButton(
                 onClick = {
+                    viewModel.saveKey("API_CHOICE", selectedIndex.toString())
                     viewModel.saveKey("API_KEY", viewModel.currentApiKey)
                     viewModel.saveKey("ENDPOINT", viewModel.currentEndpoint)
                     viewModel.saveKey("API_SERVER", viewModel.currentApiServer)
+
+                    Log.d("Api", selectedIndex.toString())
                     navController.navigateUp()
                 },
                 icon = { Icon(Icons.Filled.Check, stringResource(R.string.apply_settings)) },
@@ -86,10 +95,6 @@ fun SettingsView( // TODO Implement notification permissions
                     }
                 }
             }
-//            when(selectedIndex) {
-//                0 -> { ApiServerView(navController, viewModel) }
-//                1 -> { CustomApiView(navController, viewModel) }
-//            }
             AnimatedVisibility(selectedIndex == 0) {
                 ApiServerView(navController, viewModel)
             }

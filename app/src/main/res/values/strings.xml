@@ -55,4 +55,7 @@
     <string name="airo_api_server">AiroAPI Server</string>
     <string name="api_endpoint">API Endpoint Url</string>
     <string name="direct_api">AeroDataBox</string>
+    <string name="landing">Landing</string>
+    <string name="landed">Landed</string>
+    <string name="not_avail">Not available</string>
 </resources>

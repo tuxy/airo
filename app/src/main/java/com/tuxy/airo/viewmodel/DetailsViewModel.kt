@@ -108,9 +108,14 @@ class DetailsViewModel(context: Context, flightDataDao: FlightDataDao, id: Strin
         val seconds = duration.seconds
 
         if (seconds >= 3600) {
-            return context.resources.getString(R.string.check_in)
+            return context.resources.getString(R.string.check_in) // Check-in
         } else {
-            return context.resources.getString(R.string.flying)
+            if (progress.floatValue >= 0.9F && progress.floatValue < 1.0F) {
+                return context.resources.getString(R.string.landing) // About to land
+            } else if (progress.floatValue >= 1.0F) {
+                return context.resources.getString(R.string.landed) // Already landed
+            }
+            return context.resources.getString(R.string.flying) // Still flying
         }
     }
 

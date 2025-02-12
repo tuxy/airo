@@ -34,6 +34,13 @@ import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.joinAll
 import kotlinx.coroutines.launch
 
+data class ApiSettings(
+    val choice: String,
+    val endpoint: String?,
+    val key: String?,
+    val server: String?,
+)
+
 @OptIn(ExperimentalMaterial3Api::class, DelicateCoroutinesApi::class)
 @Composable
 fun DatePickerView(
@@ -41,13 +48,21 @@ fun DatePickerView(
     flightNumber: String,
     flightDataDao: FlightDataDao
 ) {
+    val context = LocalContext.current
+
     val datePickerState = rememberDatePickerState(initialDisplayMode = DisplayMode.Picker)
-    val viewModelFactory = DateViewModel.Factory(LocalContext.current)
+    val viewModelFactory = DateViewModel.Factory(context)
     val viewModel: DateViewModel = viewModel(factory = viewModelFactory)
 
     val timeMillis = viewModel.maybe(datePickerState.selectedDateMillis)
 
-    viewModel.GetKey() // Get key from data store
+    // Server settings
+    val settings = ApiSettings(
+        viewModel.getValue("API_CHOICE"),
+        viewModel.getValue("ENDPOINT"),
+        viewModel.getValue("API_KEY"),
+        viewModel.getValue("API_SERVER"),
+    )
 
     Scaffold(
         topBar = { SmallAppBar("", navController) },
@@ -55,13 +70,14 @@ fun DatePickerView(
             ExtendedFloatingActionButton(
                 onClick = {
                     viewModel.loading = true
+
                     GlobalScope.launch(Dispatchers.Main) {
                         getData( // FlightRequest.kt
                             viewModel.formatFlightNumber(flightNumber),
                             flightDataDao,
                             viewModel.getDateAsString(timeMillis),
                             viewModel.toasts,
-                            viewModel.key
+                            settings
                         )
                         joinAll()
                         viewModel.loading = false

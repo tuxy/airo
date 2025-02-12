@@ -32,13 +32,8 @@ class SettingsViewModel(context: Context) : ViewModel() {
     }
 
     @Composable
-    fun GetEndpoint() {
-        currentEndpoint = dataStore.getEndpoint.collectAsState(initial = "").value
-    }
-
-    @Composable
-    fun GetApiServer() {
-        currentApiServer = dataStore.getApiServer.collectAsState(initial = "").value
+    fun getValue(key: String): String {
+        return dataStore.getValueWithKey(key).collectAsState(initial = "").value
     }
 
     // Factory

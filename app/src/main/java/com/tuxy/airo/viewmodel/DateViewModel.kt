@@ -36,19 +36,19 @@ class DateViewModel(context: Context) : ViewModel() {
         )
     )
     var loading by mutableStateOf(false)
-    var key by mutableStateOf("")
 
     @Composable // Definitely not a composable, but it works to get API Key
-    fun GetKey() {
-        key = dataStore.getApiKey.collectAsState(initial = "").value
+    fun getValue(key: String): String {
+        return dataStore.getValueWithKey(key).collectAsState(initial = "").value
     }
+
 
     fun maybe(time: Long?): Long {
         return time ?: 0
     }
 
     fun getDateAsString(time: Long): String {
-        val dateFormat = SimpleDateFormat("yyyy-MM-DD", Locale.UK)
+        val dateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.UK)
         return dateFormat.format(time)
     }
 
@@ -69,5 +69,5 @@ class DateViewModel(context: Context) : ViewModel() {
             return DateViewModel(context) as T
         }
     }
-
 }
+

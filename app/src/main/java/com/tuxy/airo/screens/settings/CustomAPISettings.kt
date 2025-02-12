@@ -1,6 +1,7 @@
 package com.tuxy.airo.screens.settings
 
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -30,6 +31,7 @@ fun CustomApiView(
             onValueChange = { viewModel.currentEndpoint = it },
             singleLine = true,
         )
+        Spacer(Modifier.padding(4.dp))
         OutlinedTextField(
             modifier = Modifier
                 .fillMaxWidth()

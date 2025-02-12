@@ -3,6 +3,7 @@ package com.tuxy.airo.data
 import android.util.Log
 import android.widget.Toast
 import com.beust.klaxon.KlaxonException
+import com.tuxy.airo.screens.ApiSettings
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import okhttp3.HttpUrl.Companion.toHttpUrl
@@ -20,7 +21,7 @@ suspend fun getData(
     data: FlightDataDao,
     date: String,
     toasts: Array<Toast>,
-    apiKey: String
+    settings: ApiSettings
 ) {
     withContext(Dispatchers.IO) {
         val client = OkHttpClient()
@@ -35,16 +36,17 @@ suspend fun getData(
         val request = Request.Builder()
             .url(url)
             .header("Accept", "application/json")
-            .header("x-magicapi-key", apiKey)
-            .build()
+            .header("x-magicapi-key", settings.key.orEmpty())
+            .build() // Either the api key exists or it doesn't
 
-        if (apiKey == "") {
+        if (settings.key.orEmpty() == "" && settings.choice == "1") {
             toasts[0].show() // API_KEY toast
             return@withContext
-        }
+        } // If choice is == "0", then we ignore the api key check
 
         client.newCall(request).execute().use { response ->
             if (!response.isSuccessful) {
+                Log.d("Api", response.toString())
                 toasts[1].show() // Network Error toast
                 return@withContext // Stops from executing further
             }
@@ -70,6 +72,7 @@ suspend fun getData(
         }
     }
 }
+
 
 fun parseData(jsonRoot: Root): FlightData {
     val departureTime = parseDateTime(jsonRoot[0].departure.scheduledTime.orEmpty().local)
