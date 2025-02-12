@@ -26,10 +26,9 @@ suspend fun getData(
     withContext(Dispatchers.IO) {
         val client = OkHttpClient()
 
-        val webUrl =
-            "https://api.magicapi.dev/api/v1/aedbx/aerodatabox/flights/number/${flightNumber}/${date}"
+        val urlChoice = if (settings.choice == "0") settings.server!! else settings.endpoint!!
 
-        val url = webUrl.toHttpUrl().newBuilder() // Adds parameter for aircraft image
+        val url = "${urlChoice}/${flightNumber}/${date}".toHttpUrl().newBuilder() // Adds parameter for aircraft image
             .addQueryParameter("withAircraftImage", "True")
             .build()
 
