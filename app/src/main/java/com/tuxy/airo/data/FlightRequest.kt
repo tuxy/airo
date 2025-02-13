@@ -24,11 +24,18 @@ suspend fun getData(
     settings: ApiSettings
 ) {
     withContext(Dispatchers.IO) {
+
+        if (settings.endpoint.orEmpty() == "" && settings.server.orEmpty() == "") {
+            toasts[0].show() // API_KEY toast
+            return@withContext
+        }
+
         val client = OkHttpClient()
 
         val urlChoice = if (settings.choice == "0") settings.server!! else settings.endpoint!!
 
-        val url = "${urlChoice}/${flightNumber}/${date}".toHttpUrl().newBuilder() // Adds parameter for aircraft image
+        val url = "${urlChoice}/${flightNumber}/${date}".toHttpUrl()
+            .newBuilder() // Adds parameter for aircraft image
             .addQueryParameter("withAircraftImage", "True")
             .build()
 

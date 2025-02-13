@@ -18,7 +18,11 @@ import java.util.Locale
 class DateViewModel(context: Context) : ViewModel() {
     private val dataStore = UserPreferences(context)
     val toasts = arrayOf( // Toasts on error
-        Toast.makeText(context, context.resources.getString(R.string.no_api), Toast.LENGTH_SHORT),
+        Toast.makeText(
+            context,
+            context.resources.getString(R.string.no_api),
+            Toast.LENGTH_SHORT
+        ),
         Toast.makeText(
             context,
             context.resources.getString(R.string.invalid_api_network),
