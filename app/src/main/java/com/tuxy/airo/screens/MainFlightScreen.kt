@@ -30,24 +30,28 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LargeTopAppBar
 import androidx.compose.material3.LinearProgressIndicator
+import androidx.compose.material3.PrimaryTabRow
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Tab
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.TopAppBarScrollBehavior
+import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.MutableIntState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
-import androidx.navigation.compose.rememberNavController
 import coil3.compose.AsyncImage
 import com.tuxy.airo.R
 import com.tuxy.airo.Screen
@@ -56,14 +60,13 @@ import com.tuxy.airo.composables.LargeTopSmallBottom
 import com.tuxy.airo.data.FlightData
 import com.tuxy.airo.data.FlightDataDao
 import com.tuxy.airo.viewmodel.MainFlightViewModel
-import kotlinx.coroutines.DelicateCoroutinesApi
 import java.time.Duration
 import java.time.LocalDateTime
 import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
 import kotlin.math.abs
 
-@OptIn(ExperimentalFoundationApi::class)
+@OptIn(ExperimentalFoundationApi::class, ExperimentalMaterial3Api::class)
 @Composable
 fun MainFlightView(
     navController: NavController,
@@ -72,9 +75,14 @@ fun MainFlightView(
     val viewModel = viewModel<MainFlightViewModel>()
     viewModel.loadData(flightDataDao)
 
+    val scrollBehavior =
+        TopAppBarDefaults.exitUntilCollapsedScrollBehavior(rememberTopAppBarState())
+
     Scaffold(
-        modifier = Modifier.fillMaxSize(),
-        topBar = { MainTopBar(navController = navController) },
+        modifier = Modifier
+            .fillMaxSize()
+            .nestedScroll(scrollBehavior.nestedScrollConnection),
+        topBar = { MainTopBar(navController, scrollBehavior) },
         floatingActionButton = {
             ExtendedFloatingActionButton(
                 onClick = {
@@ -83,12 +91,11 @@ fun MainFlightView(
                 icon = { Icon(Icons.Filled.Add, stringResource(R.string.add_flight)) },
                 text = { Text(stringResource(R.string.add_flight)) },
             )
-        }
+        },
     ) { innerPadding ->
         Column(
             modifier = Modifier
-                .height(2000.dp)
-                .verticalScroll(rememberScrollState())
+                .verticalScroll(rememberScrollState()),
         ) {
             if (!viewModel.flights.isEmpty()) {
                 LazyColumn(
@@ -121,6 +128,7 @@ fun MainFlightView(
                         }
                     }
                 }
+                Spacer(Modifier.padding(56.dp))
             } else {
                 Column(
                     modifier = Modifier.fillMaxSize(),
@@ -145,7 +153,33 @@ fun MainFlightView(
     }
 }
 
-@OptIn(DelicateCoroutinesApi::class)
+// Currently not used
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun TabRow(
+    index: MutableIntState
+) {
+    PrimaryTabRow(
+        selectedTabIndex = index.intValue,
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(top = 56.dp)
+    ) {
+        Tab(
+            modifier = Modifier.padding(12.dp),
+            selected = index.intValue == 0,
+            onClick = { index.intValue = 0 },
+            content = { Text(stringResource(R.string.upcoming_flights)) }
+        )
+        Tab(
+            modifier = Modifier.padding(12.dp),
+            selected = index.intValue == 1,
+            onClick = { index.intValue = 1 },
+            content = { Text(stringResource(R.string.past_flights)) }
+        )
+    }
+}
+
 @Composable
 fun FlightCard(
     navController: NavController,
@@ -251,7 +285,10 @@ fun DateHeader(time: LocalDateTime) {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun MainTopBar(navController: NavController) {
+fun MainTopBar(
+    navController: NavController,
+    scrollBehavior: TopAppBarScrollBehavior
+) {
     LargeTopAppBar(
         title = { Text(stringResource(R.string.my_flights)) },
         colors = TopAppBarDefaults.topAppBarColors(),
@@ -265,11 +302,6 @@ fun MainTopBar(navController: NavController) {
                 )
             }
         },
+        scrollBehavior = scrollBehavior,
     )
-}
-
-@Composable
-@Preview(showBackground = true)
-fun TopBarPreview() {
-    MainTopBar(rememberNavController())
 }

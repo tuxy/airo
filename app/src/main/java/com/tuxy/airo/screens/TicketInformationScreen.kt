@@ -15,6 +15,8 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentHeight
+import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.AirplaneTicket
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -23,16 +25,22 @@ import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.QrCode
 import androidx.compose.material.icons.outlined.Info
+import androidx.compose.material3.AlertDialogDefaults
+import androidx.compose.material3.BasicAlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.MutableState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -55,6 +63,10 @@ import com.tuxy.airo.data.FlightData
 import com.tuxy.airo.data.FlightDataDao
 import com.tuxy.airo.data.IataParserData
 import com.tuxy.airo.viewmodel.TicketViewModel
+import kotlinx.coroutines.DelicateCoroutinesApi
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
 import java.time.format.DateTimeFormatter
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -90,7 +102,7 @@ fun TicketInformationView(
                 },
                 actions = {
                     IconButton(onClick = {
-                        viewModel.deleteData(flightDataDao, context)
+                        viewModel.openDialog.value = true
                     }) {
                         Icon(
                             imageVector = Icons.Filled.Delete,
@@ -121,6 +133,14 @@ fun TicketInformationView(
     ) { innerPadding ->
         AnimatedVisibility(viewModel.isDataPopulated()) { // If there is no ticket, then show an empty screen
             Column(modifier = Modifier.padding(innerPadding)) {
+                if (viewModel.openDialog.value) {
+                    DeleteTicketDialog(
+                        viewModel.openDialog,
+                        navController,
+                        viewModel,
+                        flightDataDao
+                    )
+                }
                 AnimatedVisibility(!viewModel.ticketData.eTicketIndicator) {
                     Card(
                         modifier = Modifier
@@ -280,3 +300,60 @@ fun MainTicketView(
         }
     }
 }
+
+@OptIn(ExperimentalMaterial3Api::class, DelicateCoroutinesApi::class)
+@Composable
+fun DeleteTicketDialog(
+    openDialog: MutableState<Boolean>,
+    navController: NavController,
+    viewModel: TicketViewModel,
+    flightDataDao: FlightDataDao
+) {
+    BasicAlertDialog(
+        onDismissRequest = {
+            openDialog.value = false
+        }
+    ) {
+        val context = LocalContext.current
+
+        Surface(
+            modifier = Modifier
+                .wrapContentWidth()
+                .wrapContentHeight(),
+            shape = MaterialTheme.shapes.large,
+            tonalElevation = AlertDialogDefaults.TonalElevation
+        ) {
+            Column(
+                modifier = Modifier.padding(16.dp),
+                horizontalAlignment = Alignment.End
+            ) {
+                Text(
+                    modifier = Modifier.padding(8.dp),
+                    text = stringResource(R.string.delete_dialog_ticket),
+                )
+                Spacer(modifier = Modifier.height(24.dp))
+                Row {
+                    TextButton(
+                        onClick = {
+                            openDialog.value = false
+                        },
+                    ) {
+                        Text(stringResource(R.string.cancel))
+                    }
+                    TextButton(
+                        onClick = {
+                            GlobalScope.launch(Dispatchers.IO) {
+                                viewModel.deleteData(flightDataDao, context)
+                            }
+                            openDialog.value = false
+                            navController.navigateUp()
+                        },
+                    ) {
+                        Text(stringResource(R.string.delete))
+                    }
+                }
+            }
+        }
+    }
+}
+

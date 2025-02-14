@@ -58,4 +58,7 @@
     <string name="landing">Landing</string>
     <string name="landed">Landed</string>
     <string name="not_avail">Not available</string>
+    <string name="upcoming_flights">Upcoming</string>
+    <string name="past_flights">Past</string>
+    <string name="delete_dialog_ticket">Delete ticket? This cannot be undone.</string>
 </resources>

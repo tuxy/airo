@@ -59,4 +59,7 @@
     <string name="landing">Đang hạ cánh</string>
     <string name="landed">Đã hạ cánh</string>
     <string name="not_avail">Không có sẵn</string>
+    <string name="upcoming_flights">Sắp tới</string>
+    <string name="past_flights">Quá khứ</string>
+    <string name="delete_dialog_ticket">Xóa bỏ vé bay? Hành động này không thể hủy bỏ</string>
 </resources>

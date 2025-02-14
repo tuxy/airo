@@ -7,21 +7,22 @@
 | ![screenshot-1](resources/screenshot-1.png) | ![screenshot-2](resources/screenshot-2.png) | ![screenshot-3](resources/screenshot-3.png) | ![screenshot-4](resources/screenshot-4.png) | ![screenshot-5](resources/screenshot-5.png) |
 |---------------------------------------------|---------------------------------------------|---------------------------------------------|---------------------------------------------|---------------------------------------------|
 
+**Now with public AiroAPI server at `https://airoapi.tuxy.stream/flights`!**
+
 ## Current features
 
-- Adding, removing flights using [aerodatabox's](https://aerodatabox.com/) api (API KEY IS NEEDED)
+- Adding, removing flights using [aerodatabox's](https://aerodatabox.com/)
+  api [link](https://aerodatabox.com/)
     - Adding flights with schedules 8 months in advance
+- Usage with AiroAPI caching server
 - Route map and progress
 - Aircraft information with photos
 - Flights organised by date
+- Scanning boarding passes for information and boarding (QR ONLY for now...)
 
 ## TODO before release / Roadmap
 
-- Functional progress indication for flight (DONE)
-- Flights with date headers, for grouping transfers (DONE)
-- Implement check-in and boarding timings for progress bar (DONE)
-    - +Integration with notifications
+- Notification integration
 - Periodic alerts and status for flights
 - Regional Locale settings
 - Bugfixes
-

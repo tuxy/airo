@@ -49,6 +49,8 @@ class TicketViewModel(
         ) == PackageManager.PERMISSION_GRANTED
     )
 
+    var openDialog = mutableStateOf(false)
+
     private fun getData(context: Context) {
         ticketData = IataParserData().parseData(flightData.value.ticketData, context)
     }
@@ -87,6 +89,7 @@ class TicketViewModel(
         return ticketString != ""
     }
 
+    // Show the camera
     fun showCamera(
         barCodeLauncher: ManagedActivityResultLauncher<ScanOptions, ScanIntentResult>,
         context: Context
@@ -103,6 +106,7 @@ class TicketViewModel(
         barCodeLauncher.launch(options)
     }
 
+    // Get QR code from ticketString
     fun getQrCode(): Bitmap {
         val writer = QRCodeWriter()
         val bitMatrix = writer.encode(ticketString, BarcodeFormat.QR_CODE, 400, 400)

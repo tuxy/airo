@@ -2,6 +2,7 @@ package com.tuxy.airo.viewmodel
 
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
@@ -16,6 +17,8 @@ class MainFlightViewModel() : ViewModel() {
     var flightData by mutableStateOf(emptyList<FlightData>()) // Initialise empty viewmodel
         private set
     var progress = mutableFloatStateOf(0.0F)
+        private set
+    var selectedTabIndex = mutableIntStateOf(0)
         private set
 
     // Group by 3 days
