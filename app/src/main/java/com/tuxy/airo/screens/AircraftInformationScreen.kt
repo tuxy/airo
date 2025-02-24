@@ -26,7 +26,6 @@ import androidx.navigation.NavController
 import coil3.compose.AsyncImage
 import com.tuxy.airo.R
 import com.tuxy.airo.composables.SmallAppBar
-import com.tuxy.airo.data.FlightData
 import com.tuxy.airo.data.FlightDataDao
 import com.tuxy.airo.viewmodel.StandardDataViewModel
 
@@ -66,14 +65,13 @@ fun AircraftInformationView(
                         .aspectRatio(1280f / 847f)
                 )
             }
-            AircraftListView(viewModel.flightData.value, context, viewModel)
+            AircraftListView(context, viewModel)
         }
     }
 }
 
 @Composable
 fun AircraftListView(
-    flightData: FlightData,
     context: Context,
     viewModel: StandardDataViewModel
 ) {
@@ -82,7 +80,10 @@ fun AircraftListView(
         ListItem(
             modifier = Modifier
                 .clickable {
-                    viewModel.openWebpage(context, "https://aerolopa.com/${flightData.callSign}")
+                    viewModel.openWebpage(
+                        context,
+                        "https://aerolopa.com/${viewModel.flightData.value.callSign}"
+                    )
                 },
             headlineContent = { Text(stringResource(R.string.seat_maps)) },
             trailingContent = { Icon(Icons.AutoMirrored.Filled.OpenInNew, "") }
@@ -101,4 +102,11 @@ fun AircraftListView(
             }
         )
     }
+}
+
+@Composable
+fun Attribution(
+    viewModel: StandardDataViewModel
+) {
+    // TODO Add attribution
 }

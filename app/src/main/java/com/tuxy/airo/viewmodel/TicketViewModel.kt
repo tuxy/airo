@@ -3,7 +3,6 @@ package com.tuxy.airo.viewmodel
 import android.Manifest
 import android.content.Context
 import android.content.pm.PackageManager
-import android.graphics.Color
 import android.widget.Toast
 import androidx.activity.compose.ManagedActivityResultLauncher
 import androidx.compose.runtime.getValue
@@ -12,11 +11,9 @@ import androidx.compose.runtime.setValue
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
-import coil3.Bitmap
-import com.google.zxing.BarcodeFormat
-import com.google.zxing.qrcode.QRCodeWriter
 import com.journeyapps.barcodescanner.ScanIntentResult
 import com.journeyapps.barcodescanner.ScanOptions
+import com.simonsickle.compose.barcodes.BarcodeType
 import com.tuxy.airo.R
 import com.tuxy.airo.data.FlightData
 import com.tuxy.airo.data.FlightDataDao
@@ -41,6 +38,8 @@ class TicketViewModel(
         context.resources.getString(R.string.allow_camera_toast),
         Toast.LENGTH_LONG
     )!!
+
+    var barcodeType = mutableStateOf(BarcodeType.PDF_417) // Starts off with PDF 417
 
     var hasCameraPermission by mutableStateOf(
         ContextCompat.checkSelfPermission(
@@ -104,26 +103,6 @@ class TicketViewModel(
         options.setOrientationLocked(false)
 
         barCodeLauncher.launch(options)
-    }
-
-    // Get QR code from ticketString
-    fun getQrCode(): Bitmap {
-        val writer = QRCodeWriter()
-        val bitMatrix = writer.encode(ticketString, BarcodeFormat.QR_CODE, 400, 400)
-
-        val w = bitMatrix.width
-        val h = bitMatrix.height
-        val pixels = IntArray(w * h)
-        for (y in 0 until h) {
-            for (x in 0 until w) {
-                pixels[y * w + x] = if (bitMatrix[x, y]) Color.BLACK else Color.WHITE
-            }
-        }
-
-        val bitmap =
-            Bitmap.createBitmap(w, h, android.graphics.Bitmap.Config.ARGB_8888)
-        bitmap.setPixels(pixels, 0, w, 0, 0, w, h)
-        return bitmap
     }
 
     // Factory

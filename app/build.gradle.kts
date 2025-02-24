@@ -7,13 +7,13 @@ plugins {
 
 android {
     namespace = "com.tuxy.airo"
-    compileSdk = 34
+    compileSdk = 35
 
     defaultConfig {
         applicationId = "com.tuxy.airo"
         minSdk = 26
-        //noinspection OldTargetApi
-        targetSdk = 34
+        //noinspection EditedTargetSdkVersion,OldTargetApi
+        targetSdk = 35
         versionCode = 1
         versionName = "1.0"
 
@@ -85,6 +85,7 @@ dependencies {
     implementation(libs.androidx.camera.lifecycle)
     implementation(libs.androidx.camera.extensions)
     implementation(libs.zxing.android.embedded)
+    implementation(libs.composed.barcodes)
     implementation(libs.core)
 
     testImplementation(libs.junit)

@@ -6,20 +6,21 @@ cameraExtensions = "1.4.1"
 cameraView = "1.4.1"
 cameraCamera2 = "1.4.1"
 coilNetworkOkhttp = "3.0.4"
+composedBarcodes = "1.3.0"
 core = "3.5.3"
 datastorePreferences = "1.1.2"
 klaxon = "5.5"
 kotlin = "2.0.0"
-coreKtx = "1.10.1"
+coreKtx = "1.15.0"
 junit = "4.13.2"
-junitVersion = "1.1.5"
-espressoCore = "3.5.1"
+junitVersion = "1.2.1"
+espressoCore = "3.6.1"
 kotlinxDatetime = "0.6.1"
 kotlinxSerializationJson = "1.7.3"
-activityCompose = "1.8.0"
-composeBom = "2024.04.01"
+activityCompose = "1.10.0"
+composeBom = "2025.02.00"
 mapcompose = "2.12.12"
-navigationCompose = "2.8.5"
+navigationCompose = "2.8.7"
 roomCompiler = "2.6.1"
 zxingAndroidEmbedded = "4.3.0"
 
@@ -43,6 +44,7 @@ androidx-room-ktx = { module = "androidx.room:room-ktx", version.ref = "roomComp
 androidx-room-runtime = { module = "androidx.room:room-runtime", version.ref = "roomCompiler" }
 coil-compose = { module = "io.coil-kt.coil3:coil-compose", version.ref = "coilNetworkOkhttp" }
 coil-network-okhttp = { module = "io.coil-kt.coil3:coil-network-okhttp", version.ref = "coilNetworkOkhttp" }
+composed-barcodes = { module = "com.simonsickle:composed-barcodes", version.ref = "composedBarcodes" }
 core = { module = "com.google.zxing:core", version.ref = "core" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }
 androidx-junit = { group = "androidx.test.ext", name = "junit", version.ref = "junitVersion" }

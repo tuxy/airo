@@ -26,3 +26,13 @@
 - Periodic alerts and status for flights
 - Regional Locale settings
 - Bugfixes
+
+## Libraries used/credits
+
+- MapCompose https://github.com/p-lr/MapCompose
+- ComposedBarcodes https://github.com/simonsickle/ComposedBarcodes
+- Coil Image loading https://coil-kt.github.io/coil/
+- Square libraries https://square.github.io/
+    - OkHttp
+- Zxing embedded https://github.com/journeyapps/zxing-android-embedded
+- Klaxon JSON Parsing https://github.com/cbeust/klaxon

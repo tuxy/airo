@@ -8,7 +8,6 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -44,7 +43,6 @@ import androidx.compose.runtime.MutableState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
@@ -54,8 +52,9 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
-import coil3.compose.AsyncImage
 import com.journeyapps.barcodescanner.ScanContract
+import com.simonsickle.compose.barcodes.Barcode
+import com.simonsickle.compose.barcodes.BarcodeType
 import com.tuxy.airo.R
 import com.tuxy.airo.composables.BoldDepartureAndDestinationText
 import com.tuxy.airo.composables.LargeTopSmallBottom
@@ -269,14 +268,23 @@ fun MainTicketView(
                     .background(Color.Gray)
             ) {
                 if (viewModel.isDataPopulated()) {
-                    AsyncImage(
-                        model = viewModel.getQrCode(),
-                        contentDescription = stringResource(R.string.qrcode_desc),
-                        contentScale = ContentScale.Crop,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .aspectRatio(1f / 1f)
-                    )
+                    when (BarcodeType.AZTEC.isValueValid(viewModel.ticketString) && BarcodeType.PDF_417.isValueValid(
+                        viewModel.ticketString
+                    )) {
+                        true -> {
+                            Barcode(
+                                modifier = Modifier
+                                    .align(Alignment.Center)
+                                    .width(150.dp)
+                                    .height(150.dp),
+                                resolutionFactor = 10,
+                                type = viewModel.barcodeType.value,
+                                value = viewModel.ticketString
+                            )
+                        }
+
+                        false -> {} // Do nothing if the code cannot be processed
+                    }
                 }
             }
         }
