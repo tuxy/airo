@@ -13,7 +13,6 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import com.journeyapps.barcodescanner.ScanIntentResult
 import com.journeyapps.barcodescanner.ScanOptions
-import com.simonsickle.compose.barcodes.BarcodeType
 import com.tuxy.airo.R
 import com.tuxy.airo.data.FlightData
 import com.tuxy.airo.data.FlightDataDao
@@ -38,8 +37,6 @@ class TicketViewModel(
         context.resources.getString(R.string.allow_camera_toast),
         Toast.LENGTH_LONG
     )!!
-
-    var barcodeType = mutableStateOf(BarcodeType.PDF_417) // Starts off with PDF 417
 
     var hasCameraPermission by mutableStateOf(
         ContextCompat.checkSelfPermission(

@@ -222,7 +222,7 @@ fun MainTicketView(
             )
             BoldDepartureAndDestinationText(flightData.to, flightData.toName, Alignment.End)
         }
-        Column {
+        Column() {
             Row(
                 modifier = Modifier
                     .padding(horizontal = 52.dp, vertical = 8.dp)
@@ -257,28 +257,30 @@ fun MainTicketView(
                 )
             }
         }
-        Box(
+        Row(
             modifier = Modifier
-                .padding(horizontal = 64.dp)
-                .padding(vertical = 20.dp)
+                .fillMaxWidth(),
+            horizontalArrangement = Arrangement.Center
         ) {
             Box(
                 modifier = Modifier
-                    .fillMaxWidth()
+                    .padding(horizontal = 32.dp)
+                    .padding(vertical = 20.dp)
+                    .width(250.dp)
+                    .height(250.dp)
                     .background(Color.Gray)
             ) {
                 if (viewModel.isDataPopulated()) {
-                    when (BarcodeType.AZTEC.isValueValid(viewModel.ticketString) && BarcodeType.PDF_417.isValueValid(
-                        viewModel.ticketString
-                    )) {
+                    when (BarcodeType.AZTEC.isValueValid(viewModel.ticketString)) {
                         true -> {
                             Barcode(
                                 modifier = Modifier
                                     .align(Alignment.Center)
-                                    .width(150.dp)
-                                    .height(150.dp),
+                                    .width(250.dp)
+                                    .height(250.dp)
+                                    .padding(32.dp),
                                 resolutionFactor = 10,
-                                type = viewModel.barcodeType.value,
+                                type = BarcodeType.AZTEC,
                                 value = viewModel.ticketString
                             )
                         }
@@ -292,14 +294,16 @@ fun MainTicketView(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceEvenly
         ) {
-            OutlinedButton(onClick = { clipboard.setText(AnnotatedString(iataParserData.bookingReference)) }) {
+            OutlinedButton(onClick = {
+                clipboard.setText(AnnotatedString(iataParserData.bookingReference))
+            }) {
                 Row(
                     Modifier.padding(4.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Icon(
                         imageVector = Icons.Filled.ContentCopy,
-                        contentDescription = stringResource(R.string.copy)
+                        contentDescription = stringResource(R.string.copy_reference)
                     )
                     Spacer(Modifier.width(4.dp))
                     Text(stringResource(R.string.copy_reference))
@@ -364,4 +368,3 @@ fun DeleteTicketDialog(
         }
     }
 }
-

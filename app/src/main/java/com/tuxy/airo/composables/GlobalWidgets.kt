@@ -83,7 +83,7 @@ fun RouteBar(flightData: FlightData) {
 
 // Used in main flight and ticket screen
 @Composable
-fun LargeTopSmallBottom(top: String, bottom: String) {
+fun LargeTopSmallBottom(top: String, bottom: String, modifier: Modifier = Modifier) {
     Column {
         Text(
             top,
