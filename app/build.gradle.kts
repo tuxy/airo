@@ -78,6 +78,7 @@ dependencies {
 
     // browser
     implementation(libs.androidx.browser)
+    implementation(libs.compose.html)
 
     // camera & qr
     implementation(libs.androidx.camera.view)

@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">Airo</string>
     <string name="aircraft_information">Thông tin máy bay</string>
     <string name="aircraft">Máy bay</string>
     <string name="seat_maps">Bản đồ ghế ngồi</string>

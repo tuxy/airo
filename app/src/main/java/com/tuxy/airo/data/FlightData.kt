@@ -47,6 +47,7 @@ data class FlightData(
     val mapOriginY: Double = 0.0,
     val mapDestinationX: Double = 0.0,
     val mapDestinationY: Double = 0.0,
+    val attribution: String = ""
 )
 
 @Dao

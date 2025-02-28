@@ -3,6 +3,7 @@ package com.tuxy.airo.screens
 import android.content.Context
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.aspectRatio
@@ -16,14 +17,19 @@ import androidx.compose.material3.ListItem
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import coil3.compose.AsyncImage
+import com.ireward.htmlcompose.HtmlText
 import com.tuxy.airo.R
 import com.tuxy.airo.composables.SmallAppBar
 import com.tuxy.airo.data.FlightDataDao
@@ -101,6 +107,7 @@ fun AircraftListView(
                 )
             }
         )
+        Attribution(viewModel)
     }
 }
 
@@ -108,5 +115,24 @@ fun AircraftListView(
 fun Attribution(
     viewModel: StandardDataViewModel
 ) {
-    // TODO Add attribution
+    val expanded = remember { mutableStateOf(false) }
+    val hasVisualOverflow = remember { mutableStateOf(false) }
+    val interactionSource = remember { MutableInteractionSource() }
+    Box(
+        modifier = Modifier
+            .padding(16.dp)
+            .clickable(
+                interactionSource = interactionSource,
+                indication = null
+            ) {
+                expanded.value = !expanded.value
+            }
+    ) {
+        HtmlText(
+            text = viewModel.flightData.value.attribution,
+            maxLines = if (expanded.value) Int.MAX_VALUE else 1,
+            onTextLayout = { hasVisualOverflow.value = it.hasVisualOverflow },
+            style = TextStyle(color = Color.Gray)
+        )
+    }
 }

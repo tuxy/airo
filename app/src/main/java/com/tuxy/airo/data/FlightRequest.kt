@@ -144,6 +144,7 @@ fun parseData(jsonRoot: Root): FlightData {
         mapOriginY = yOrigin,
         mapDestinationX = xDest,
         mapDestinationY = yDest,
+        attribution = jsonRoot[0].aircraft.orEmpty().image.orEmpty().htmlAttributions[0]
     )
 }
 
