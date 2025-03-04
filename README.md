@@ -36,3 +36,4 @@
     - OkHttp
 - Zxing embedded https://github.com/journeyapps/zxing-android-embedded
 - Klaxon JSON Parsing https://github.com/cbeust/klaxon
+- Compose-html https://github.com/ireward/compose-html

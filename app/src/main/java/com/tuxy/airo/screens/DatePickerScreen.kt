@@ -46,7 +46,7 @@ data class ApiSettings(
 fun DatePickerView(
     navController: NavController,
     flightNumber: String,
-    flightDataDao: FlightDataDao
+    flightDataDao: FlightDataDao,
 ) {
     val context = LocalContext.current
 
@@ -77,7 +77,8 @@ fun DatePickerView(
                             flightDataDao,
                             viewModel.getDateAsString(timeMillis),
                             viewModel.toasts,
-                            settings
+                            settings,
+                            context
                         )
                         joinAll()
                         viewModel.loading = false

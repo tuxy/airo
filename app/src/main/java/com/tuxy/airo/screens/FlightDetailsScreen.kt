@@ -48,6 +48,7 @@ import com.tuxy.airo.Screen
 import com.tuxy.airo.composables.RouteBar
 import com.tuxy.airo.data.FlightData
 import com.tuxy.airo.data.FlightDataDao
+import com.tuxy.airo.setAlarm
 import com.tuxy.airo.viewmodel.DetailsViewModel
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
@@ -64,7 +65,7 @@ import kotlin.math.absoluteValue
 fun FlightDetailsView(
     navController: NavController,
     id: String,
-    flightDataDao: FlightDataDao
+    flightDataDao: FlightDataDao,
 ) {
     val viewModelFactory = DetailsViewModel.Factory(LocalContext.current, flightDataDao, id)
     val viewModel: DetailsViewModel = viewModel(factory = viewModelFactory)
@@ -273,8 +274,10 @@ fun DeleteDialog(
     openDialog: MutableState<Boolean>,
     navController: NavController,
     flightDataDao: FlightDataDao,
-    flightData: MutableState<FlightData>
+    flightData: MutableState<FlightData>,
 ) {
+    val context = LocalContext.current
+
     BasicAlertDialog(
         onDismissRequest = {
             openDialog.value = false
@@ -309,6 +312,7 @@ fun DeleteDialog(
                             GlobalScope.launch(Dispatchers.IO) {
                                 flightDataDao.deleteFlight(flightData.value)
                             }
+                            setAlarm(context)
                             openDialog.value = false
                             navController.navigateUp()
                         },

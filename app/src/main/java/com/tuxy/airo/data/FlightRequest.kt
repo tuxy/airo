@@ -1,9 +1,11 @@
 package com.tuxy.airo.data
 
+import android.content.Context
 import android.util.Log
 import android.widget.Toast
 import com.beust.klaxon.KlaxonException
 import com.tuxy.airo.screens.ApiSettings
+import com.tuxy.airo.setAlarm
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import okhttp3.HttpUrl.Companion.toHttpUrl
@@ -21,7 +23,8 @@ suspend fun getData(
     data: FlightDataDao,
     date: String,
     toasts: Array<Toast>,
-    settings: ApiSettings
+    settings: ApiSettings,
+    context: Context
 ) {
     withContext(Dispatchers.IO) {
 
@@ -34,7 +37,7 @@ suspend fun getData(
 
         val urlChoice = if (settings.choice == "0") settings.server!! else settings.endpoint!!
 
-        val url = "${urlChoice}/${flightNumber}/${date}".toHttpUrl()
+        val url = "https://${urlChoice}/${flightNumber}/${date}".toHttpUrl()
             .newBuilder() // Adds parameter for aircraft image
             .addQueryParameter("withAircraftImage", "True")
             .build()
@@ -70,6 +73,7 @@ suspend fun getData(
                     return@withContext
                 }
                 data.addFlight(flightData) // If this errors, we give up
+                setAlarm(context)
             } catch (e: KlaxonException) {
                 e.printStackTrace()
                 toasts[2].show() // flight not found

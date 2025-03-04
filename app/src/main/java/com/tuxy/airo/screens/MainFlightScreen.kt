@@ -45,6 +45,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -70,10 +71,12 @@ import kotlin.math.abs
 @Composable
 fun MainFlightView(
     navController: NavController,
-    flightDataDao: FlightDataDao
+    flightDataDao: FlightDataDao,
 ) {
     val viewModel = viewModel<MainFlightViewModel>()
     viewModel.loadData(flightDataDao)
+
+    val context = LocalContext.current
 
     val scrollBehavior =
         TopAppBarDefaults.exitUntilCollapsedScrollBehavior(rememberTopAppBarState())

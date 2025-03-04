@@ -18,9 +18,10 @@ import com.tuxy.airo.screens.TicketInformationView
 private const val INITIAL_OFFSET_FACTOR = 0.10f
 
 @Composable
-fun SetupNavGraph( // Transitions taken from Read You's repository
+fun SetupNavGraph(
+    // Transitions taken from Read You's repository
     navController: NavHostController,
-    flightDataDao: FlightDataDao
+    flightDataDao: FlightDataDao,
 ) {
     NavHost(
         navController = navController,
@@ -33,7 +34,7 @@ fun SetupNavGraph( // Transitions taken from Read You's repository
         composable(route = Screen.MainFlightsScreen.route) {
             MainFlightView(
                 navController,
-                flightDataDao
+                flightDataDao,
             )
         }
         composable(route = Screen.SettingsScreen.route) { SettingsView(navController) }
@@ -43,7 +44,7 @@ fun SetupNavGraph( // Transitions taken from Read You's repository
             FlightDetailsView(
                 navController,
                 backStackEntry.arguments?.getString("id").toString(),
-                flightDataDao
+                flightDataDao,
             )
         }
 
@@ -54,7 +55,7 @@ fun SetupNavGraph( // Transitions taken from Read You's repository
             DatePickerView(
                 navController,
                 backStackEntry.arguments?.getString("flight_number").toString(),
-                flightDataDao
+                flightDataDao,
             )
         }
 

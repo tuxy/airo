@@ -9,9 +9,10 @@
         tools:ignore="PermissionImpliesUnsupportedChromeOsHardware" />
 
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <uses-permission android:name="android.permission.USE_EXACT_ALARM" />
+    <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
 
     <application
-        android:name=".AiroApp"
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
         android:fullBackupContent="@xml/backup_rules"
@@ -39,6 +40,8 @@
             tools:ignore="DiscouragedApi" />
 
         <profileable android:shell="true" />
+
+        <receiver android:name=".Alarm" />
     </application>
 
 </manifest>
