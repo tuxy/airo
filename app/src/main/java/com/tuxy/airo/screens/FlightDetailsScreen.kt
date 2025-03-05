@@ -45,10 +45,10 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.tuxy.airo.R
 import com.tuxy.airo.Screen
+import com.tuxy.airo.cancelAlarm
 import com.tuxy.airo.composables.RouteBar
 import com.tuxy.airo.data.FlightData
 import com.tuxy.airo.data.FlightDataDao
-import com.tuxy.airo.setAlarm
 import com.tuxy.airo.viewmodel.DetailsViewModel
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
@@ -312,7 +312,7 @@ fun DeleteDialog(
                             GlobalScope.launch(Dispatchers.IO) {
                                 flightDataDao.deleteFlight(flightData.value)
                             }
-                            setAlarm(context)
+                            cancelAlarm(context, flightData.value)
                             openDialog.value = false
                             navController.navigateUp()
                         },

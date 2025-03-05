@@ -76,8 +76,6 @@ fun MainFlightView(
     val viewModel = viewModel<MainFlightViewModel>()
     viewModel.loadData(flightDataDao)
 
-    val context = LocalContext.current
-
     val scrollBehavior =
         TopAppBarDefaults.exitUntilCollapsedScrollBehavior(rememberTopAppBarState())
 
@@ -231,10 +229,11 @@ fun FlightCard(
                             .toMillis()
 
                         if (LocalDateTime.now() < flightData.departDate) {
-                            viewModel.progress.floatValue = 0.0F
+                            0.0F
+                        } else {
+                            val duration = flightData.duration.toMillis()
+                            abs(now.toFloat() / duration.toFloat())
                         }
-                        val duration = flightData.duration.toMillis()
-                        abs(now.toFloat() / duration.toFloat())
                     },
                     modifier = Modifier
                         .padding(16.dp)

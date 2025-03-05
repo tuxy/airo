@@ -16,10 +16,6 @@ import java.time.ZoneOffset
 class MainFlightViewModel() : ViewModel() {
     var flightData by mutableStateOf(emptyList<FlightData>()) // Initialise empty viewmodel
         private set
-    var progress = mutableFloatStateOf(0.0F)
-        private set
-    var selectedTabIndex = mutableIntStateOf(0)
-        private set
 
     // Group by 3 days
     var flights = flightData.groupBy { flight ->

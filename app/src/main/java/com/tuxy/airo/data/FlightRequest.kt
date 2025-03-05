@@ -60,20 +60,18 @@ suspend fun getData(
                 return@withContext // Stops from executing further
             }
             val jsonListResponse = response.body!!.string()
-            Log.d("ApiAccess", jsonListResponse)
 
             try {
                 val jsonRoot = Root.fromJson(jsonListResponse)
                 println(jsonRoot)
                 val flightData = parseData(jsonRoot)
-                Log.d("ApiAccess", flightData.toString())
                 // TODO Look through existing flights and compare without having to use api
                 if (data.queryExisting(flightData.departDate, flightData.callSign) > 0) {
                     toasts[3].show() // flight already exists toast
                     return@withContext
                 }
                 data.addFlight(flightData) // If this errors, we give up
-                setAlarm(context)
+                setAlarm(context, flightData)
             } catch (e: KlaxonException) {
                 e.printStackTrace()
                 toasts[2].show() // flight not found
