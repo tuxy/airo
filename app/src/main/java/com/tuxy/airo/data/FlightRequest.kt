@@ -1,7 +1,6 @@
 package com.tuxy.airo.data
 
 import android.content.Context
-import android.util.Log
 import android.widget.Toast
 import com.beust.klaxon.KlaxonException
 import com.tuxy.airo.screens.ApiSettings
@@ -55,7 +54,6 @@ suspend fun getData(
 
         client.newCall(request).execute().use { response ->
             if (!response.isSuccessful) {
-                Log.d("Api", response.toString())
                 toasts[1].show() // Network Error toast
                 return@withContext // Stops from executing further
             }

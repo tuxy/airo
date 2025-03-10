@@ -19,7 +19,7 @@
     <string name="delete_dialog">Xóa bỏ chuyến bay? Hành động này không thể hủy bỏ</string>
     <string name="cancel">Hủy</string>
     <string name="delete">Xóa</string>
-    <string name="to">Đến</string>
+    <string name="to">đến</string>
     <string name="flight">Chuyến bay</string>
     <string name="terminal">Nhà ga</string>
     <string name="gate">Của bay</string>
@@ -62,4 +62,8 @@
     <string name="past_flights">Quá khứ</string>
     <string name="delete_dialog_ticket">Xóa bỏ vé bay? Hành động này không thể hủy bỏ</string>
     <string name="booking_reference">Số đặt vé</string>
+    <string name="flight_alert_title">Chuẩn bị cho chuyến bay trong 6 tiếng</string>
+    <string name="get_ready">Hãy chuẩn bị cho chuyến</string>
+    <string name="at">lúc</string>
+    <string name="invalid_api_url">API Không hợp lệ</string>
 </resources>

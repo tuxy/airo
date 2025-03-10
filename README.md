@@ -18,13 +18,14 @@
 - Route map and progress
 - Aircraft information with photos
 - Flights organised by date
-- Scanning boarding passes for information and boarding (QR ONLY for now...)
+- Scanning boarding passes for information and boarding
+- Notifications 6 hour before flight
 
 ## TODO before release / Roadmap
 
-- Notification integration
 - Periodic alerts and status for flights
 - Regional Locale settings
+- Fix for timezones
 - Bugfixes
 
 ## Libraries used/credits

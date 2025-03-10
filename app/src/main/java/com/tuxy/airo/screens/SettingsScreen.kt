@@ -1,6 +1,5 @@
 package com.tuxy.airo.screens
 
-import android.util.Log
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -67,7 +66,6 @@ fun SettingsView( // TODO Implement notification permissions
                     viewModel.saveKey("ENDPOINT", viewModel.currentEndpoint)
                     viewModel.saveKey("API_SERVER", viewModel.currentApiServer)
 
-                    Log.d("Api", selectedIndex.toString())
                     navController.navigateUp()
                 },
                 icon = { Icon(Icons.Filled.Check, stringResource(R.string.apply_settings)) },

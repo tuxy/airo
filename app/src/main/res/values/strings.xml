@@ -19,7 +19,7 @@
     <string name="delete_dialog">Delete flight? This cannot be undone.</string>
     <string name="cancel">Cancel</string>
     <string name="delete">Delete</string>
-    <string name="to">To</string>
+    <string name="to">to</string>
     <string name="flight">Flight</string>
     <string name="terminal">Terminal</string>
     <string name="gate">Gate</string>
@@ -62,4 +62,8 @@
     <string name="past_flights">Past</string>
     <string name="delete_dialog_ticket">Delete ticket? This cannot be undone.</string>
     <string name="booking_reference">Booking reference</string>
+    <string name="flight_alert_title">Prepare for flight in 6 hours</string>
+    <string name="get_ready">Get ready for flight</string>
+    <string name="at">at</string>
+    <string name="invalid_api_url">Invalid API URL</string>
 </resources>

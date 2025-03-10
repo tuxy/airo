@@ -23,10 +23,8 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
-import androidx.navigation.compose.rememberNavController
 import com.tuxy.airo.R
 import com.tuxy.airo.Screen
 import com.tuxy.airo.composables.SmallAppBar
@@ -80,10 +78,4 @@ fun FlightSearch(navController: NavController) {
             }
         ),
     )
-}
-
-@Composable
-@Preview(showBackground = true)
-fun NewFlightViewPreview() {
-    NewFlightView(rememberNavController())
 }

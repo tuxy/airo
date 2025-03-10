@@ -11,14 +11,14 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.material3.Scaffold
-import androidx.compose.ui.platform.ComposeView
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import com.tuxy.airo.data.FlightData
 import com.tuxy.airo.data.FlightDataBase
 import com.tuxy.airo.data.FlightDataDao
 import com.tuxy.airo.ui.theme.AeroTheme
-import java.time.ZoneOffset
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
 
 class MainActivity : ComponentActivity() {
 
@@ -44,23 +44,37 @@ class MainActivity : ComponentActivity() {
 }
 
 fun setAlarm(context: Context, flightData: FlightData) {
-    val timeSec =
-        (flightData.departDate.atOffset(ZoneOffset.UTC).toEpochSecond()) * 1000
-//    val timeSec = System.currentTimeMillis() + 5000
-    val alarmManager = context.getSystemService(ALARM_SERVICE) as AlarmManager
-    val intent = Intent(context, Alarm::class.java)
-    intent.putExtra("title", flightData.callSign)
-    val pendingIntent = PendingIntent.getBroadcast(
-        context,
-        flightData.hashCode(),
-        intent,
-        PendingIntent.FLAG_IMMUTABLE
-    )
-    alarmManager.setExactAndAllowWhileIdle(
-        AlarmManager.RTC_WAKEUP,
-        timeSec,
-        pendingIntent
-    )
+
+    val depTime =
+        flightData.departDate.atZone(ZoneId.systemDefault()).toEpochSecond()
+
+    if (depTime > System.currentTimeMillis() / 1000) {
+        val alarmManager = context.getSystemService(ALARM_SERVICE) as AlarmManager
+        val intent = Intent(context, Alarm::class.java)
+
+        val time = flightData.departDate.atZone(ZoneId.systemDefault())
+            .format(DateTimeFormatter.ofPattern("HH:mm"))
+
+        val flight = context.getString(R.string.flight_alert_title)
+        val content =
+            "${context.getString(R.string.get_ready)} ${flightData.callSign} ${context.getString(R.string.to)} ${flightData.toName} ${
+                context.getString(R.string.at)
+            } $time"
+
+        intent.putExtra("flight", flight)
+        intent.putExtra("content", content)
+        val pendingIntent = PendingIntent.getBroadcast(
+            context,
+            flightData.id,
+            intent,
+            PendingIntent.FLAG_IMMUTABLE
+        )
+        alarmManager.setExactAndAllowWhileIdle(
+            AlarmManager.RTC_WAKEUP,
+            (depTime - 21600) * 1000,
+            pendingIntent
+        )
+    }
 }
 
 fun cancelAlarm(context: Context, flightData: FlightData) {
@@ -68,7 +82,7 @@ fun cancelAlarm(context: Context, flightData: FlightData) {
     val intent = Intent(context, Alarm::class.java)
     val pendingIntent = PendingIntent.getBroadcast(
         context,
-        flightData.hashCode(),
+        flightData.id,
         intent,
         PendingIntent.FLAG_IMMUTABLE
     )
