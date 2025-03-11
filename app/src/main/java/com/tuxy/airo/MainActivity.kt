@@ -1,16 +1,24 @@
 package com.tuxy.airo
 
+import android.Manifest
 import android.annotation.SuppressLint
 import android.app.Activity.ALARM_SERVICE
 import android.app.AlarmManager
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageManager
+import android.os.Build
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
+import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.material3.Scaffold
+import androidx.compose.ui.platform.LocalContext
+import androidx.core.content.ContextCompat
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import com.tuxy.airo.data.FlightData
@@ -34,6 +42,33 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             AeroTheme {
+
+                val launcher = rememberLauncherForActivityResult(
+                    ActivityResultContracts.RequestPermission()
+                ) { isGranted: Boolean ->
+                    if (isGranted) {
+                        Log.d("Permissions", "NOTIFICATION PERMISSION GRANTED")
+
+                    } else {
+                        Log.d("Permissions", "NOTIFICATION PERMISSION DENIED")
+                    }
+                }
+
+                when (PackageManager.PERMISSION_GRANTED) {
+                    ContextCompat.checkSelfPermission(
+                        LocalContext.current,
+                        Manifest.permission.POST_NOTIFICATIONS
+                    ) -> {
+                        Log.d("Permissions", "NOTIFICATION PERMISSION REQUIRED")
+                    }
+
+                    else -> {
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                            launcher.launch(Manifest.permission.POST_NOTIFICATIONS)
+                        }
+                    }
+                }
+
                 Scaffold {
                     navController = rememberNavController()
                     SetupNavGraph(navController, data)

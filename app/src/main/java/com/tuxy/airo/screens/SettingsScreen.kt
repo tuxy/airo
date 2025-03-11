@@ -40,7 +40,7 @@ import com.tuxy.airo.screens.settings.CustomApiView
 import com.tuxy.airo.viewmodel.SettingsViewModel
 
 @Composable
-fun SettingsView( // TODO Implement notification permissions
+fun SettingsView(
     navController: NavController
 ) {
     val viewModelFactory = SettingsViewModel.Factory(LocalContext.current)
@@ -77,7 +77,7 @@ fun SettingsView( // TODO Implement notification permissions
             SingleChoiceSegmentedButtonRow(
                 modifier = Modifier
                     .padding(innerPadding)
-                    .padding(16.dp)
+                    .padding(start = 16.dp, end = 16.dp, top = 16.dp, bottom = 8.dp)
                     .fillMaxWidth()
             ) {
                 options.forEachIndexed { index, label ->
