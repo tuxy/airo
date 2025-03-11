@@ -1,5 +1,7 @@
 package com.tuxy.airo.screens
 
+import android.webkit.URLUtil
+import android.widget.Toast
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -55,12 +57,41 @@ fun SettingsView(
     viewModel.currentEndpoint = viewModel.getValue("ENDPOINT")
     viewModel.currentApiServer = viewModel.getValue("API_SERVER")
 
+    val toast = Toast.makeText(
+        LocalContext.current,
+        stringResource(R.string.invalid_api_url),
+        Toast.LENGTH_SHORT
+    )
+
     Scaffold(
         modifier = Modifier.fillMaxSize(),
         topBar = { LargeAppBar(stringResource(R.string.settings), navController) },
         floatingActionButton = {
             ExtendedFloatingActionButton(
                 onClick = {
+                    when (selectedIndex) { // Parse and check for URL
+                        0 -> {
+                            if (!URLUtil.isValidUrl(viewModel.currentApiServer)) {
+                                navController.navigateUp()
+                                toast.show()
+                                return@ExtendedFloatingActionButton
+                            }
+                        }
+
+                        1 -> {
+                            if (!URLUtil.isValidUrl(viewModel.currentApiKey)) {
+                                navController.navigateUp()
+                                toast.show()
+                                return@ExtendedFloatingActionButton
+                            }
+                            if (!URLUtil.isValidUrl(viewModel.currentEndpoint)) {
+                                navController.navigateUp()
+                                toast.show()
+                                return@ExtendedFloatingActionButton
+                            }
+                        }
+                    }
+
                     viewModel.saveKey("API_CHOICE", selectedIndex.toString())
                     viewModel.saveKey("API_KEY", viewModel.currentApiKey)
                     viewModel.saveKey("ENDPOINT", viewModel.currentEndpoint)
@@ -77,7 +108,7 @@ fun SettingsView(
             SingleChoiceSegmentedButtonRow(
                 modifier = Modifier
                     .padding(innerPadding)
-                    .padding(start = 16.dp, end = 16.dp, top = 16.dp, bottom = 8.dp)
+                    .padding(start = 16.dp, end = 16.dp, top = 16.dp)
                     .fillMaxWidth()
             ) {
                 options.forEachIndexed { index, label ->

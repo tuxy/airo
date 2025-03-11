@@ -10,14 +10,12 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
-import android.util.Log
 import androidx.activity.ComponentActivity
-import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.material3.Scaffold
 import androidx.compose.ui.platform.LocalContext
+import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
@@ -42,31 +40,18 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             AeroTheme {
-
-                val launcher = rememberLauncherForActivityResult(
-                    ActivityResultContracts.RequestPermission()
-                ) { isGranted: Boolean ->
-                    if (isGranted) {
-                        Log.d("Permissions", "NOTIFICATION PERMISSION GRANTED")
-
-                    } else {
-                        Log.d("Permissions", "NOTIFICATION PERMISSION DENIED")
-                    }
-                }
-
-                when (PackageManager.PERMISSION_GRANTED) {
-                    ContextCompat.checkSelfPermission(
-                        LocalContext.current,
-                        Manifest.permission.POST_NOTIFICATIONS
-                    ) -> {
-                        Log.d("Permissions", "NOTIFICATION PERMISSION REQUIRED")
-                    }
-
-                    else -> {
-                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                            launcher.launch(Manifest.permission.POST_NOTIFICATIONS)
-                        }
-                    }
+                // Attempts to set up notification permissions
+                if (Build.VERSION.SDK_INT >= 33) {
+                    if (ContextCompat.checkSelfPermission(
+                            LocalContext.current,
+                            Manifest.permission.POST_NOTIFICATIONS
+                        ) != PackageManager.PERMISSION_GRANTED
+                    ) {
+                        ActivityCompat.requestPermissions(
+                            this,
+                            arrayOf(Manifest.permission.POST_NOTIFICATIONS), 101
+                        )
+                    } // If the user denies notifications, we ignore forever
                 }
 
                 Scaffold {

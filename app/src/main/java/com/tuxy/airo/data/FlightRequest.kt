@@ -36,7 +36,7 @@ suspend fun getData(
 
         val urlChoice = if (settings.choice == "0") settings.server!! else settings.endpoint!!
 
-        val url = "https://${urlChoice}/${flightNumber}/${date}".toHttpUrl()
+        val url = "${urlChoice}/${flightNumber}/${date}".toHttpUrl()
             .newBuilder() // Adds parameter for aircraft image
             .addQueryParameter("withAircraftImage", "True")
             .build()
