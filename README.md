@@ -31,6 +31,8 @@
 ## Libraries used/credits
 
 - MapCompose https://github.com/p-lr/MapCompose
+- USGS Topo map https://www.usgs.gov/ (December 2024)
+    - MOBAC (MOBile Atlas Creator) https://mobac.sourceforge.io/
 - ComposedBarcodes https://github.com/simonsickle/ComposedBarcodes
 - Coil Image loading https://coil-kt.github.io/coil/
 - Square libraries https://square.github.io/
@@ -38,3 +40,4 @@
 - Zxing embedded https://github.com/journeyapps/zxing-android-embedded
 - Klaxon JSON Parsing https://github.com/cbeust/klaxon
 - Compose-html https://github.com/ireward/compose-html
+- Radarbox logo's provided by Jxck-S https://github.com/Jxck-S/airline-logos
