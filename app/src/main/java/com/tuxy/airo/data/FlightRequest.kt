@@ -12,6 +12,7 @@ import okhttp3.OkHttpClient
 import okhttp3.Request
 import java.time.Duration
 import java.time.LocalDateTime
+import java.time.OffsetDateTime
 import java.time.format.DateTimeFormatter
 import kotlin.math.abs
 import kotlin.math.ln
@@ -61,7 +62,6 @@ suspend fun getData(
 
             try {
                 val jsonRoot = Root.fromJson(jsonListResponse)
-                println(jsonRoot)
                 val flightData = parseData(jsonRoot)
                 // TODO Look through existing flights and compare without having to use api
                 if (data.queryExisting(flightData.departDate, flightData.callSign) > 0) {
@@ -189,10 +189,11 @@ private const val X0 = -2.0037508342789248E7 // Constant for map projection
 fun parseDateTime(time: String): LocalDateTime {
     // TODO, utilise UTC time and convert into local time instead of relying on localtime
     val pattern =
-        DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mmXXXXX")!! // Ignore time-zone, as time is set to local by default
-    val localDateTime = LocalDateTime.parse(time, pattern)
+        DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mmXXXXX")!!
+    // val localDateTime = LocalDateTime.parse(time, pattern)
+    val offsetDateTime = OffsetDateTime.parse(time, pattern)
 
-    return localDateTime!!
+    return offsetDateTime!!.toLocalDateTime()
 }
 
 
