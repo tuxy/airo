@@ -15,10 +15,10 @@ jobs:
       with:
         java-version: '17'
         distribution: 'temurin'
-    - name: Set up Gradle
-      uses: actions/setup-gradle@v3
     - name: Build with Gradle
-      run: ./gradlew :app:assembleDebug
+      uses: gradle/gradle-build-action@v2
+      with:
+        arguments: :app:assembleDebug
     - name: Upload Debug APK
       uses: actions/upload-artifact@v3
       with:
