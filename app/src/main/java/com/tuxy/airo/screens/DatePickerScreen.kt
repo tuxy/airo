@@ -22,10 +22,13 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import android.widget.Toast
 import androidx.navigation.NavController
 import com.tuxy.airo.R
 import com.tuxy.airo.composables.SmallAppBar
 import com.tuxy.airo.data.FlightDataDao
+import com.tuxy.airo.data.FlightDataError
+import com.tuxy.airo.data.FlightDataFetchException
 import com.tuxy.airo.data.getData
 import com.tuxy.airo.viewmodel.DateViewModel
 import kotlinx.coroutines.DelicateCoroutinesApi
@@ -72,18 +75,41 @@ fun DatePickerView(
                     viewModel.loading = true
 
                     GlobalScope.launch(Dispatchers.Main) {
-                        getData( // FlightRequest.kt
-                            viewModel.formatFlightNumber(flightNumber),
-                            flightDataDao,
-                            viewModel.getDateAsString(timeMillis),
-                            viewModel.toasts,
-                            settings,
-                            context
-                        )
-                        joinAll()
-                        viewModel.loading = false
-                        navController.navigateUp()
-                        navController.navigateUp()
+                        viewModel.loading = true
+                        try {
+                            val result = getData( // FlightRequest.kt
+                                viewModel.formatFlightNumber(flightNumber),
+                                flightDataDao,
+                                viewModel.getDateAsString(timeMillis),
+                                // viewModel.toasts, // REMOVED
+                                settings,
+                                context
+                            )
+
+                            if (result.isSuccess) {
+                                // Optional: Toast.makeText(context, "Flight added successfully!", Toast.LENGTH_SHORT).show()
+                                navController.navigateUp()
+                                navController.navigateUp()
+                            } else {
+                                val exception = result.exceptionOrNull()
+                                if (exception is FlightDataFetchException) {
+                                    when (exception.errorType) {
+                                        is FlightDataError.ApiKeyMissing -> viewModel.toasts[0].show()
+                                        is FlightDataError.NetworkError -> viewModel.toasts[1].show()
+                                        is FlightDataError.ParsingError -> viewModel.toasts[2].show()
+                                        is FlightDataError.IncompleteDataError -> viewModel.toasts[2].show()
+                                        is FlightDataError.FlightAlreadyExists -> viewModel.toasts[3].show()
+                                        is FlightDataError.UnknownError -> viewModel.toasts[1].show() // Using network error toast for unknown
+                                    }
+                                } else {
+                                    // Generic error for other unexpected exceptions
+                                    Toast.makeText(context, context.getString(R.string.error_unknown), Toast.LENGTH_SHORT).show()
+                                }
+                                // No navigation on failure
+                            }
+                        } finally {
+                            viewModel.loading = false
+                        }
                     }
                 },
                 icon = { Icon(Icons.Filled.Check, stringResource(R.string.empty)) },
