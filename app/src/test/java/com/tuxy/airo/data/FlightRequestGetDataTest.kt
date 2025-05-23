@@ -128,7 +128,9 @@ class FlightRequestGetDataTest {
         val result = getData(flightNumber, mockDao, date, settings, mockContext)
         
         assertTrue(result.isFailure)
-        assertEquals(FlightDataError.ApiKeyMissing, result.exceptionOrNull())
+        val exception = result.exceptionOrNull()
+        assertTrue(exception is FlightDataFetchException)
+        assertEquals(FlightDataError.ApiKeyMissing, (exception as FlightDataFetchException).errorType)
     }
     
     @Test
@@ -137,12 +139,16 @@ class FlightRequestGetDataTest {
         val settingsNoEndpoint = ApiSettings(choice = "1", endpoint = "", server = "server.com", key = "somekey")
         val resultNoEndpoint = getData(flightNumber, mockDao, date, settingsNoEndpoint, mockContext)
         assertTrue(resultNoEndpoint.isFailure)
-        assertEquals(FlightDataError.ApiKeyMissing, resultNoEndpoint.exceptionOrNull())
+        val exceptionNoEndpoint = resultNoEndpoint.exceptionOrNull()
+        assertTrue(exceptionNoEndpoint is FlightDataFetchException)
+        assertEquals(FlightDataError.ApiKeyMissing, (exceptionNoEndpoint as FlightDataFetchException).errorType)
 
         val settingsNoServer = ApiSettings(choice = "0", endpoint = "endpoint.com", server = "", key = "somekey")
         val resultNoServer = getData(flightNumber, mockDao, date, settingsNoServer, mockContext)
         assertTrue(resultNoServer.isFailure)
-        assertEquals(FlightDataError.ApiKeyMissing, resultNoServer.exceptionOrNull())
+        val exceptionNoServer = resultNoServer.exceptionOrNull()
+        assertTrue(exceptionNoServer is FlightDataFetchException)
+        assertEquals(FlightDataError.ApiKeyMissing, (exceptionNoServer as FlightDataFetchException).errorType)
     }
 
 
@@ -154,44 +160,24 @@ class FlightRequestGetDataTest {
         val result = getData(flightNumber, mockDao, date, settings, mockContext)
 
         assertTrue(result.isFailure)
-        assertEquals(FlightDataError.NetworkError, result.exceptionOrNull())
+        val exception = result.exceptionOrNull()
+        assertTrue(exception is FlightDataFetchException)
+        assertEquals(FlightDataError.NetworkError, (exception as FlightDataFetchException).errorType)
     }
     
     @Test
-    fun getData_networkIoException_returnsUnknownError() = runTest {
-        // Simulate an IOException, e.g. server disconnects abruptly
-        // MockWebServer doesn't directly simulate all IOExceptions easily,
-        // but an empty response might sometimes trigger client-side issues.
-        // A more direct way would be to mock the OkHttpClient if we could inject it.
-        // For now, we assume that some IOExceptions will bubble up as generic Exception.
-        // This test is more conceptual for now.
-        // To truly test this, one might need to mock the OkHttpClient directly.
-        // For now, let's assume an unhandled exception in client.execute() leads to UnknownError
-        // This specific scenario is hard to trigger deterministically with MockWebServer alone for all types of IOExceptions.
-        // If client.newCall(request).execute() throws an IOException directly (not an HTTP error code)
-        // it should be caught by the generic catch (e: Exception) in getData.
-        
-        // We can't make MockWebServer itself throw an IOException easily for the *execution* of the call.
-        // The UnknownError is for exceptions *other* than Klaxon/MissingCriticalData.
-        // Let's assume for now that an unexpected exception in the OkHttp call chain not resulting in a Response object
-        // would be caught by the generic `catch (e: Exception)`.
-        // This test will be more of a placeholder or needs deeper OkHttp client mocking.
-        // For now, we'll test a scenario that results in a non-HTTP, non-parsing, non-critical data error.
-        // One way to simulate this is by causing an issue *after* network but *before* full parsing,
-        // though getData's structure makes this hard.
-        // Let's skip a direct IOException simulation for now and rely on the generic catch test.
-        // Consider if `response.body!!.string()` could throw an IOException.
-        mockWebServer.enqueue(MockResponse().setBody("Simulate issue with body reading").setHeader("Content-Length", "100").setSocketPolicy(okhttp3.mockwebserver.SocketPolicy.DISCONNECT_AT_START))
+    fun getData_networkIoException_returnsNetworkErrorFromDisconnect() = runTest {
+        // SocketPolicy.DISCONNECT_AT_START should cause an IOException when the client tries to read,
+        // which in turn should be handled by OkHttp and result in a !response.isSuccessful,
+        // leading to FlightDataError.NetworkError.
+        mockWebServer.enqueue(MockResponse().setSocketPolicy(okhttp3.mockwebserver.SocketPolicy.DISCONNECT_AT_START))
         val settings = getBaseApiSettings()
         val result = getData(flightNumber, mockDao, date, settings, mockContext)
+        
         assertTrue(result.isFailure)
-        // This often results in NetworkError or potentially UnknownError depending on OkHttp client behavior
-        // Given the current structure of getData, most OkHttp/network issues will likely manifest as NetworkError
-        // or be caught by the generic Exception handler, mapping to UnknownError.
-        // If response.isSuccessful is false, it's NetworkError.
-        // If response.body.string() throws an IOException, it would be UnknownError.
-        // SocketPolicy.DISCONNECT_AT_START should cause an IOException when the client tries to read.
-        assertEquals(FlightDataError.NetworkError, result.exceptionOrNull()) // More likely NetworkError for DISCONNECT_AT_START
+        val exception = result.exceptionOrNull()
+        assertTrue(exception is FlightDataFetchException)
+        assertEquals(FlightDataError.NetworkError, (exception as FlightDataFetchException).errorType)
     }
 
 
@@ -203,7 +189,9 @@ class FlightRequestGetDataTest {
         val result = getData(flightNumber, mockDao, date, settings, mockContext)
 
         assertTrue(result.isFailure)
-        assertEquals(FlightDataError.ParsingError, result.exceptionOrNull())
+        val exception = result.exceptionOrNull()
+        assertTrue(exception is FlightDataFetchException)
+        assertEquals(FlightDataError.ParsingError, (exception as FlightDataFetchException).errorType)
     }
 
     @Test
@@ -214,7 +202,9 @@ class FlightRequestGetDataTest {
         val result = getData(flightNumber, mockDao, date, settings, mockContext)
 
         assertTrue(result.isFailure)
-        assertEquals(FlightDataError.IncompleteDataError, result.exceptionOrNull())
+        val exception = result.exceptionOrNull()
+        assertTrue(exception is FlightDataFetchException)
+        assertEquals(FlightDataError.IncompleteDataError, (exception as FlightDataFetchException).errorType)
     }
 
     @Test
@@ -226,7 +216,9 @@ class FlightRequestGetDataTest {
         val result = getData(flightNumber, mockDao, date, settings, mockContext)
 
         assertTrue(result.isFailure)
-        assertEquals(FlightDataError.FlightAlreadyExists, result.exceptionOrNull())
+        val exception = result.exceptionOrNull()
+        assertTrue(exception is FlightDataFetchException)
+        assertEquals(FlightDataError.FlightAlreadyExists, (exception as FlightDataFetchException).errorType)
         verify(mockDao, never()).addFlight(any())
     }
     
@@ -240,6 +232,8 @@ class FlightRequestGetDataTest {
         val result = getData(flightNumber, mockDao, date, settings, mockContext)
 
         assertTrue(result.isFailure)
-        assertEquals(FlightDataError.UnknownError, result.exceptionOrNull())
+        val exception = result.exceptionOrNull()
+        assertTrue(exception is FlightDataFetchException)
+        assertEquals(FlightDataError.UnknownError, (exception as FlightDataFetchException).errorType)
     }
 }

@@ -75,40 +75,46 @@ suspend fun getData(
     date: String,
     settings: ApiSettings,
     context: Context
-): Result<FlightData, FlightDataError> {
+): Result<FlightData> { // Changed return type
     return withContext(Dispatchers.IO) {
         val request = buildFlightApiRequest(flightNumber, date, settings)
-            ?: return@withContext Result.failure(FlightDataError.ApiKeyMissing)
+            ?: return@withContext Result.failure(FlightDataFetchException(FlightDataError.ApiKeyMissing))
 
         try {
             sharedOkHttpClient.newCall(request).execute().use { response ->
                 if (!response.isSuccessful) {
-                    return@withContext Result.failure(FlightDataError.NetworkError)
+                    return@withContext Result.failure(FlightDataFetchException(FlightDataError.NetworkError))
                 }
                 val jsonListResponse = response.body!!.string()
 
                 try {
-                    val jsonRoot = Root.fromJson(jsonListResponse)
-                    val flightData = parseData(jsonRoot)
+                    // Root.fromJson returns Root?, handle null if jsonListResponse is empty or invalid
+                    val jsonRoot = Root.fromJson(jsonListResponse) ?:
+                        return@withContext Result.failure(FlightDataFetchException(FlightDataError.ParsingError))
+                    
+                    val flightData = parseData(jsonRoot) // parseData can throw MissingCriticalDataException
+                    
                     if (data.queryExisting(flightData.departDate, flightData.callSign) > 0) {
-                        return@withContext Result.failure(FlightDataError.FlightAlreadyExists)
+                        return@withContext Result.failure(FlightDataFetchException(FlightDataError.FlightAlreadyExists))
                     }
                     data.addFlight(flightData)
                     setAlarm(context, flightData)
                     return@withContext Result.success(flightData)
                 } catch (e: KlaxonException) {
                     e.printStackTrace()
-                    return@withContext Result.failure(FlightDataError.ParsingError)
+                    return@withContext Result.failure(FlightDataFetchException(FlightDataError.ParsingError))
                 } catch (e: MissingCriticalDataException) {
                     e.printStackTrace()
                     Log.e("FlightRequest", "Missing critical data: ${e.message}")
-                    return@withContext Result.failure(FlightDataError.IncompleteDataError)
+                    return@withContext Result.failure(FlightDataFetchException(FlightDataError.IncompleteDataError))
                 }
             }
         } catch (e: Exception) {
             // Catch any other exceptions during the network call or processing
             e.printStackTrace()
-            return@withContext Result.failure(FlightDataError.UnknownError)
+            // Consider specific exception types if needed, e.g. IOException for network issues
+            // For now, all other exceptions map to UnknownError
+            return@withContext Result.failure(FlightDataFetchException(FlightDataError.UnknownError))
         }
     }
 }
@@ -189,9 +195,9 @@ fun parseData(jsonRoot: Root): FlightData {
     val gate = flightInfo.departure.gate.ifNullOrEmptyLog("gate", "N/A")
     val terminal = flightInfo.departure.terminal.ifNullOrEmptyLog("terminal", "N/A")
     val aircraftModel = flightInfo.aircraft.orEmpty().model.ifNullOrEmptyLog("aircraftModel", "N/A")
-    val aircraftImageUrl = flightInfo.aircraft.orEmpty().image.orEmpty().url
-    val imageAuthor = flightInfo.aircraft.orEmpty().image.orEmpty().author
-    val imageAuthorUrl = flightInfo.aircraft.orEmpty().image.orEmpty().webUrl
+    val aircraftImageUrl = flightInfo.aircraft.orEmpty().image.orEmpty().url ?: ""
+    val imageAuthor = flightInfo.aircraft.orEmpty().image.orEmpty().author ?: ""
+    val imageAuthorUrl = flightInfo.aircraft.orEmpty().image.orEmpty().webUrl ?: ""
     val attribution = flightInfo.aircraft.orEmpty().image.orEmpty().htmlAttributions.firstOrNull() ?: ""
 
 

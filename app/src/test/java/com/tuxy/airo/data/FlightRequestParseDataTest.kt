@@ -254,4 +254,188 @@ class FlightRequestParseDataTest {
             assertEquals("JSON root is null or empty", e.message)
         }
     }
+
+    // --- Tests for aircraft image field defaults ---
+
+    private fun getBaseJsonForImageTests(): String {
+        // A minimal but valid JSON structure, focusing on testing aircraft image defaults.
+        // Critical fields are present. Aircraft/image fields will be manipulated by each test.
+        return """
+        {
+            "number": "IMGTEST01",
+            "departure": {
+                "airport": { "iata": "DEP", "shortName": "Departure Airport", "location": { "lat": 1.0, "lon": 1.0 } },
+                "scheduledTime": { "local": "2024-01-01T10:00:00+00:00", "utc": "2024-01-01T10:00:00Z" }
+            },
+            "arrival": {
+                "airport": { "iata": "ARR", "shortName": "Arrival Airport", "location": { "lat": 2.0, "lon": 2.0 } },
+                "scheduledTime": { "local": "2024-01-01T12:00:00+00:00", "utc": "2024-01-01T12:00:00Z" }
+            }
+            // aircraft and airline objects will be added/modified by specific tests
+        }
+        """.trimIndent()
+    }
+
+    private fun assertImageDefaults(flightData: FlightData, callSign: String = "IMGTEST01") {
+        assertEquals(callSign, flightData.callSign) // Ensure rest of parsing is okay
+        assertEquals("Aircraft URI should be empty string", "", flightData.aircraftUri)
+        assertEquals("Author should be empty string", "", flightData.author)
+        assertEquals("Author URI should be empty string", "", flightData.authorUri)
+        assertEquals("N/A", flightData.aircraftName) // Default for model
+    }
+
+    @Test
+    fun parseData_aircraftObjectNull_defaultsImageFieldsToEmptyString() {
+        val baseMap = klaxon.parse<MutableMap<String, Any?>>(getBaseJsonForImageTests())!!
+        baseMap["aircraft"] = null // Explicitly set aircraft to null
+        val json = klaxon.toJsonString(baseMap)
+        val root = buildRoot(json)
+        val flightData = parseData(root)
+        assertImageDefaults(flightData)
+    }
+
+    @Test
+    fun parseData_aircraftObjectMissing_defaultsImageFieldsToEmptyString() {
+        // Aircraft object completely missing from JSON (baseJsonForImageTests doesn't include it by default)
+        val json = getBaseJsonForImageTests()
+        val root = buildRoot(json)
+        val flightData = parseData(root)
+        assertImageDefaults(flightData)
+    }
+
+    @Test
+    fun parseData_imageObjectNullInAircraft_defaultsImageFieldsToEmptyString() {
+        val baseMap = klaxon.parse<MutableMap<String, Any?>>(getBaseJsonForImageTests())!!
+        baseMap["aircraft"] = mutableMapOf<String, Any?>("model" to "Some Model", "image" to null)
+        val json = klaxon.toJsonString(baseMap)
+        val root = buildRoot(json)
+        val flightData = parseData(root)
+        assertImageDefaults(flightData)
+        assertEquals("Some Model", flightData.aircraftName)
+    }
+
+    @Test
+    fun parseData_imageObjectMissingInAircraft_defaultsImageFieldsToEmptyString() {
+        val baseMap = klaxon.parse<MutableMap<String, Any?>>(getBaseJsonForImageTests())!!
+        baseMap["aircraft"] = mutableMapOf<String, Any?>("model" to "Some Model") // Image object missing
+        val json = klaxon.toJsonString(baseMap)
+        val root = buildRoot(json)
+        val flightData = parseData(root)
+        assertImageDefaults(flightData)
+        assertEquals("Some Model", flightData.aircraftName)
+    }
+
+    @Test
+    fun parseData_imageUrlNull_defaultsAircraftUriToEmptyString() {
+        val baseMap = klaxon.parse<MutableMap<String, Any?>>(getBaseJsonForImageTests())!!
+        baseMap["aircraft"] = mutableMapOf<String, Any?>(
+            "image" to mutableMapOf<String, Any?>("url" to null, "author" to "Test Author", "webUrl" to "http://example.com")
+        )
+        val json = klaxon.toJsonString(baseMap)
+        val root = buildRoot(json)
+        val flightData = parseData(root)
+        assertEquals("IMGTEST01", flightData.callSign)
+        assertEquals("", flightData.aircraftUri)
+        assertEquals("Test Author", flightData.author)
+        assertEquals("http://example.com", flightData.authorUri)
+    }
+    
+    @Test
+    fun parseData_imageUrlMissing_defaultsAircraftUriToEmptyString() {
+        val baseMap = klaxon.parse<MutableMap<String, Any?>>(getBaseJsonForImageTests())!!
+        baseMap["aircraft"] = mutableMapOf<String, Any?>(
+            "image" to mutableMapOf<String, Any?>("author" to "Test Author", "webUrl" to "http://example.com") // url missing
+        )
+        val json = klaxon.toJsonString(baseMap)
+        val root = buildRoot(json)
+        val flightData = parseData(root)
+        assertEquals("IMGTEST01", flightData.callSign)
+        assertEquals("", flightData.aircraftUri)
+        assertEquals("Test Author", flightData.author)
+        assertEquals("http://example.com", flightData.authorUri)
+    }
+
+    @Test
+    fun parseData_imageAuthorNull_defaultsAuthorToEmptyString() {
+        val baseMap = klaxon.parse<MutableMap<String, Any?>>(getBaseJsonForImageTests())!!
+        baseMap["aircraft"] = mutableMapOf<String, Any?>(
+            "image" to mutableMapOf<String, Any?>("url" to "http://example.com/img.png", "author" to null, "webUrl" to "http://example.com")
+        )
+        val json = klaxon.toJsonString(baseMap)
+        val root = buildRoot(json)
+        val flightData = parseData(root)
+        assertEquals("IMGTEST01", flightData.callSign)
+        assertEquals("http://example.com/img.png", flightData.aircraftUri)
+        assertEquals("", flightData.author)
+        assertEquals("http://example.com", flightData.authorUri)
+    }
+
+    @Test
+    fun parseData_imageAuthorMissing_defaultsAuthorToEmptyString() {
+        val baseMap = klaxon.parse<MutableMap<String, Any?>>(getBaseJsonForImageTests())!!
+        baseMap["aircraft"] = mutableMapOf<String, Any?>(
+            "image" to mutableMapOf<String, Any?>("url" to "http://example.com/img.png", "webUrl" to "http://example.com") // author missing
+        )
+        val json = klaxon.toJsonString(baseMap)
+        val root = buildRoot(json)
+        val flightData = parseData(root)
+        assertEquals("IMGTEST01", flightData.callSign)
+        assertEquals("http://example.com/img.png", flightData.aircraftUri)
+        assertEquals("", flightData.author)
+        assertEquals("http://example.com", flightData.authorUri)
+    }
+
+    @Test
+    fun parseData_imageWebUrlNull_defaultsAuthorUriToEmptyString() {
+        val baseMap = klaxon.parse<MutableMap<String, Any?>>(getBaseJsonForImageTests())!!
+        baseMap["aircraft"] = mutableMapOf<String, Any?>(
+            "image" to mutableMapOf<String, Any?>("url" to "http://example.com/img.png", "author" to "Test Author", "webUrl" to null)
+        )
+        val json = klaxon.toJsonString(baseMap)
+        val root = buildRoot(json)
+        val flightData = parseData(root)
+        assertEquals("IMGTEST01", flightData.callSign)
+        assertEquals("http://example.com/img.png", flightData.aircraftUri)
+        assertEquals("Test Author", flightData.author)
+        assertEquals("", flightData.authorUri)
+    }
+
+    @Test
+    fun parseData_imageWebUrlMissing_defaultsAuthorUriToEmptyString() {
+        val baseMap = klaxon.parse<MutableMap<String, Any?>>(getBaseJsonForImageTests())!!
+        baseMap["aircraft"] = mutableMapOf<String, Any?>(
+            "image" to mutableMapOf<String, Any?>("url" to "http://example.com/img.png", "author" to "Test Author") // webUrl missing
+        )
+        val json = klaxon.toJsonString(baseMap)
+        val root = buildRoot(json)
+        val flightData = parseData(root)
+        assertEquals("IMGTEST01", flightData.callSign)
+        assertEquals("http://example.com/img.png", flightData.aircraftUri)
+        assertEquals("Test Author", flightData.author)
+        assertEquals("", flightData.authorUri)
+    }
+
+    @Test
+    fun parseData_allImageSpecificFieldsNull_defaultsAllImageFieldsToEmptyString() {
+        val baseMap = klaxon.parse<MutableMap<String, Any?>>(getBaseJsonForImageTests())!!
+        baseMap["aircraft"] = mutableMapOf<String, Any?>(
+            "image" to mutableMapOf<String, Any?>("url" to null, "author" to null, "webUrl" to null)
+        )
+        val json = klaxon.toJsonString(baseMap)
+        val root = buildRoot(json)
+        val flightData = parseData(root)
+        assertImageDefaults(flightData)
+    }
+
+    @Test
+    fun parseData_allImageSpecificFieldsMissing_defaultsAllImageFieldsToEmptyString() {
+        val baseMap = klaxon.parse<MutableMap<String, Any?>>(getBaseJsonForImageTests())!!
+        baseMap["aircraft"] = mutableMapOf<String, Any?>(
+            "image" to emptyMap<String, Any?>() // All url, author, webUrl missing
+        )
+        val json = klaxon.toJsonString(baseMap)
+        val root = buildRoot(json)
+        val flightData = parseData(root)
+        assertImageDefaults(flightData)
+    }
 }
