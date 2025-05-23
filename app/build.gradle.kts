@@ -89,7 +89,17 @@ dependencies {
     implementation(libs.composed.barcodes)
     implementation(libs.core)
 
-    testImplementation(libs.junit)
+    // Core testing dependencies
+    testImplementation(libs.junit) // Already present
+    testImplementation("org.mockito:mockito-core:4.11.0") // Updated to a common recent version
+    testImplementation("org.mockito:mockito-inline:4.11.0") // For mocking final classes/methods if needed
+    testImplementation("com.squareup.okhttp3:mockwebserver:4.12.0") // Align with OkHttp if possible, using common recent
+    testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.7.3") // For testing coroutines
+
+    // Klaxon is already an implementation dependency, so it's available for tests.
+    // If a different version was needed for tests only: testImplementation("com.beust:klaxon:5.5")
+
+
     androidTestImplementation(libs.androidx.navigation.testing)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
