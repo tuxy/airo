@@ -31,25 +31,24 @@ data class RootElement(
 )
 
 data class Aircraft(
-    val model: String?, // Optional, handled by ifNullOrEmptyLog in parseData
-    val image: Image?    // Optional sub-section
+    val model: String? = "N/A", // Optional, handled by ifNullOrEmptyLog in parseData
+    val image: Image? = Image() // Optional sub-section
 )
 
 data class Image(
-    val url: String?, // Optional
-    @Json(name = "webUrl") // Matches sample JSON field name
-    val webUrl: String?, // Optional
-    val author: String?, // Optional
-    val title: String?, // Not in sample, but good to have if API might send
-    val description: String?, // Not in sample
-    val license: String?, // Not in sample
-    val htmlAttributions: List<String>? // Optional, and list can be empty
+    val url: String = "",
+    val webUrl: String = "",
+    val author: String = "N/A",
+    val title: String = "N/A",
+    val description: String = "N/A",
+    val license: String = "N/A",
+    val htmlAttributions: List<String> = emptyList<String>(),
 )
 
 data class Airline(
-    val name: String?, // Optional, handled by ifNullOrEmptyLog
-    val iata: String?, // Optional, handled by ifNullOrEmptyLog
-    val icao: String?  // Optional, handled by ifNullOrEmptyLog
+    val name: String = "N/A",
+    val iata: String? = "N/A",
+    val icao: String? = "N/A"
 )
 
 // Represents Departure or Arrival structures
@@ -76,14 +75,14 @@ data class Airport(
 )
 
 data class Location(
-    val lat: Double?, // Critical, checked in parseData. Made nullable.
-    val lon: Double?  // Critical, checked in parseData. Made nullable.
+    val lat: Double? = 0.0, // Critical, checked in parseData. Made nullable.
+    val lon: Double? = 0.0  // Critical, checked in parseData. Made nullable.
 )
 
 // Represents ScheduledTime, RevisedTime, PredictedTime structures
-data class EdTime(
-    val utc: String?,   // Critical for scheduled times, checked in parseData. Made nullable.
-    val local: String? // Critical for scheduled times, checked in parseData. Made nullable.
+data class EdTime( // Error handling?
+    val utc: String = "2000-01-01 00:00",
+    val local: String = "2000-01-01 00:00"
 )
 
 data class GreatCircleDistance(

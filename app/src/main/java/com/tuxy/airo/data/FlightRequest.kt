@@ -91,9 +91,9 @@ suspend fun getData(
                     // Root.fromJson returns Root?, handle null if jsonListResponse is empty or invalid
                     val jsonRoot = Root.fromJson(jsonListResponse) ?:
                         return@withContext Result.failure(FlightDataFetchException(FlightDataError.ParsingError))
-                    
+
                     val flightData = parseData(jsonRoot) // parseData can throw MissingCriticalDataException
-                    
+
                     if (data.queryExisting(flightData.departDate, flightData.callSign) > 0) {
                         return@withContext Result.failure(FlightDataFetchException(FlightDataError.FlightAlreadyExists))
                     }
@@ -252,7 +252,7 @@ fun EdTime?.orEmpty(): EdTime {
 }
 
 fun Aircraft?.orEmpty(): Aircraft {
-    return this ?: Aircraft(image = Image())
+    return this ?: Aircraft()
 }
 
 fun Image?.orEmpty(): Image {

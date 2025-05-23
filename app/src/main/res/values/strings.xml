@@ -66,4 +66,5 @@
     <string name="get_ready">Get ready for flight</string>
     <string name="at">at</string>
     <string name="invalid_api_url">Invalid API URL</string>
+    <string name="error_unknown">Unknown error</string>
 </resources>
