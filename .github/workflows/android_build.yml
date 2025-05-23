@@ -1,7 +1,7 @@
 name: Android Build
 on:
   push:
-    branches: [ main ]
+    branches: [ main, github-actions-android-build ]
   pull_request:
     branches: [ main ]
 jobs:
@@ -18,4 +18,9 @@ jobs:
     - name: Set up Gradle
       uses: actions/setup-gradle@v3
     - name: Build with Gradle
-      run: ./gradlew build
+      run: ./gradlew :app:assembleDebug
+    - name: Upload Debug APK
+      uses: actions/upload-artifact@v3
+      with:
+        name: app-debug-apk
+        path: app/build/outputs/apk/debug/app-debug.apk
