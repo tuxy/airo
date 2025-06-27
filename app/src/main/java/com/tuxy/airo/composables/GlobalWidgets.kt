@@ -3,9 +3,11 @@ package com.tuxy.airo.composables
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
@@ -13,6 +15,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LargeTopAppBar
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
@@ -21,6 +24,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
@@ -72,12 +76,12 @@ fun RouteBar(flightData: FlightData) {
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        BoldDepartureAndDestinationText(flightData.from, flightData.fromName, Alignment.Start)
+        BoldDepartureAndDestinationText(flightData.from, flightData.fromName, "", Alignment.Start)
         Icon(
             imageVector = Icons.AutoMirrored.Filled.ArrowForward,
             contentDescription = stringResource(R.string.to)
         )
-        BoldDepartureAndDestinationText(flightData.to, flightData.toName, Alignment.End)
+        BoldDepartureAndDestinationText(flightData.to, flightData.toName, "", Alignment.End)
     }
 }
 
@@ -116,6 +120,7 @@ fun DepartureAndDestinationText(icao: String, fullName: String) {
 fun BoldDepartureAndDestinationText(
     icao: String,
     fullName: String,
+    time: String,
     alignment: Alignment.Horizontal,
 ) {
     Column(
@@ -127,10 +132,47 @@ fun BoldDepartureAndDestinationText(
             fontWeight = FontWeight.Normal,
             fontSize = 12.sp
         )
-        Text(
-            icao,
-            fontWeight = FontWeight.W500,
-            fontSize = 24.sp
-        )
+        if(alignment == Alignment.Start) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(
+                    icao,
+                    fontWeight = FontWeight.W500,
+                    fontSize = 24.sp
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    time,
+                    fontWeight = FontWeight.W400,
+                    fontSize = 14.sp,
+                    color = MaterialTheme.colorScheme.primary
+                )
+            }
+        } else {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(
+                    time,
+                    fontWeight = FontWeight.W400,
+                    fontSize = 14.sp,
+                    color = MaterialTheme.colorScheme.primary
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    icao,
+                    fontWeight = FontWeight.W500,
+                    fontSize = 24.sp,
+                )
+            }
+        }
     }
+}
+
+@Composable
+@Preview(showBackground = true)
+fun TextPreview() {
+    BoldDepartureAndDestinationText(
+        icao = "SGN",
+        fullName = "Tan Son Nhat",
+        time = "5:00",
+        alignment = Alignment.Start
+    )
 }
