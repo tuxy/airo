@@ -215,6 +215,7 @@ fun MainTicketView(
                 flightData.from,
                 flightData.fromName,
                 "",
+                flightData.fromCountryCode,
                 Alignment.Start
             )
             Icon(
@@ -225,7 +226,9 @@ fun MainTicketView(
                 flightData.to,
                 flightData.toName,
                 "",
-                Alignment.End)
+                flightData.toCountryCode,
+                Alignment.End
+            )
         }
         Column() {
             Row(

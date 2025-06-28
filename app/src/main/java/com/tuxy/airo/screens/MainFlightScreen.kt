@@ -214,6 +214,7 @@ fun FlightCard(
                 ) {
                     BoldDepartureAndDestinationText(
                         flightData.from,
+                        flightData.fromCountryCode,
                         flightData.fromName,
                         flightData.departDate.format(DateTimeFormatter.ofPattern("HH:mm")),
                         Alignment.Start
@@ -224,6 +225,7 @@ fun FlightCard(
                     )
                     BoldDepartureAndDestinationText(
                         flightData.to,
+                        flightData.toCountryCode,
                         flightData.toName,
                         flightData.arriveDate.format(DateTimeFormatter.ofPattern("HH:mm")),
                         Alignment.End

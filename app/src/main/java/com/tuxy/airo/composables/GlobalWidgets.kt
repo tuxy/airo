@@ -1,5 +1,6 @@
 package com.tuxy.airo.composables
 
+import android.util.Log
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -76,12 +77,24 @@ fun RouteBar(flightData: FlightData) {
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        BoldDepartureAndDestinationText(flightData.from, flightData.fromName, "", Alignment.Start)
+        BoldDepartureAndDestinationText(
+            icao = flightData.from,
+            countryCode = flightData.fromCountryCode,
+            fullName = flightData.fromName,
+            time = "",
+            alignment = Alignment.Start
+        )
         Icon(
             imageVector = Icons.AutoMirrored.Filled.ArrowForward,
             contentDescription = stringResource(R.string.to)
         )
-        BoldDepartureAndDestinationText(flightData.to, flightData.toName, "", Alignment.End)
+        BoldDepartureAndDestinationText(
+            icao = flightData.to,
+            countryCode = flightData.toCountryCode,
+            fullName = flightData.toName,
+            time = "",
+            alignment = Alignment.End
+        )
     }
 }
 
@@ -119,6 +132,7 @@ fun DepartureAndDestinationText(icao: String, fullName: String) {
 @Composable
 fun BoldDepartureAndDestinationText(
     icao: String,
+    countryCode: String,
     fullName: String,
     time: String,
     alignment: Alignment.Horizontal,
@@ -127,11 +141,19 @@ fun BoldDepartureAndDestinationText(
         modifier = Modifier.defaultMinSize(minWidth = 64.dp),
         horizontalAlignment = alignment
     ) {
-        Text(
-            fullName,
-            fontWeight = FontWeight.Normal,
-            fontSize = 12.sp
-        )
+        if(alignment == Alignment.Start) {
+            Text(
+                "${countryCodeToEmoji(countryCode)}  $fullName",
+                fontWeight = FontWeight.Normal,
+                fontSize = 12.sp
+            )
+        } else {
+            Text(
+                "$fullName  ${countryCodeToEmoji(countryCode)}",
+                fontWeight = FontWeight.Normal,
+                fontSize = 12.sp
+            )
+        }
         if(alignment == Alignment.Start) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(
@@ -171,8 +193,19 @@ fun BoldDepartureAndDestinationText(
 fun TextPreview() {
     BoldDepartureAndDestinationText(
         icao = "SGN",
+        countryCode = "VN",
         fullName = "Tan Son Nhat",
         time = "5:00",
         alignment = Alignment.Start
     )
+}
+
+fun countryCodeToEmoji(countryCode: String): String {
+    Log.d("APIACCESS", countryCode)
+    if (countryCode == "") {
+        return countryCode
+    }
+    val firstLetter = Character.codePointAt(countryCode, 0) - 0x41 + 0x1F1E6
+    val secondLetter = Character.codePointAt(countryCode, 1) - 0x41 + 0x1F1E6
+    return String(Character.toChars(firstLetter)) + String(Character.toChars(secondLetter))
 }
