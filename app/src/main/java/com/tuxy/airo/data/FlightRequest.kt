@@ -14,7 +14,6 @@ import java.time.Duration
 import java.time.LocalDateTime
 import java.time.OffsetDateTime
 import java.time.ZoneId
-import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
 import kotlin.math.abs
 import kotlin.math.ln
@@ -137,16 +136,18 @@ fun parseData(jsonRoot: Root): FlightData {
 
     val departureAirportIata = departureAirport.iata ?: throw MissingCriticalDataException("Departure airport IATA code is missing")
     val arrivalAirportIata = arrivalAirport.iata ?: throw MissingCriticalDataException("Arrival airport IATA code is missing")
+    val fromCountryCode = departureAirport.countryCode ?: throw MissingCriticalDataException("From country code missing")
+    val toCountryCode = arrivalAirport.countryCode ?: throw MissingCriticalDataException("To country code missing")
     val departureAirportShortName = departureAirport.shortName ?: throw MissingCriticalDataException("Departure airport short name is missing")
     val arrivalAirportShortName = arrivalAirport.shortName ?: throw MissingCriticalDataException("Arrival airport short name is missing")
 
     val departureScheduledTime = departureFlight.scheduledTime ?: throw MissingCriticalDataException("Departure scheduled time data is missing")
     val arrivalScheduledTime = arrivalFlight.scheduledTime ?: throw MissingCriticalDataException("Arrival scheduled time data is missing")
 
-    val departureScheduledTimeLocal = departureScheduledTime.local ?: throw MissingCriticalDataException("Departure scheduled time (local) is missing")
-    val arrivalScheduledTimeLocal = arrivalScheduledTime.local ?: throw MissingCriticalDataException("Arrival scheduled time (local) is missing")
-    val departureScheduledTimeUtc = departureScheduledTime.utc ?: throw MissingCriticalDataException("Departure scheduled time (UTC) is missing")
-    val arrivalScheduledTimeUtc = arrivalScheduledTime.utc ?: throw MissingCriticalDataException("Arrival scheduled time (UTC) is missing")
+    val departureScheduledTimeLocal = departureScheduledTime.local
+    val arrivalScheduledTimeLocal = arrivalScheduledTime.local
+    val departureScheduledTimeUtc = departureScheduledTime.utc
+    val arrivalScheduledTimeUtc = arrivalScheduledTime.utc
 
     val departureLocation = departureAirport.location ?: throw MissingCriticalDataException("Departure airport location data is missing")
     val arrivalLocation = arrivalAirport.location ?: throw MissingCriticalDataException("Arrival airport location data is missing")
@@ -195,9 +196,9 @@ fun parseData(jsonRoot: Root): FlightData {
     val gate = flightInfo.departure.gate.ifNullOrEmptyLog("gate", "N/A")
     val terminal = flightInfo.departure.terminal.ifNullOrEmptyLog("terminal", "N/A")
     val aircraftModel = flightInfo.aircraft.orEmpty().model.ifNullOrEmptyLog("aircraftModel", "N/A")
-    val aircraftImageUrl = flightInfo.aircraft.orEmpty().image.orEmpty().url ?: ""
-    val imageAuthor = flightInfo.aircraft.orEmpty().image.orEmpty().author ?: ""
-    val imageAuthorUrl = flightInfo.aircraft.orEmpty().image.orEmpty().webUrl ?: ""
+    val aircraftImageUrl = flightInfo.aircraft.orEmpty().image.orEmpty().url
+    val imageAuthor = flightInfo.aircraft.orEmpty().image.orEmpty().author
+    val imageAuthorUrl = flightInfo.aircraft.orEmpty().image.orEmpty().webUrl
     val attribution = flightInfo.aircraft.orEmpty().image.orEmpty().htmlAttributions.firstOrNull() ?: ""
 
 
@@ -211,6 +212,8 @@ fun parseData(jsonRoot: Root): FlightData {
         to = arrivalAirportIata,
         fromName = departureAirportShortName,
         toName = arrivalAirportShortName,
+        fromCountryCode = fromCountryCode,
+        toCountryCode = toCountryCode,
         departDate = departureTime,
         arriveDate = arrivalTime,
         duration = Duration.between(
@@ -245,24 +248,12 @@ fun Airline?.orEmpty(): Airline {
     return this ?: Airline()
 }
 
-fun EdTime?.orEmpty(): EdTime {
-    // Consider if EdTime() is a sensible default or if specific fields within EdTime need checks
-    // For now, if scheduledTime.local or .utc is missing, it's caught as critical.
-    return this ?: EdTime()
-}
-
 fun Aircraft?.orEmpty(): Aircraft {
     return this ?: Aircraft()
 }
 
 fun Image?.orEmpty(): Image {
     return this ?: Image()
-}
-
-fun Location?.orEmpty(): Location {
-    // Latitude and Longitude are now checked as critical.
-    // If a Location object itself is null, lat/lon checks will fail earlier.
-    return this ?: Location()
 }
 
 // Moved X0, doProjection, and normalize into this object
@@ -294,6 +285,9 @@ fun parseDateTime(time: String): LocalDateTime {
     val systemDefaultZoneId = ZoneId.systemDefault()
 
     // Convert the OffsetDateTime to ZonedDateTime in the system's default time zone
+    // TODO THIS is where the issues lie. Whenever the time gets converted, BOTH departure and arrival times are based off the time on the system clock
+    // TODO For many reasons, this is idiotic and instead, take the last 5 characters and convert that into a timezone. Then, apply the timezone after taking
+    // TODO into account the system's UTC time. This will ensure that the time is exact, and all local. Furthermore, this could pave the way for a setting for all local.
     val zonedDateTime = offsetDateTime.atZoneSameInstant(systemDefaultZoneId)
 
     // Return the LocalDateTime part of the ZonedDateTime

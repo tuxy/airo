@@ -214,13 +214,21 @@ fun MainTicketView(
             BoldDepartureAndDestinationText(
                 flightData.from,
                 flightData.fromName,
+                "",
+                flightData.fromCountryCode,
                 Alignment.Start
             )
             Icon(
                 imageVector = Icons.AutoMirrored.Filled.ArrowForward,
                 contentDescription = stringResource(R.string.to)
             )
-            BoldDepartureAndDestinationText(flightData.to, flightData.toName, Alignment.End)
+            BoldDepartureAndDestinationText(
+                flightData.to,
+                flightData.toName,
+                "",
+                flightData.toCountryCode,
+                Alignment.End
+            )
         }
         Column() {
             Row(

@@ -48,10 +48,12 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import androidx.navigation.compose.rememberNavController
 import coil3.compose.AsyncImage
 import com.tuxy.airo.R
 import com.tuxy.airo.Screen
@@ -212,14 +214,22 @@ fun FlightCard(
                 ) {
                     BoldDepartureAndDestinationText(
                         flightData.from,
+                        flightData.fromCountryCode,
                         flightData.fromName,
+                        flightData.departDate.format(DateTimeFormatter.ofPattern("HH:mm")),
                         Alignment.Start
                     )
                     Icon(
                         imageVector = Icons.AutoMirrored.Filled.ArrowForward,
                         contentDescription = stringResource(R.string.to)
                     )
-                    BoldDepartureAndDestinationText(flightData.to, flightData.toName, Alignment.End)
+                    BoldDepartureAndDestinationText(
+                        flightData.to,
+                        flightData.toCountryCode,
+                        flightData.toName,
+                        flightData.arriveDate.format(DateTimeFormatter.ofPattern("HH:mm")),
+                        Alignment.End
+                    )
                 }
                 TicketInformationCard(flightData)
                 LinearProgressIndicator(
@@ -304,5 +314,20 @@ fun MainTopBar(
             }
         },
         scrollBehavior = scrollBehavior,
+    )
+}
+
+@Composable
+@Preview
+fun FlightCardPreview() {
+    FlightCard(
+        navController = rememberNavController(),
+        flightData = FlightData(
+            fromName = "Tan Son Nhat",
+            toName = "Brisbane",
+            from = "SGN",
+            to = "BNE"
+        ),
+        viewModel = viewModel<MainFlightViewModel>(),
     )
 }
