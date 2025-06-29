@@ -8,19 +8,28 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.layout.wrapContentWidth
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.DirectionsWalk
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.FlightTakeoff
 import androidx.compose.material3.AlertDialogDefaults
 import androidx.compose.material3.BasicAlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
@@ -36,6 +45,7 @@ import androidx.compose.runtime.MutableState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -58,7 +68,11 @@ import kotlinx.coroutines.launch
 import ovh.plrapps.mapcompose.ui.MapUI
 import java.time.Duration
 import java.time.LocalDateTime
+import java.time.ZoneId
+import java.time.ZoneOffset
+import java.time.format.DateTimeFormatter
 import kotlin.math.absoluteValue
+import kotlin.time.toKotlinDuration
 
 @OptIn(DelicateCoroutinesApi::class)
 @Composable
@@ -118,19 +132,173 @@ fun FlightDetailsView(
                     }
                 )
                 RouteBar(viewModel.flightData.value)
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .background(Color.Gray)
-                        .aspectRatio(1280f / 847f)
+                Column(
+                    Modifier
+                        .verticalScroll(rememberScrollState())
+                        .fillMaxHeight()
                 ) {
-                    MapUI(
-                        state = viewModel.mapState
-                    )
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .background(Color.Gray)
+                            .aspectRatio(1280f / 847f)
+                    ) {
+                        MapUI(
+                            state = viewModel.mapState
+                        )
+                    }
+                    FlightBoardCard(viewModel.flightData.value)
+                    FlightStatusCard(viewModel)
+                    FlightInformationInteract(navController, viewModel.flightData.value)
                 }
-                FlightStatusCard(viewModel)
-                FlightInformationInteract(navController, viewModel.flightData.value)
             }
+        }
+    }
+}
+
+@Composable
+fun FlightBoardCard(
+    flightData: FlightData
+) {
+    Card(
+        modifier = Modifier
+            .padding(top = 16.dp, start = 16.dp, end = 16.dp)
+            .fillMaxWidth()
+    ) {
+        Column(
+            modifier = Modifier
+                .padding(16.dp)
+                .fillMaxWidth(),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            FlightBoard(
+                code = flightData.from,
+                name = flightData.fromName,
+                terminal = flightData.terminal,
+                gate = flightData.gate,
+                date = flightData.departDate,
+                timeZone = flightData.departTimeZone
+            )
+
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                HorizontalDivider(
+                    modifier = Modifier.width(128.dp)
+                )
+                Spacer(Modifier.padding(4.dp))
+                Text(
+                    flightData.duration.toKotlinDuration().toComponents { hours, minutes, _, _ ->
+                        if (hours < 1) {
+                            return@toComponents "${minutes}m"
+                        } else {
+                            return@toComponents "${hours}hr ${minutes}m"
+                        }
+                    },
+                    color = MaterialTheme.colorScheme.inverseSurface,
+                    fontSize = 10.sp
+                )
+                Spacer(Modifier.padding(4.dp))
+                HorizontalDivider(
+                    modifier = Modifier.width(128.dp)
+                )
+            }
+
+            FlightBoard(
+                code = flightData.to,
+                name = flightData.toName,
+                terminal = "-",
+                gate = "-", // TODO Implement arrival gates and terminals
+                date = flightData.arriveDate,
+                timeZone = flightData.arriveTimeZone
+            )
+        }
+    }
+}
+
+@Composable
+fun FlightBoard(
+    code: String,
+    name: String,
+    terminal: String,
+    gate: String,
+    date: LocalDateTime,
+    timeZone: ZoneId,
+) {
+    Row(
+        horizontalArrangement = Arrangement.SpaceBetween,
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Column {
+            Text(
+                code,
+                fontWeight = FontWeight.W500,
+                fontSize = 16.sp
+            )
+            Text(name)
+            Row {
+                SmallCard(
+                    Icons.Filled.FlightTakeoff,
+                    stringResource(R.string.terminal),
+                    terminal
+                )
+                SmallCard(
+                    Icons.AutoMirrored.Filled.DirectionsWalk,
+                    stringResource(R.string.terminal),
+                    gate
+                )
+            }
+        }
+        Column(
+            horizontalAlignment = Alignment.End
+        ) {
+            Text(
+                date
+                    .atOffset(ZoneOffset.UTC)
+                    .atZoneSameInstant(timeZone)
+                    .format(DateTimeFormatter.ofPattern("HH:mm")),
+                fontWeight = FontWeight.W500,
+                fontSize = 16.sp,
+                color = MaterialTheme.colorScheme.primary
+            )
+        }
+    }
+}
+
+@Composable
+fun SmallCard(
+    imageVector: ImageVector,
+    contentDescription: String,
+    text: String
+) {
+    Row(
+        modifier = Modifier
+            .padding(top = 8.dp, end = 8.dp)
+            .background(
+                color = Color.hsl(
+                    hue = 53.0F,
+                    saturation = 1F,
+                    lightness = 0.46F,
+                ),
+                shape = RoundedCornerShape(4.dp)
+            ),
+    ) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.padding(4.dp)
+        ) {
+            Icon(
+                imageVector,
+                contentDescription,
+                Modifier.size(16.dp),
+                Color.Black
+            )
+            Spacer(Modifier.padding(4.dp))
+            Text(
+                text,
+                color = Color.Black
+            )
         }
     }
 }

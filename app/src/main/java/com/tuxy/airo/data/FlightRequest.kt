@@ -12,7 +12,6 @@ import okhttp3.OkHttpClient
 import okhttp3.Request
 import java.time.Duration
 import java.time.LocalDateTime
-import java.time.OffsetDateTime
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import kotlin.math.abs
@@ -88,10 +87,13 @@ suspend fun getData(
 
                 try {
                     // Root.fromJson returns Root?, handle null if jsonListResponse is empty or invalid
-                    val jsonRoot = Root.fromJson(jsonListResponse) ?:
-                        return@withContext Result.failure(FlightDataFetchException(FlightDataError.ParsingError))
+                    val jsonRoot =
+                        Root.fromJson(jsonListResponse) ?: return@withContext Result.failure(
+                            FlightDataFetchException(FlightDataError.ParsingError)
+                        )
 
-                    val flightData = parseData(jsonRoot) // parseData can throw MissingCriticalDataException
+                    val flightData =
+                        parseData(jsonRoot) // parseData can throw MissingCriticalDataException
 
                     if (data.queryExisting(flightData.departDate, flightData.callSign) > 0) {
                         return@withContext Result.failure(FlightDataFetchException(FlightDataError.FlightAlreadyExists))
@@ -123,48 +125,71 @@ fun parseData(jsonRoot: Root): FlightData {
     // Root.fromJson can return null if parsing fails (e.g. empty or malformed JSON)
     // However, getData already calls Root.fromJson and would likely fail earlier if jsonRoot is null.
     // For safety, if jsonRoot can be empty (though API implies it's an array with one element):
-    val flightInfo = jsonRoot.firstOrNull() ?: throw MissingCriticalDataException("JSON root is null or empty")
+    val flightInfo =
+        jsonRoot.firstOrNull() ?: throw MissingCriticalDataException("JSON root is null or empty")
 
     // Critical data checks using safe navigation due to schema changes
-    val callSign = flightInfo.number ?: throw MissingCriticalDataException("Call sign (number) is missing")
+    val callSign =
+        flightInfo.number ?: throw MissingCriticalDataException("Call sign (number) is missing")
 
-    val departureFlight = flightInfo.departure ?: throw MissingCriticalDataException("Departure information is missing")
-    val arrivalFlight = flightInfo.arrival ?: throw MissingCriticalDataException("Arrival information is missing")
+    val departureFlight = flightInfo.departure
+        ?: throw MissingCriticalDataException("Departure information is missing")
+    val arrivalFlight =
+        flightInfo.arrival ?: throw MissingCriticalDataException("Arrival information is missing")
 
-    val departureAirport = departureFlight.airport ?: throw MissingCriticalDataException("Departure airport data is missing")
-    val arrivalAirport = arrivalFlight.airport ?: throw MissingCriticalDataException("Arrival airport data is missing")
+    val departureAirport = departureFlight.airport
+        ?: throw MissingCriticalDataException("Departure airport data is missing")
+    val arrivalAirport = arrivalFlight.airport
+        ?: throw MissingCriticalDataException("Arrival airport data is missing")
 
-    val departureAirportIata = departureAirport.iata ?: throw MissingCriticalDataException("Departure airport IATA code is missing")
-    val arrivalAirportIata = arrivalAirport.iata ?: throw MissingCriticalDataException("Arrival airport IATA code is missing")
-    val fromCountryCode = departureAirport.countryCode ?: throw MissingCriticalDataException("From country code missing")
-    val toCountryCode = arrivalAirport.countryCode ?: throw MissingCriticalDataException("To country code missing")
-    val departureAirportShortName = departureAirport.shortName ?: throw MissingCriticalDataException("Departure airport short name is missing")
-    val arrivalAirportShortName = arrivalAirport.shortName ?: throw MissingCriticalDataException("Arrival airport short name is missing")
+    val departureAirportIata = departureAirport.iata
+        ?: throw MissingCriticalDataException("Departure airport IATA code is missing")
+    val arrivalAirportIata = arrivalAirport.iata
+        ?: throw MissingCriticalDataException("Arrival airport IATA code is missing")
+    val fromCountryCode = departureAirport.countryCode
+        ?: throw MissingCriticalDataException("From country code missing")
+    val toCountryCode =
+        arrivalAirport.countryCode ?: throw MissingCriticalDataException("To country code missing")
+    val departureAirportShortName = departureAirport.shortName
+        ?: throw MissingCriticalDataException("Departure airport short name is missing")
+    val arrivalAirportShortName = arrivalAirport.shortName
+        ?: throw MissingCriticalDataException("Arrival airport short name is missing")
 
-    val departureScheduledTime = departureFlight.scheduledTime ?: throw MissingCriticalDataException("Departure scheduled time data is missing")
-    val arrivalScheduledTime = arrivalFlight.scheduledTime ?: throw MissingCriticalDataException("Arrival scheduled time data is missing")
+    val departureScheduledTime = departureFlight.scheduledTime
+        ?: throw MissingCriticalDataException("Departure scheduled time data is missing")
+    val arrivalScheduledTime = arrivalFlight.scheduledTime
+        ?: throw MissingCriticalDataException("Arrival scheduled time data is missing")
 
-    val departureScheduledTimeLocal = departureScheduledTime.local
-    val arrivalScheduledTimeLocal = arrivalScheduledTime.local
-    val departureScheduledTimeUtc = departureScheduledTime.utc
-    val arrivalScheduledTimeUtc = arrivalScheduledTime.utc
+    val departureTimeZone = departureAirport.timeZone
+        ?: throw MissingCriticalDataException("Departure timezone is missing")
+    val arrivalTimeZone = arrivalAirport.timeZone
+        ?: throw MissingCriticalDataException("Arrival time zone is missing")
 
-    val departureLocation = departureAirport.location ?: throw MissingCriticalDataException("Departure airport location data is missing")
-    val arrivalLocation = arrivalAirport.location ?: throw MissingCriticalDataException("Arrival airport location data is missing")
+    val departureLocation = departureAirport.location
+        ?: throw MissingCriticalDataException("Departure airport location data is missing")
+    val arrivalLocation = arrivalAirport.location
+        ?: throw MissingCriticalDataException("Arrival airport location data is missing")
 
-    val departureLat = departureLocation.lat ?: throw MissingCriticalDataException("Departure airport latitude is missing")
-    val departureLon = departureLocation.lon ?: throw MissingCriticalDataException("Departure airport longitude is missing")
-    val arrivalLat = arrivalLocation.lat ?: throw MissingCriticalDataException("Arrival airport latitude is missing")
-    val arrivalLon = arrivalLocation.lon ?: throw MissingCriticalDataException("Arrival airport longitude is missing")
+    val departureLat = departureLocation.lat
+        ?: throw MissingCriticalDataException("Departure airport latitude is missing")
+    val departureLon = departureLocation.lon
+        ?: throw MissingCriticalDataException("Departure airport longitude is missing")
+    val arrivalLat = arrivalLocation.lat
+        ?: throw MissingCriticalDataException("Arrival airport latitude is missing")
+    val arrivalLon = arrivalLocation.lon
+        ?: throw MissingCriticalDataException("Arrival airport longitude is missing")
 
-    val departureTime = parseDateTime(departureScheduledTimeLocal)
-    val arrivalTime = parseDateTime(arrivalScheduledTimeLocal)
+    val departureTime = parseDateTime(departureScheduledTime.utc)
+    val arrivalTime = parseDateTime(arrivalScheduledTime.utc)
 
     // Normalised coordinates for origin airport
-    val (projectedXOrigin, projectedYOrigin) = MapProjectionUtils.doProjection(departureLat, departureLon)
-        // doProjection now throws, so null check removed as per previous step, but the prompt implies it might return null.
-        // Re-checking doProjection: it returns Pair<Double, Double> and throws on error.
-        // So, no need for `?: throw MissingCriticalDataException("Failed to project origin coordinates")` here.
+    val (projectedXOrigin, projectedYOrigin) = MapProjectionUtils.doProjection(
+        departureLat,
+        departureLon
+    )
+    // doProjection now throws, so null check removed as per previous step, but the prompt implies it might return null.
+    // Re-checking doProjection: it returns Pair<Double, Double> and throws on error.
+    // So, no need for `?: throw MissingCriticalDataException("Failed to project origin coordinates")` here.
     val xOrigin = MapProjectionUtils.normalize(
         projectedXOrigin,
         min = MapProjectionUtils.X0,
@@ -199,7 +224,8 @@ fun parseData(jsonRoot: Root): FlightData {
     val aircraftImageUrl = flightInfo.aircraft.orEmpty().image.orEmpty().url
     val imageAuthor = flightInfo.aircraft.orEmpty().image.orEmpty().author
     val imageAuthorUrl = flightInfo.aircraft.orEmpty().image.orEmpty().webUrl
-    val attribution = flightInfo.aircraft.orEmpty().image.orEmpty().htmlAttributions.firstOrNull() ?: ""
+    val attribution =
+        flightInfo.aircraft.orEmpty().image.orEmpty().htmlAttributions.firstOrNull() ?: ""
 
 
     return FlightData(
@@ -216,9 +242,11 @@ fun parseData(jsonRoot: Root): FlightData {
         toCountryCode = toCountryCode,
         departDate = departureTime,
         arriveDate = arrivalTime,
+        departTimeZone = ZoneId.of(departureTimeZone),
+        arriveTimeZone = ZoneId.of(arrivalTimeZone),
         duration = Duration.between(
-            parseDateTime(departureScheduledTimeUtc),
-            parseDateTime(arrivalScheduledTimeUtc)
+            departureTime,
+            arrivalTime
         ),
         gate = gate,
         terminal = terminal,
@@ -260,7 +288,10 @@ fun Image?.orEmpty(): Image {
 internal object MapProjectionUtils {
     internal const val X0 = -2.0037508342789248E7 // Constant for map projection
 
-    internal fun doProjection(latitude: Double, longitude: Double): Pair<Double, Double> { // Return non-nullable, throw if invalid
+    internal fun doProjection(
+        latitude: Double,
+        longitude: Double
+    ): Pair<Double, Double> { // Return non-nullable, throw if invalid
         if (abs(latitude) > 90 || abs(longitude) > 180) {
             throw MissingCriticalDataException("Invalid latitude or longitude for projection: lat=$latitude, lon=$longitude")
         }
@@ -279,19 +310,7 @@ internal object MapProjectionUtils {
 
 fun parseDateTime(time: String): LocalDateTime {
     val pattern = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mmXXXXX")
-    val offsetDateTime = OffsetDateTime.parse(time, pattern)
-
-    // Get the system's default time zone
-    val systemDefaultZoneId = ZoneId.systemDefault()
-
-    // Convert the OffsetDateTime to ZonedDateTime in the system's default time zone
-    // TODO THIS is where the issues lie. Whenever the time gets converted, BOTH departure and arrival times are based off the time on the system clock
-    // TODO For many reasons, this is idiotic and instead, take the last 5 characters and convert that into a timezone. Then, apply the timezone after taking
-    // TODO into account the system's UTC time. This will ensure that the time is exact, and all local. Furthermore, this could pave the way for a setting for all local.
-    val zonedDateTime = offsetDateTime.atZoneSameInstant(systemDefaultZoneId)
-
-    // Return the LocalDateTime part of the ZonedDateTime
-    return zonedDateTime.toLocalDateTime()
+    return LocalDateTime.parse(time, pattern)
 }
 
 

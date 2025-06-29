@@ -110,13 +110,16 @@ fun MainFlightView(
                     viewModel.flights.forEach { (header, flights) ->
 
                         val unsortedFlights = flights.groupBy { flight ->
-                            flight.departDate.toEpochSecond(ZoneOffset.UTC).toDouble()
+                            flight.departDate
+                                .atOffset(ZoneOffset.UTC)
+                                .atZoneSameInstant(flight.departTimeZone)
+                                .toEpochSecond()
                         }.toSortedMap()
 
                         stickyHeader {
                             DateHeader(
                                 LocalDateTime.ofEpochSecond(
-                                    header.toLong(), // Grouped date
+                                    header - 86400,
                                     0,
                                     ZoneOffset.UTC
                                 )
@@ -216,7 +219,10 @@ fun FlightCard(
                         flightData.from,
                         flightData.fromCountryCode,
                         flightData.fromName,
-                        flightData.departDate.format(DateTimeFormatter.ofPattern("HH:mm")),
+                        flightData.departDate
+                            .atOffset(ZoneOffset.UTC)
+                            .atZoneSameInstant(flightData.departTimeZone)
+                            .format(DateTimeFormatter.ofPattern("HH:mm")),
                         Alignment.Start
                     )
                     Icon(
@@ -227,7 +233,10 @@ fun FlightCard(
                         flightData.to,
                         flightData.toCountryCode,
                         flightData.toName,
-                        flightData.arriveDate.format(DateTimeFormatter.ofPattern("HH:mm")),
+                        flightData.arriveDate
+                            .atOffset(ZoneOffset.UTC)
+                            .atZoneSameInstant(flightData.arriveTimeZone)
+                            .format(DateTimeFormatter.ofPattern("HH:mm")),
                         Alignment.End
                     )
                 }
@@ -287,6 +296,7 @@ fun DateHeader(time: LocalDateTime) {
         verticalAlignment = Alignment.Bottom
     ) {
         Text(
+            // Lazy method
             time.format(DateTimeFormatter.ofPattern("dd MMM")),
             fontSize = 24.sp,
             fontWeight = FontWeight.W500
