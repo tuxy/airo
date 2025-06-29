@@ -218,8 +218,8 @@ fun parseData(jsonRoot: Root): FlightData {
     val airlineName = flightInfo.airline.orEmpty().name.ifNullOrEmptyLog("airlineName", "N/A")
     val airlineIcao = flightInfo.airline.orEmpty().icao.ifNullOrEmptyLog("airlineIcao", "N/A")
     val airlineIata = flightInfo.airline.orEmpty().iata.ifNullOrEmptyLog("airlineIata", "N/A")
-    val gate = flightInfo.departure.gate.ifNullOrEmptyLog("gate", "N/A")
-    val terminal = flightInfo.departure.terminal.ifNullOrEmptyLog("terminal", "N/A")
+    val gate = flightInfo.departure.gate.ifNullOrEmptyLog("gate", "—")
+    val terminal = flightInfo.departure.terminal.ifNullOrEmptyLog("terminal", "—")
     val aircraftModel = flightInfo.aircraft.orEmpty().model.ifNullOrEmptyLog("aircraftModel", "N/A")
     val aircraftImageUrl = flightInfo.aircraft.orEmpty().image.orEmpty().url
     val imageAuthor = flightInfo.aircraft.orEmpty().image.orEmpty().author
@@ -227,6 +227,10 @@ fun parseData(jsonRoot: Root): FlightData {
     val attribution =
         flightInfo.aircraft.orEmpty().image.orEmpty().htmlAttributions.firstOrNull() ?: ""
 
+    val toGate = flightInfo.arrival.gate.orEmpty().ifNullOrEmptyLog("toGate", "—")
+    val toTerminal = flightInfo.arrival.terminal.orEmpty().ifNullOrEmptyLog("toTerminal", "—")
+    val toBaggageClaim = flightInfo.arrival.baggageBelt.orEmpty().ifNullOrEmptyLog("toBaggageClaim", "—")
+    val checkInDesk = flightInfo.departure.checkInDesk.orEmpty().ifNullOrEmptyLog("checkInDesk", "—")
 
     return FlightData(
         id = 0, // Auto-assigned id
@@ -250,6 +254,10 @@ fun parseData(jsonRoot: Root): FlightData {
         ),
         gate = gate,
         terminal = terminal,
+        toGate = toGate,
+        toTerminal = toTerminal,
+        toBaggageClaim = toBaggageClaim,
+        checkInDesk = checkInDesk,
         aircraftName = aircraftModel,
         aircraftUri = aircraftImageUrl,
         author = imageAuthor,

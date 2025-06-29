@@ -25,6 +25,8 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.DirectionsWalk
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.FlightTakeoff
+import androidx.compose.material.icons.filled.Luggage
+import androidx.compose.material.icons.outlined.Desk
 import androidx.compose.material3.AlertDialogDefaults
 import androidx.compose.material3.BasicAlertDialog
 import androidx.compose.material3.Card
@@ -131,23 +133,29 @@ fun FlightDetailsView(
                         viewModel.progress.floatValue
                     }
                 )
-                RouteBar(viewModel.flightData.value)
                 Column(
                     Modifier
                         .verticalScroll(rememberScrollState())
                         .fillMaxHeight()
                 ) {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .background(Color.Gray)
-                            .aspectRatio(1280f / 847f)
-                    ) {
-                        MapUI(
-                            state = viewModel.mapState
-                        )
-                    }
+                    RouteBar(viewModel.flightData.value)
                     FlightBoardCard(viewModel.flightData.value)
+                    Card(
+                        modifier = Modifier
+                            .padding(top = 17.dp, start = 17.dp, end = 17.dp) // Not sure why, but map seems to pop out a bit more than the others
+                            .fillMaxWidth()
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .background(Color.Gray)
+                                .aspectRatio(1280f / 847f)
+                        ) {
+                            MapUI(
+                                state = viewModel.mapState
+                            )
+                        }
+                    }
                     FlightStatusCard(viewModel)
                     FlightInformationInteract(navController, viewModel.flightData.value)
                 }
@@ -176,13 +184,15 @@ fun FlightBoardCard(
                 name = flightData.fromName,
                 terminal = flightData.terminal,
                 gate = flightData.gate,
+                baggageClaim = "",
+                checkIn = flightData.checkInDesk,
                 date = flightData.departDate,
                 timeZone = flightData.departTimeZone
             )
-
             Row(
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween
+                horizontalArrangement = Arrangement.SpaceBetween,
+                modifier = Modifier.padding(vertical = 4.dp)
             ) {
                 HorizontalDivider(
                     modifier = Modifier.width(128.dp)
@@ -197,7 +207,7 @@ fun FlightBoardCard(
                         }
                     },
                     color = MaterialTheme.colorScheme.inverseSurface,
-                    fontSize = 10.sp
+                    fontSize = 12.sp
                 )
                 Spacer(Modifier.padding(4.dp))
                 HorizontalDivider(
@@ -208,10 +218,13 @@ fun FlightBoardCard(
             FlightBoard(
                 code = flightData.to,
                 name = flightData.toName,
-                terminal = "-",
-                gate = "-", // TODO Implement arrival gates and terminals
+                terminal = flightData.toTerminal,
+                gate = flightData.toGate,
+                baggageClaim = flightData.toBaggageClaim,
+                checkIn = "",
                 date = flightData.arriveDate,
-                timeZone = flightData.arriveTimeZone
+                timeZone = flightData.arriveTimeZone,
+                to = true,
             )
         }
     }
@@ -223,8 +236,11 @@ fun FlightBoard(
     name: String,
     terminal: String,
     gate: String,
+    baggageClaim: String,
+    checkIn: String,
     date: LocalDateTime,
     timeZone: ZoneId,
+    to: Boolean = false,
 ) {
     Row(
         horizontalArrangement = Arrangement.SpaceBetween,
@@ -233,10 +249,14 @@ fun FlightBoard(
         Column {
             Text(
                 code,
+                fontWeight = FontWeight.Normal,
+                fontSize = 12.sp
+            )
+            Text(
+                name,
                 fontWeight = FontWeight.W500,
                 fontSize = 16.sp
             )
-            Text(name)
             Row {
                 SmallCard(
                     Icons.Filled.FlightTakeoff,
@@ -245,9 +265,22 @@ fun FlightBoard(
                 )
                 SmallCard(
                     Icons.AutoMirrored.Filled.DirectionsWalk,
-                    stringResource(R.string.terminal),
+                    stringResource(R.string.gate),
                     gate
                 )
+                if (to) { // Checks if the card is an arrival flight
+                    SmallCard(
+                        Icons.Filled.Luggage,
+                        stringResource(R.string.baggage_claim),
+                        baggageClaim // Then pick baggageClaim over checkInDesk
+                    )
+                } else {
+                    SmallCard(
+                        Icons.Outlined.Desk,
+                        stringResource(R.string.check_in),
+                        checkIn
+                    )
+                }
             }
         }
         Column(
@@ -259,7 +292,7 @@ fun FlightBoard(
                     .atZoneSameInstant(timeZone)
                     .format(DateTimeFormatter.ofPattern("HH:mm")),
                 fontWeight = FontWeight.W500,
-                fontSize = 16.sp,
+                fontSize = 24.sp,
                 color = MaterialTheme.colorScheme.primary
             )
         }
@@ -299,6 +332,7 @@ fun SmallCard(
                 text,
                 color = Color.Black
             )
+            Spacer(Modifier.padding(2.dp))
         }
     }
 }

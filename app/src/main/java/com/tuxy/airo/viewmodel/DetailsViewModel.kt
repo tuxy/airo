@@ -23,6 +23,10 @@ import kotlinx.coroutines.launch
 import ovh.plrapps.mapcompose.api.addLayer
 import ovh.plrapps.mapcompose.api.addMarker
 import ovh.plrapps.mapcompose.api.addPath
+import ovh.plrapps.mapcompose.api.disableGestures
+import ovh.plrapps.mapcompose.api.disableRotation
+import ovh.plrapps.mapcompose.api.disableScrolling
+import ovh.plrapps.mapcompose.api.disableZooming
 import ovh.plrapps.mapcompose.api.scrollTo
 import ovh.plrapps.mapcompose.core.TileStreamProvider
 import ovh.plrapps.mapcompose.ui.state.MapState
@@ -235,6 +239,10 @@ class DetailsViewModel(context: Context, flightDataDao: FlightDataDao, id: Strin
      */
     @OptIn(DelicateCoroutinesApi::class)
     val mapState = MapState(6, mapSize, mapSize).apply { // Max zoom level 6
+        disableZooming()
+        disableGestures()
+        disableRotation()
+        disableScrolling()
         addLayer(tileStreamProvider)
         GlobalScope.launch {
             addMarker(

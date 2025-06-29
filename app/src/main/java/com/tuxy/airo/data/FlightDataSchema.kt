@@ -59,6 +59,8 @@ data class Flight(
     val revisedTime: EdTime?,   // Optional sub-section
     val terminal: String?,      // Optional
     val gate: String?,          // Optional
+    val checkInDesk: String?, // Optional
+    val baggageBelt: String?, // Optional
     val quality: List<String>?  // Optional
 )
 
@@ -70,7 +72,6 @@ data class Airport(
     val municipalityName: String?, // Optional
     val location: Location?, // Sub-fields lat/lon are critical. Made nullable itself.
     val countryCode: String?, // Optional
-    @Json(name = "timeZone") // Matches sample JSON field name
     val timeZone: String?    // Optional
 )
 

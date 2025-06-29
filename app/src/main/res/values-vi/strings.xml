@@ -67,4 +67,5 @@
     <string name="at">lúc</string>
     <string name="invalid_api_url">API Không hợp lệ</string>
     <string name="error_unknown">Lỗi</string>
+    <string name="baggage_claim">Băng truyền</string>
 </resources>
