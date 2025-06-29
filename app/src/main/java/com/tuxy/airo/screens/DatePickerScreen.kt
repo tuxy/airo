@@ -1,5 +1,6 @@
 package com.tuxy.airo.screens
 
+import android.widget.Toast
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -22,7 +23,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import android.widget.Toast
 import androidx.navigation.NavController
 import com.tuxy.airo.R
 import com.tuxy.airo.composables.SmallAppBar
@@ -34,7 +34,6 @@ import com.tuxy.airo.viewmodel.DateViewModel
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.joinAll
 import kotlinx.coroutines.launch
 
 data class ApiSettings(
@@ -103,7 +102,11 @@ fun DatePickerView(
                                     }
                                 } else {
                                     // Generic error for other unexpected exceptions
-                                    Toast.makeText(context, context.getString(R.string.error_unknown), Toast.LENGTH_SHORT).show()
+                                    Toast.makeText(
+                                        context,
+                                        context.getString(R.string.error_unknown),
+                                        Toast.LENGTH_SHORT
+                                    ).show()
                                 }
                                 // No navigation on failure
                             }

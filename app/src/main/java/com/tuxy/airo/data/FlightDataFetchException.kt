@@ -6,4 +6,5 @@ package com.tuxy.airo.data
  *
  * @property errorType The specific [FlightDataError] that occurred.
  */
-class FlightDataFetchException(val errorType: FlightDataError) : Throwable("Flight data fetch failed: ${errorType::class.simpleName}")
+class FlightDataFetchException(val errorType: FlightDataError) :
+    Throwable("Flight data fetch failed: ${errorType::class.simpleName}")

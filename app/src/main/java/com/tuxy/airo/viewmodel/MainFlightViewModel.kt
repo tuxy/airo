@@ -46,7 +46,8 @@ class MainFlightViewModel() : ViewModel() {
     // Group by 3 days
     var flights = flightData.groupBy { flight ->
         Math.round(
-            flight.departDate.toEpochSecond(ZoneOffset.UTC).toDouble() / 172800 // 172800 seconds = 2 days
+            flight.departDate.toEpochSecond(ZoneOffset.UTC)
+                .toDouble() / 172800 // 172800 seconds = 2 days
         ) * 172800
     }.toSortedMap()
 

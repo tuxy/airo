@@ -141,7 +141,7 @@ fun BoldDepartureAndDestinationText(
         modifier = Modifier.defaultMinSize(minWidth = 64.dp),
         horizontalAlignment = alignment
     ) {
-        if(alignment == Alignment.Start) {
+        if (alignment == Alignment.Start) {
             Text(
                 "${countryCodeToEmoji(countryCode)}  $fullName",
                 fontWeight = FontWeight.Normal,
@@ -154,7 +154,7 @@ fun BoldDepartureAndDestinationText(
                 fontSize = 12.sp
             )
         }
-        if(alignment == Alignment.Start) {
+        if (alignment == Alignment.Start) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(
                     icao,

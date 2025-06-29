@@ -16,6 +16,7 @@ import com.tuxy.airo.R
 import com.tuxy.airo.data.FlightData
 import com.tuxy.airo.data.FlightDataDao
 import com.tuxy.airo.data.singleIntoMut
+import com.tuxy.airo.viewmodel.DetailsViewModel.Factory
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
@@ -48,6 +49,7 @@ class DetailsViewModel(context: Context, flightDataDao: FlightDataDao, id: Strin
      * object and populated via the `init` block.
      */
     var flightData = mutableStateOf(FlightData())
+
     /**
      * State for controlling a dialog. Its specific purpose is not detailed here but is likely
      * used for user interactions within the details screen.
@@ -99,7 +101,8 @@ class DetailsViewModel(context: Context, flightDataDao: FlightDataDao, id: Strin
     fun getDuration(context: Context): String {
         val duration = Duration.between(LocalDateTime.now(), flightData.value.departDate)
 
-        val offset = mutableFloatStateOf(10800F) // 3 hours in seconds, potentially for check-in window start
+        val offset =
+            mutableFloatStateOf(10800F) // 3 hours in seconds, potentially for check-in window start
 
         val days = mutableFloatStateOf(0.0F)
         val hours = mutableFloatStateOf(0.0F)
@@ -333,7 +336,7 @@ class DetailsViewModel(context: Context, flightDataDao: FlightDataDao, id: Strin
      */
     private fun calculateScale(x1: Double, y1: Double, x2: Double, y2: Double): Float {
         val zoomConstant = 12.0 // Empirically determined constant to adjust the overall zoom level.
-                                // A smaller value zooms out more, a larger value zooms in more.
+        // A smaller value zooms out more, a larger value zooms in more.
 
         val a = (x2 - x1) * (x2 - x1) // Squared difference in x
         val b = (y2 - y1) * (y2 - y1) // Squared difference in y
