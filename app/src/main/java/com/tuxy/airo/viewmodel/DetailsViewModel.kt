@@ -27,6 +27,7 @@ import ovh.plrapps.mapcompose.core.TileStreamProvider
 import ovh.plrapps.mapcompose.ui.state.MapState
 import java.time.Duration
 import java.time.LocalDateTime
+import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
 import kotlin.math.floor
 import kotlin.math.pow
@@ -94,9 +95,10 @@ class DetailsViewModel(context: Context, flightDataDao: FlightDataDao, id: Strin
             val correctedTime = time.minusHours(1)
 
             return "${context.resources.getString(R.string.ends_at)} ${
-                correctedTime.format(
-                    DateTimeFormatter.ofPattern("HH:mm")
-                )
+                correctedTime
+                    .atOffset(ZoneOffset.UTC)
+                    .atZoneSameInstant(flightData.value.departTimeZone)
+                    .format(DateTimeFormatter.ofPattern("HH:mm"))
             }"
         }
 

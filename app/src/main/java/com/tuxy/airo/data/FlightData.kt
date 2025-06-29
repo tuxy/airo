@@ -20,6 +20,8 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import java.time.Duration
 import java.time.LocalDateTime
+import java.time.ZoneId
+import java.time.ZoneOffset
 
 @Entity(tableName = "flight_table")
 data class FlightData(
@@ -34,6 +36,8 @@ data class FlightData(
     val fromName: String = "",
     val departDate: LocalDateTime = LocalDateTime.of(2000, 1, 1, 1, 1, 1, 1),
     val arriveDate: LocalDateTime = LocalDateTime.of(2000, 1, 1, 1, 1, 1, 1),
+    val departTimeZone: ZoneId = ZoneOffset.UTC,
+    val arriveTimeZone: ZoneId = ZoneOffset.UTC,
     val duration: Duration = Duration.between(LocalDateTime.now(), LocalDateTime.now()),
     val toName: String = "",
     var ticketData: String = "",

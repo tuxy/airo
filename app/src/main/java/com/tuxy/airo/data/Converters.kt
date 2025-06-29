@@ -3,6 +3,7 @@ package com.tuxy.airo.data
 import androidx.room.TypeConverter
 import java.time.Duration
 import java.time.LocalDateTime
+import java.time.ZoneId
 
 class Converters {
     @TypeConverter
@@ -23,5 +24,15 @@ class Converters {
     @TypeConverter
     fun convertStringToDuration(long: Long): Duration {
         return Duration.ofMillis(long)
+    }
+
+    @TypeConverter
+    fun convertZoneToString(zoneId: ZoneId): String {
+        return zoneId.toString()
+    }
+
+    @TypeConverter
+    fun convertStringToZone(string: String): ZoneId {
+        return ZoneId.of(string)
     }
 }
