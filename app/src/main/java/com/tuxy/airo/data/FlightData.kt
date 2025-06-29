@@ -33,6 +33,8 @@ data class FlightData(
     val airlineIata: String = "",
     val from: String = "",
     val to: String = "",
+    val fromCountryCode: String = "",
+    val toCountryCode: String = "",
     val fromName: String = "",
     val departDate: LocalDateTime = LocalDateTime.of(2000, 1, 1, 1, 1, 1, 1),
     val arriveDate: LocalDateTime = LocalDateTime.of(2000, 1, 1, 1, 1, 1, 1),

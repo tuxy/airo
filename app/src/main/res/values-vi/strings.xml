@@ -66,4 +66,5 @@
     <string name="get_ready">Hãy chuẩn bị cho chuyến</string>
     <string name="at">lúc</string>
     <string name="invalid_api_url">API Không hợp lệ</string>
+    <string name="error_unknown">Lỗi</string>
 </resources>

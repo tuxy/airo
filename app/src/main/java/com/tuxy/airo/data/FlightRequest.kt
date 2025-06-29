@@ -1,7 +1,7 @@
 package com.tuxy.airo.data
 
 import android.content.Context
-import android.widget.Toast
+import android.util.Log
 import com.beust.klaxon.KlaxonException
 import com.tuxy.airo.screens.ApiSettings
 import com.tuxy.airo.setAlarm
@@ -13,187 +13,285 @@ import okhttp3.Request
 import java.time.Duration
 import java.time.LocalDateTime
 import java.time.OffsetDateTime
+import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import kotlin.math.abs
 import kotlin.math.ln
 import kotlin.math.sin
 
+sealed class FlightDataError {
+    object ApiKeyMissing : FlightDataError()
+    object NetworkError : FlightDataError()
+    object ParsingError : FlightDataError()
+    object IncompleteDataError : FlightDataError() // Added for more specific error
+    object FlightAlreadyExists : FlightDataError()
+    object UnknownError : FlightDataError()
+}
+
+// Custom exception for critical data missing during parsing
+class MissingCriticalDataException(message: String) : Exception(message)
+
+private val sharedOkHttpClient = OkHttpClient()
+
+private fun buildFlightApiRequest(
+    flightNumber: String,
+    date: String,
+    settings: ApiSettings
+): Request? {
+    val urlChoice = when (settings.choice) {
+        "0" -> settings.server
+        "1" -> settings.endpoint
+        else -> null
+    }
+
+    if (urlChoice.isNullOrEmpty()) {
+        return null // Invalid choice or empty server/endpoint
+    }
+
+    if (settings.choice == "1" && settings.key.isNullOrEmpty()) {
+        return null // API key required for custom endpoint but missing
+    }
+
+    val url = "${urlChoice}/${flightNumber}/${date}".toHttpUrl()
+        .newBuilder()
+        .addQueryParameter("withAircraftImage", "True")
+        .build()
+
+    return Request.Builder()
+        .url(url)
+        .header("Accept", "application/json")
+        .also {
+            if (settings.choice == "1") { // Only add API key if custom endpoint is chosen
+                it.header("x-magicapi-key", settings.key.orEmpty())
+            }
+        }
+        .build()
+}
+
 suspend fun getData(
     flightNumber: String,
     data: FlightDataDao,
     date: String,
-    toasts: Array<Toast>,
     settings: ApiSettings,
     context: Context
-) {
-    withContext(Dispatchers.IO) {
+): Result<FlightData> { // Changed return type
+    return withContext(Dispatchers.IO) {
+        val request = buildFlightApiRequest(flightNumber, date, settings)
+            ?: return@withContext Result.failure(FlightDataFetchException(FlightDataError.ApiKeyMissing))
 
-        if (settings.endpoint.orEmpty() == "" && settings.server.orEmpty() == "") {
-            toasts[0].show() // API_KEY toast
-            return@withContext
-        }
-
-        val client = OkHttpClient()
-
-        val urlChoice = if (settings.choice == "0") settings.server!! else settings.endpoint!!
-
-        val url = "${urlChoice}/${flightNumber}/${date}".toHttpUrl()
-            .newBuilder() // Adds parameter for aircraft image
-            .addQueryParameter("withAircraftImage", "True")
-            .build()
-
-        val request = Request.Builder()
-            .url(url)
-            .header("Accept", "application/json")
-            .header("x-magicapi-key", settings.key.orEmpty())
-            .build() // Either the api key exists or it doesn't
-
-        if (settings.key.orEmpty() == "" && settings.choice == "1") {
-            toasts[0].show() // API_KEY toast
-            return@withContext
-        } // If choice is == "0", then we ignore the api key check
-
-        client.newCall(request).execute().use { response ->
-            if (!response.isSuccessful) {
-                toasts[1].show() // Network Error toast
-                return@withContext // Stops from executing further
-            }
-            val jsonListResponse = response.body!!.string()
-
-            try {
-                val jsonRoot = Root.fromJson(jsonListResponse)
-                val flightData = parseData(jsonRoot)
-                // TODO Look through existing flights and compare without having to use api
-                if (data.queryExisting(flightData.departDate, flightData.callSign) > 0) {
-                    toasts[3].show() // flight already exists toast
-                    return@withContext
+        try {
+            sharedOkHttpClient.newCall(request).execute().use { response ->
+                if (!response.isSuccessful) {
+                    return@withContext Result.failure(FlightDataFetchException(FlightDataError.NetworkError))
                 }
-                data.addFlight(flightData) // If this errors, we give up
-                setAlarm(context, flightData)
-            } catch (e: KlaxonException) {
-                e.printStackTrace()
-                toasts[2].show() // flight not found
-                return@withContext // Stops from executing further
+                val jsonListResponse = response.body!!.string()
+
+                try {
+                    // Root.fromJson returns Root?, handle null if jsonListResponse is empty or invalid
+                    val jsonRoot = Root.fromJson(jsonListResponse) ?:
+                        return@withContext Result.failure(FlightDataFetchException(FlightDataError.ParsingError))
+
+                    val flightData = parseData(jsonRoot) // parseData can throw MissingCriticalDataException
+
+                    if (data.queryExisting(flightData.departDate, flightData.callSign) > 0) {
+                        return@withContext Result.failure(FlightDataFetchException(FlightDataError.FlightAlreadyExists))
+                    }
+                    data.addFlight(flightData)
+                    setAlarm(context, flightData)
+                    return@withContext Result.success(flightData)
+                } catch (e: KlaxonException) {
+                    e.printStackTrace()
+                    return@withContext Result.failure(FlightDataFetchException(FlightDataError.ParsingError))
+                } catch (e: MissingCriticalDataException) {
+                    e.printStackTrace()
+                    Log.e("FlightRequest", "Missing critical data: ${e.message}")
+                    return@withContext Result.failure(FlightDataFetchException(FlightDataError.IncompleteDataError))
+                }
             }
+        } catch (e: Exception) {
+            // Catch any other exceptions during the network call or processing
+            e.printStackTrace()
+            // Consider specific exception types if needed, e.g. IOException for network issues
+            // For now, all other exceptions map to UnknownError
+            return@withContext Result.failure(FlightDataFetchException(FlightDataError.UnknownError))
         }
     }
 }
 
 
 fun parseData(jsonRoot: Root): FlightData {
-    val departureTime = parseDateTime(jsonRoot[0].departure.scheduledTime.orEmpty().local)
-    val arrivalTime = parseDateTime(jsonRoot[0].arrival.scheduledTime.orEmpty().local)
+    // Root.fromJson can return null if parsing fails (e.g. empty or malformed JSON)
+    // However, getData already calls Root.fromJson and would likely fail earlier if jsonRoot is null.
+    // For safety, if jsonRoot can be empty (though API implies it's an array with one element):
+    val flightInfo = jsonRoot.firstOrNull() ?: throw MissingCriticalDataException("JSON root is null or empty")
+
+    // Critical data checks using safe navigation due to schema changes
+    val callSign = flightInfo.number ?: throw MissingCriticalDataException("Call sign (number) is missing")
+
+    val departureFlight = flightInfo.departure ?: throw MissingCriticalDataException("Departure information is missing")
+    val arrivalFlight = flightInfo.arrival ?: throw MissingCriticalDataException("Arrival information is missing")
+
+    val departureAirport = departureFlight.airport ?: throw MissingCriticalDataException("Departure airport data is missing")
+    val arrivalAirport = arrivalFlight.airport ?: throw MissingCriticalDataException("Arrival airport data is missing")
+
+    val departureAirportIata = departureAirport.iata ?: throw MissingCriticalDataException("Departure airport IATA code is missing")
+    val arrivalAirportIata = arrivalAirport.iata ?: throw MissingCriticalDataException("Arrival airport IATA code is missing")
+    val fromCountryCode = departureAirport.countryCode ?: throw MissingCriticalDataException("From country code missing")
+    val toCountryCode = arrivalAirport.countryCode ?: throw MissingCriticalDataException("To country code missing")
+    val departureAirportShortName = departureAirport.shortName ?: throw MissingCriticalDataException("Departure airport short name is missing")
+    val arrivalAirportShortName = arrivalAirport.shortName ?: throw MissingCriticalDataException("Arrival airport short name is missing")
+
+    val departureScheduledTime = departureFlight.scheduledTime ?: throw MissingCriticalDataException("Departure scheduled time data is missing")
+    val arrivalScheduledTime = arrivalFlight.scheduledTime ?: throw MissingCriticalDataException("Arrival scheduled time data is missing")
+
+    val departureScheduledTimeLocal = departureScheduledTime.local
+    val arrivalScheduledTimeLocal = arrivalScheduledTime.local
+    val departureScheduledTimeUtc = departureScheduledTime.utc
+    val arrivalScheduledTimeUtc = arrivalScheduledTime.utc
+
+    val departureLocation = departureAirport.location ?: throw MissingCriticalDataException("Departure airport location data is missing")
+    val arrivalLocation = arrivalAirport.location ?: throw MissingCriticalDataException("Arrival airport location data is missing")
+
+    val departureLat = departureLocation.lat ?: throw MissingCriticalDataException("Departure airport latitude is missing")
+    val departureLon = departureLocation.lon ?: throw MissingCriticalDataException("Departure airport longitude is missing")
+    val arrivalLat = arrivalLocation.lat ?: throw MissingCriticalDataException("Arrival airport latitude is missing")
+    val arrivalLon = arrivalLocation.lon ?: throw MissingCriticalDataException("Arrival airport longitude is missing")
+
+    val departureTime = parseDateTime(departureScheduledTimeLocal)
+    val arrivalTime = parseDateTime(arrivalScheduledTimeLocal)
 
     // Normalised coordinates for origin airport
-    val (projectedXOrigin, projectedYOrigin) = doProjection(
-        jsonRoot[0].departure.airport.location.orEmpty().lat,
-        jsonRoot[0].departure.airport.location.orEmpty().lon
-    )!!
-    val xOrigin = normalize(
+    val (projectedXOrigin, projectedYOrigin) = MapProjectionUtils.doProjection(departureLat, departureLon)
+        // doProjection now throws, so null check removed as per previous step, but the prompt implies it might return null.
+        // Re-checking doProjection: it returns Pair<Double, Double> and throws on error.
+        // So, no need for `?: throw MissingCriticalDataException("Failed to project origin coordinates")` here.
+    val xOrigin = MapProjectionUtils.normalize(
         projectedXOrigin,
-        min = X0,
-        max = -X0
+        min = MapProjectionUtils.X0,
+        max = -MapProjectionUtils.X0
     )
-    val yOrigin = normalize(
+    val yOrigin = MapProjectionUtils.normalize(
         projectedYOrigin,
-        min = -X0,
-        max = X0
+        min = -MapProjectionUtils.X0,
+        max = MapProjectionUtils.X0
     )
 
     // Normalised coordinates for destination airport
-    val (projectedXDest, projectedYDest) = doProjection(
-        jsonRoot[0].arrival.airport.location.orEmpty().lat,
-        jsonRoot[0].arrival.airport.location.orEmpty().lon
-    )!!
-    val xDest = normalize(
+    val (projectedXDest, projectedYDest) = MapProjectionUtils.doProjection(arrivalLat, arrivalLon)
+    val xDest = MapProjectionUtils.normalize(
         projectedXDest,
-        min = X0,
-        max = -X0
+        min = MapProjectionUtils.X0,
+        max = -MapProjectionUtils.X0
     )
-    val yDest = normalize(
+    val yDest = MapProjectionUtils.normalize(
         projectedYDest,
-        min = -X0,
-        max = X0
+        min = -MapProjectionUtils.X0,
+        max = MapProjectionUtils.X0
     )
 
+    // Non-critical fields with defaults
+    val airlineName = flightInfo.airline.orEmpty().name.ifNullOrEmptyLog("airlineName", "N/A")
+    val airlineIcao = flightInfo.airline.orEmpty().icao.ifNullOrEmptyLog("airlineIcao", "N/A")
+    val airlineIata = flightInfo.airline.orEmpty().iata.ifNullOrEmptyLog("airlineIata", "N/A")
+    val gate = flightInfo.departure.gate.ifNullOrEmptyLog("gate", "N/A")
+    val terminal = flightInfo.departure.terminal.ifNullOrEmptyLog("terminal", "N/A")
+    val aircraftModel = flightInfo.aircraft.orEmpty().model.ifNullOrEmptyLog("aircraftModel", "N/A")
+    val aircraftImageUrl = flightInfo.aircraft.orEmpty().image.orEmpty().url
+    val imageAuthor = flightInfo.aircraft.orEmpty().image.orEmpty().author
+    val imageAuthorUrl = flightInfo.aircraft.orEmpty().image.orEmpty().webUrl
+    val attribution = flightInfo.aircraft.orEmpty().image.orEmpty().htmlAttributions.firstOrNull() ?: ""
+
+
     return FlightData(
-        // TODO error handling for parsing
         id = 0, // Auto-assigned id
-        callSign = jsonRoot[0].number,
-        airline = jsonRoot[0].airline.orEmpty().name,
-        airlineIcao = jsonRoot[0].airline.orEmpty().icao ?: "N/A",
-        airlineIata = jsonRoot[0].airline.orEmpty().iata ?: "N/A",
-        from = jsonRoot[0].departure.airport.iata ?: "N/A",
-        to = jsonRoot[0].arrival.airport.iata ?: "N/A",
-        fromName = jsonRoot[0].departure.airport.shortName ?: "N/A",
-        toName = jsonRoot[0].arrival.airport.shortName ?: "N/A",
+        callSign = callSign,
+        airline = airlineName,
+        airlineIcao = airlineIcao,
+        airlineIata = airlineIata,
+        from = departureAirportIata,
+        to = arrivalAirportIata,
+        fromName = departureAirportShortName,
+        toName = arrivalAirportShortName,
+        fromCountryCode = fromCountryCode,
+        toCountryCode = toCountryCode,
         departDate = departureTime,
         arriveDate = arrivalTime,
         duration = Duration.between(
-            parseDateTime(jsonRoot[0].departure.scheduledTime.orEmpty().utc),
-            parseDateTime(jsonRoot[0].arrival.scheduledTime.orEmpty().utc)
+            parseDateTime(departureScheduledTimeUtc),
+            parseDateTime(arrivalScheduledTimeUtc)
         ),
-        // start of with no ticketData
-        gate = jsonRoot[0].departure.gate ?: "N/A",
-        terminal = jsonRoot[0].departure.terminal ?: "N/A",
-        aircraftName = jsonRoot[0].aircraft.orEmpty().model ?: "N/A",
-        aircraftUri = jsonRoot[0].aircraft.orEmpty().image.orEmpty().url,
-        author = jsonRoot[0].aircraft.orEmpty().image.orEmpty().author,
-        authorUri = jsonRoot[0].aircraft.orEmpty().image.orEmpty().webUrl,
+        gate = gate,
+        terminal = terminal,
+        aircraftName = aircraftModel,
+        aircraftUri = aircraftImageUrl,
+        author = imageAuthor,
+        authorUri = imageAuthorUrl,
         mapOriginX = xOrigin,
         mapOriginY = yOrigin,
         mapDestinationX = xDest,
         mapDestinationY = yDest,
-        attribution = jsonRoot[0].aircraft.orEmpty().image.orEmpty().htmlAttributions[0]
+        attribution = attribution
     )
 }
+
+// Helper function for logging and providing default for non-critical nullable strings
+private fun String?.ifNullOrEmptyLog(fieldName: String, default: String): String {
+    if (this.isNullOrEmpty()) {
+        Log.w("FlightRequest", "Missing non-critical field: $fieldName, using default '$default'.")
+        return default
+    }
+    return this
+}
+
 
 fun Airline?.orEmpty(): Airline {
     return this ?: Airline()
 }
 
-fun EdTime?.orEmpty(): EdTime {
-    return this ?: EdTime()
-}
-
 fun Aircraft?.orEmpty(): Aircraft {
-    return this ?: Aircraft(image = Image())
+    return this ?: Aircraft()
 }
 
 fun Image?.orEmpty(): Image {
     return this ?: Image()
 }
 
-fun Location?.orEmpty(): Location {
-    return this ?: Location()
-}
+// Moved X0, doProjection, and normalize into this object
+internal object MapProjectionUtils {
+    internal const val X0 = -2.0037508342789248E7 // Constant for map projection
 
-fun doProjection(latitude: Double, longitude: Double): Pair<Double, Double>? {
-    if (abs(latitude) > 90 || abs(longitude) > 180) {
-        return null
+    internal fun doProjection(latitude: Double, longitude: Double): Pair<Double, Double> { // Return non-nullable, throw if invalid
+        if (abs(latitude) > 90 || abs(longitude) > 180) {
+            throw MissingCriticalDataException("Invalid latitude or longitude for projection: lat=$latitude, lon=$longitude")
+        }
+        val num = longitude * 0.017453292519943295 // 2*pi / 360
+        val x = 6378137.0 * num
+        val a = latitude * 0.017453292519943295
+        val y = 3189068.5 * ln((1.0 + sin(a)) / (1.0 - sin(a)))
+
+        return Pair(x, y)
     }
-    val num = longitude * 0.017453292519943295 // 2*pi / 360
-    val x = 6378137.0 * num
-    val a = latitude * 0.017453292519943295
-    val y = 3189068.5 * ln((1.0 + sin(a)) / (1.0 - sin(a)))
 
-    return Pair(x, y)
+    internal fun normalize(t: Double, min: Double, max: Double): Double {
+        return (t - min) / (max - min)
+    }
 }
-
-fun normalize(t: Double, min: Double, max: Double): Double {
-    return (t - min) / (max - min)
-}
-
-private const val X0 = -2.0037508342789248E7 // Constant for map projection
 
 fun parseDateTime(time: String): LocalDateTime {
-    // TODO, utilise UTC time and convert into local time instead of relying on localtime
-    val pattern =
-        DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mmXXXXX")!!
-    // val localDateTime = LocalDateTime.parse(time, pattern)
+    val pattern = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mmXXXXX")
     val offsetDateTime = OffsetDateTime.parse(time, pattern)
 
-    return offsetDateTime!!.toLocalDateTime()
+    // Get the system's default time zone
+    val systemDefaultZoneId = ZoneId.systemDefault()
+
+    // Convert the OffsetDateTime to ZonedDateTime in the system's default time zone
+    // TODO THIS is where the issues lie. Whenever the time gets converted, BOTH departure and arrival times are based off the time on the system clock
+    // TODO For many reasons, this is idiotic and instead, take the last 5 characters and convert that into a timezone. Then, apply the timezone after taking
+    // TODO into account the system's UTC time. This will ensure that the time is exact, and all local. Furthermore, this could pave the way for a setting for all local.
+    val zonedDateTime = offsetDateTime.atZoneSameInstant(systemDefaultZoneId)
+
+    // Return the LocalDateTime part of the ZonedDateTime
+    return zonedDateTime.toLocalDateTime()
 }
 
 
