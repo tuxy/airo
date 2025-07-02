@@ -52,9 +52,9 @@
     <string name="no_ticket">Không tìm thấy vé nào. Quét vé với nút quét thể lên máy bay</string>
     <string name="no_flight_smile">Không có chuyến bay nào :)</string>
     <string name="flight_exists">Chuyến bay đã tồn tại</string>
-    <string name="airo_api_server">Server AiroAPI</string>
+    <string name="airo_api_server">AiroAPI</string>
     <string name="api_endpoint">API Url</string>
-    <string name="direct_api">AeroDataBox</string>
+    <string name="direct_api">ADB</string>
     <string name="landing">Đang hạ cánh</string>
     <string name="landed">Đã hạ cánh</string>
     <string name="not_avail">Không có sẵn</string>
@@ -68,4 +68,6 @@
     <string name="invalid_api_url">API Không hợp lệ</string>
     <string name="error_unknown">Lỗi</string>
     <string name="baggage_claim">Băng truyền</string>
+    <string name="default_server_extra">Server sẽ mặc định tới https://airoapi.tuxy.stream. Chế độ này không được khuyến khích và chỉ nên dùng khi đang thử.</string>
+    <string name="adb_text">Xem <a href="https://aerodatabox.com/">https://aerodatabox.com</a> cho thêm thông tin</string>
 </resources>

@@ -9,9 +9,13 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import com.ireward.htmlcompose.HtmlText
 import com.tuxy.airo.R
 import com.tuxy.airo.viewmodel.SettingsViewModel
 
@@ -20,11 +24,17 @@ fun CustomApiView(
     navController: NavController,
     viewModel: SettingsViewModel,
 ) {
-    Column {
+    Column(
+        modifier = Modifier.padding(horizontal = 16.dp)
+    ) {
+        HtmlText(
+            stringResource(R.string.adb_text),
+            fontSize = 10.sp,
+            style = TextStyle(color = Color.Gray)
+        )
         OutlinedTextField(
             modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp),
+                .fillMaxWidth(),
             shape = RoundedCornerShape(15.dp),
             value = viewModel.currentEndpoint,
             label = { Text(stringResource(R.string.api_endpoint)) },
@@ -34,8 +44,7 @@ fun CustomApiView(
         Spacer(Modifier.padding(4.dp))
         OutlinedTextField(
             modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp),
+                .fillMaxWidth(),
             shape = RoundedCornerShape(15.dp),
             value = viewModel.currentApiKey,
             label = { Text(stringResource(R.string.api_key)) },

@@ -38,8 +38,9 @@ private fun buildFlightApiRequest(
     settings: ApiSettings
 ): Request? {
     val urlChoice = when (settings.choice) {
-        "0" -> settings.server
-        "1" -> settings.endpoint
+        "0" -> "https://airoapi.tuxy.stream/flights"
+        "1" -> settings.server
+        "2" -> settings.endpoint
         else -> null
     }
 

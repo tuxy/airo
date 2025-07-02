@@ -27,14 +27,17 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
+import com.ireward.htmlcompose.HtmlText
 import com.tuxy.airo.R
 import com.tuxy.airo.composables.LargeAppBar
 import com.tuxy.airo.screens.settings.ApiServerView
@@ -50,7 +53,10 @@ fun SettingsView(
 
     // Set up SegmentedButtons
     val options =
-        listOf(stringResource(R.string.airo_api_server), stringResource(R.string.direct_api))
+        listOf(
+            stringResource(R.string.default_server),
+            stringResource(R.string.airo_api_server),
+            stringResource(R.string.direct_api))
     var selectedIndex by remember { mutableIntStateOf(0) }
 
     // Initialise settings (Don't get API key for security)
@@ -70,7 +76,8 @@ fun SettingsView(
             ExtendedFloatingActionButton(
                 onClick = {
                     when (selectedIndex) { // Parse and check for URL
-                        0 -> {
+                        // No checks for 0.
+                        1 -> {
                             if (!URLUtil.isValidUrl(viewModel.currentApiServer)) {
                                 navController.navigateUp()
                                 toast.show()
@@ -78,12 +85,7 @@ fun SettingsView(
                             }
                         }
 
-                        1 -> {
-                            if (!URLUtil.isValidUrl(viewModel.currentApiKey)) {
-                                navController.navigateUp()
-                                toast.show()
-                                return@ExtendedFloatingActionButton
-                            }
+                        2 -> { // Checks whether the URL is valid. Cannot check API key for now.
                             if (!URLUtil.isValidUrl(viewModel.currentEndpoint)) {
                                 navController.navigateUp()
                                 toast.show()
@@ -125,9 +127,19 @@ fun SettingsView(
                 }
             }
             AnimatedVisibility(selectedIndex == 0) {
-                ApiServerView(navController, viewModel)
+                Column(
+                    modifier = Modifier.padding(horizontal = 16.dp)
+                ) {
+                    HtmlText(
+                        stringResource(R.string.default_server_extra),
+                        style = TextStyle(color = Color.Gray)
+                    )
+                }
             }
             AnimatedVisibility(selectedIndex == 1) {
+                ApiServerView(navController, viewModel)
+            }
+            AnimatedVisibility(selectedIndex == 2) {
                 CustomApiView(navController, viewModel)
             }
         }
