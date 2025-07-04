@@ -1,6 +1,7 @@
 package com.tuxy.airo.viewmodel
 
 import android.content.Context
+import android.util.Log
 import android.widget.Toast
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -12,6 +13,9 @@ import androidx.lifecycle.ViewModelProvider
 import com.tuxy.airo.R
 import com.tuxy.airo.data.UserPreferences
 import java.text.SimpleDateFormat
+import java.time.LocalDateTime
+import java.time.ZoneOffset
+import java.time.format.DateTimeFormatter
 import java.util.Locale
 
 @Suppress("UNCHECKED_CAST")
@@ -52,8 +56,8 @@ class DateViewModel(context: Context) : ViewModel() {
     }
 
     fun getDateAsString(time: Long): String {
-        val dateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.UK)
-        return dateFormat.format(time)
+        val date = LocalDateTime.ofEpochSecond(time / 1000L, 0, ZoneOffset.UTC).atZone(ZoneOffset.systemDefault())
+        return date.format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))
     }
 
     fun formatFlightNumber(string: String): String {
