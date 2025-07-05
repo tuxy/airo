@@ -1,6 +1,5 @@
 package com.tuxy.airo.composables
 
-import android.util.Log
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -201,7 +200,6 @@ fun TextPreview() {
 }
 
 fun countryCodeToEmoji(countryCode: String): String {
-    Log.d("APIACCESS", countryCode)
     if (countryCode == "") {
         return countryCode
     }

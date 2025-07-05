@@ -70,4 +70,5 @@
     <string name="baggage_claim">Băng truyền</string>
     <string name="default_server_extra">Server sẽ mặc định tới https://airoapi.tuxy.stream. Chế độ này không được khuyến khích và chỉ nên dùng khi đang thử.</string>
     <string name="adb_text">Xem <a href="https://aerodatabox.com/">https://aerodatabox.com</a> cho thêm thông tin</string>
+    <string name="update_error">Lỗi đã xảy ra khi cập nhật</string>
 </resources>

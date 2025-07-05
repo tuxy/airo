@@ -37,6 +37,16 @@ class DateViewModel(context: Context) : ViewModel() {
             context,
             context.resources.getString(R.string.flight_exists),
             Toast.LENGTH_SHORT
+        ),
+        Toast.makeText(
+            context,
+            context.resources.getString(R.string.error_unknown),
+            Toast.LENGTH_SHORT
+        ),
+        Toast.makeText(
+            context,
+            context.resources.getString(R.string.update_error),
+            Toast.LENGTH_SHORT
         )
     )
     var loading by mutableStateOf(false)

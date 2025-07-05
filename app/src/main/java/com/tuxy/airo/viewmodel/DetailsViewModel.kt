@@ -1,10 +1,13 @@
 package com.tuxy.airo.viewmodel
 
 import android.content.Context
+import android.util.Log
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material3.Icon
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.Modifier
@@ -15,7 +18,12 @@ import androidx.lifecycle.ViewModelProvider
 import com.tuxy.airo.R
 import com.tuxy.airo.data.FlightData
 import com.tuxy.airo.data.FlightDataDao
+import com.tuxy.airo.data.FlightDataError
+import com.tuxy.airo.data.FlightDataFetchException
+import com.tuxy.airo.data.UserPreferences
+import com.tuxy.airo.data.getData
 import com.tuxy.airo.data.singleIntoMut
+import com.tuxy.airo.screens.ApiSettings
 import com.tuxy.airo.viewmodel.DetailsViewModel.Factory
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.GlobalScope
@@ -48,6 +56,9 @@ import kotlin.math.sqrt
  */
 @Suppress("UNCHECKED_CAST")
 class DetailsViewModel(context: Context, flightDataDao: FlightDataDao, id: String) : ViewModel() {
+
+    private val dataStore = UserPreferences(context)
+
     /**
      * Holds the state for the current flight's details. It is initialized as an empty [FlightData]
      * object and populated via the `init` block.
@@ -78,6 +89,31 @@ class DetailsViewModel(context: Context, flightDataDao: FlightDataDao, id: Strin
             flightDataDao,
             id
         ) // On initialisation, pass db data into flightData
+    }
+
+    suspend fun updateFlightData(
+        flightDataDao: FlightDataDao,
+        flightData: FlightData,
+        settings: ApiSettings,
+        context: Context
+    ): Result<FlightData> {
+        val collectedFlightData = getData(
+            flightNumber = flightData.callSign.replace(" ", ""), // Whitespace removal
+            flightDataDao = flightDataDao,
+            date = flightData.departDate.format(DateTimeFormatter.ofPattern("yyyy-MM-dd")),
+            settings = settings,
+            context = context,
+            update = true
+        )
+
+        collectedFlightData.onSuccess { newFlight ->
+            Log.d("FlightUpdate", newFlight.toString())
+            flightDataDao.deleteFlight(flightData)
+            flightDataDao.addFlight(newFlight)
+            return Result.success(newFlight)
+        }
+
+        return Result.failure(FlightDataFetchException(FlightDataError.UpdateError))
     }
 
     /**
@@ -202,6 +238,11 @@ class DetailsViewModel(context: Context, flightDataDao: FlightDataDao, id: Strin
             }
             return context.resources.getString(R.string.flying) // Still flying
         }
+    }
+
+    @Composable // Definitely not a composable, but it works to get API Key
+    fun getValue(key: String): String {
+        return dataStore.getValueWithKey(key).collectAsState(initial = "").value
     }
 
     /**

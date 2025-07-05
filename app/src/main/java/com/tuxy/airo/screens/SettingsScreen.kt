@@ -56,7 +56,8 @@ fun SettingsView(
         listOf(
             stringResource(R.string.default_server),
             stringResource(R.string.airo_api_server),
-            stringResource(R.string.direct_api))
+            stringResource(R.string.direct_api)
+        )
     var selectedIndex by remember { mutableIntStateOf(0) }
 
     // Initialise settings (Don't get API key for security)
@@ -110,7 +111,7 @@ fun SettingsView(
             SingleChoiceSegmentedButtonRow(
                 modifier = Modifier
                     .padding(innerPadding)
-                    .padding(start = 16.dp, end = 16.dp, top = 16.dp)
+                    .padding(horizontal = 16.dp)
                     .fillMaxWidth()
             ) {
                 options.forEachIndexed { index, label ->
