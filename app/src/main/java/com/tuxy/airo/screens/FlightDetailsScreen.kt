@@ -142,7 +142,11 @@ fun FlightDetailsView(
                     FlightBoardCard(viewModel.flightData.value)
                     Card(
                         modifier = Modifier
-                            .padding(top = 17.dp, start = 17.dp, end = 17.dp) // Not sure why, but map seems to pop out a bit more than the others
+                            .padding(
+                                top = 17.dp,
+                                start = 17.dp,
+                                end = 17.dp
+                            ) // Not sure why, but map seems to pop out a bit more than the others
                             .fillMaxWidth()
                     ) {
                         Box(

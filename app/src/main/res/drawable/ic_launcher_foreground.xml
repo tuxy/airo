@@ -9,8 +9,8 @@
         android:translateX="25.06195"
         android:translateY="25.06195">
         <path
+            android:fillColor="#ffffff"
             android:pathData="m26.38,23.69h17.82a10.27,10.27 24.31,0 1,7.71 3.48L115.44,99.31a1.07,1.07 114.53,0 1,-0.81 1.78L46.27,100.58A2.55,2.55 37.9,0 1,43.82 98.68L24.78,25.77a1.66,1.66 127.68,0 1,1.6 -2.07z"
-            android:strokeWidth="3.96875"
-            android:fillColor="#ffffff" />
+            android:strokeWidth="3.96875" />
     </group>
 </vector>

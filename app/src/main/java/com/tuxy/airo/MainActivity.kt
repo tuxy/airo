@@ -13,12 +13,9 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.compose.material3.Scaffold
 import androidx.compose.ui.platform.LocalContext
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
-import androidx.navigation.NavHostController
-import androidx.navigation.compose.rememberNavController
 import com.tuxy.airo.data.FlightData
 import com.tuxy.airo.data.FlightDataBase
 import com.tuxy.airo.data.FlightDataDao
@@ -28,7 +25,7 @@ import java.time.format.DateTimeFormatter
 
 class MainActivity : ComponentActivity() {
 
-    private lateinit var navController: NavHostController
+    // private lateinit var navController: NavHostController
     lateinit var data: FlightDataDao
 
 
@@ -54,10 +51,7 @@ class MainActivity : ComponentActivity() {
                     } // If the user denies notifications, we ignore forever
                 }
 
-                Scaffold {
-                    navController = rememberNavController()
-                    SetupNavGraph(navController, data)
-                }
+                MainScreen()
             }
         }
     }

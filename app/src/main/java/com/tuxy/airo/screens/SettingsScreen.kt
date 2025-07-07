@@ -56,7 +56,8 @@ fun SettingsView(
         listOf(
             stringResource(R.string.default_server),
             stringResource(R.string.airo_api_server),
-            stringResource(R.string.direct_api))
+            stringResource(R.string.direct_api)
+        )
     var selectedIndex by remember { mutableIntStateOf(0) }
 
     // Initialise settings (Don't get API key for security)
