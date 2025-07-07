@@ -64,6 +64,7 @@ import com.tuxy.airo.data.FlightDataDao
 import com.tuxy.airo.viewmodel.MainFlightViewModel
 import java.time.Duration
 import java.time.LocalDateTime
+import java.time.OffsetDateTime
 import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
 import kotlin.math.abs
@@ -110,16 +111,13 @@ fun MainFlightView(
                     viewModel.flights.forEach { (header, flights) ->
 
                         val unsortedFlights = flights.groupBy { flight ->
-                            flight.departDate
-                                .atOffset(ZoneOffset.UTC)
-                                .atZoneSameInstant(flight.departTimeZone)
-                                .toEpochSecond()
+                            flight.departDate.toEpochSecond(ZoneOffset.UTC)
                         }.toSortedMap()
 
                         stickyHeader {
                             DateHeader(
                                 LocalDateTime.ofEpochSecond(
-                                    header - 86400,
+                                    header,
                                     0,
                                     ZoneOffset.UTC
                                 )

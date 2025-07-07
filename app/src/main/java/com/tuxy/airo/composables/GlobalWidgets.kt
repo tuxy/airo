@@ -201,7 +201,6 @@ fun TextPreview() {
 }
 
 fun countryCodeToEmoji(countryCode: String): String {
-    Log.d("APIACCESS", countryCode)
     if (countryCode == "") {
         return countryCode
     }
