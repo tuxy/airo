@@ -1,6 +1,6 @@
 package com.tuxy.airo.screens
 
-import android.widget.Toast
+import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -46,11 +46,11 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -69,6 +69,7 @@ import com.tuxy.airo.cancelAlarm
 import com.tuxy.airo.composables.RouteBar
 import com.tuxy.airo.data.FlightData
 import com.tuxy.airo.data.FlightDataDao
+import com.tuxy.airo.data.getData
 import com.tuxy.airo.viewmodel.DetailsViewModel
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
@@ -105,9 +106,13 @@ fun FlightDetailsView(
 
     val refreshState = rememberPullToRefreshState()
     var isRefreshing by remember { mutableStateOf(false) }
+    var isRefreshingFinished by remember { mutableStateOf(false) }
 
-    val coroutineScope = rememberCoroutineScope()
-
+    LaunchedEffect(isRefreshingFinished) {
+        if(isRefreshingFinished) {
+            navController.navigateUp()
+        }
+    }
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),
@@ -161,23 +166,28 @@ fun FlightDetailsView(
                     isRefreshing = isRefreshing,
                     state = refreshState,
                     onRefresh = {
-                        coroutineScope.launch {
-                            isRefreshing = true
-                            viewModel.updateFlightData(
-                                flightDataDao,
-                                flightData = viewModel.flightData.value,
+                        isRefreshing = true
+                        GlobalScope.launch(Dispatchers.IO) {
+                            val collectedFlightData = getData(
+                                flightNumber = viewModel.flightData.value.callSign.replace(" ", ""), // Whitespace removal
+                                flightDataDao = flightDataDao,
+                                date = viewModel.flightData.value.departDate.format(DateTimeFormatter.ofPattern("yyyy-MM-dd")),
                                 settings = settings,
                                 context = context,
-                            ).onFailure {
-                                Toast.makeText(
-                                    context,
-                                    R.string.update_error,
-                                    Toast.LENGTH_SHORT
-                                ).show()
+                                update = true
+                            )
+
+                            collectedFlightData.onSuccess { newFlight ->
+                                Log.d("FlightUpdate", newFlight.toString())
+                                flightDataDao.deleteFlight(viewModel.flightData.value)
+                                flightDataDao.addFlight(
+                                    newFlight.copy(ticketData = viewModel.flightData.value.ticketData) // Retain ticket information
+                                )
                             }
                             isRefreshing = false
+                            isRefreshingFinished = true
                         }
-                        navController.navigateUp() // A bit primitive, but should work to update flight via refresh
+
                     }
                 ) {
                     Column(

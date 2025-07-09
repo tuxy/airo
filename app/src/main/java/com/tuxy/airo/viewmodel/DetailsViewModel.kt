@@ -1,7 +1,6 @@
 package com.tuxy.airo.viewmodel
 
 import android.content.Context
-import android.util.Log
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.LocationOn
@@ -18,12 +17,8 @@ import androidx.lifecycle.ViewModelProvider
 import com.tuxy.airo.R
 import com.tuxy.airo.data.FlightData
 import com.tuxy.airo.data.FlightDataDao
-import com.tuxy.airo.data.FlightDataError
-import com.tuxy.airo.data.FlightDataFetchException
 import com.tuxy.airo.data.UserPreferences
-import com.tuxy.airo.data.getData
 import com.tuxy.airo.data.singleIntoMut
-import com.tuxy.airo.screens.ApiSettings
 import com.tuxy.airo.viewmodel.DetailsViewModel.Factory
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.GlobalScope
@@ -49,10 +44,6 @@ import kotlin.math.sqrt
 /**
  * Manages and provides data for the flight details screen, including map display and flight status information.
  * The `@Suppress("UNCHECKED_CAST")` annotation is present due to the type casting in the [Factory] class.
- *
- * @property context The Android application context.
- * @property flightDataDao The Data Access Object for flight data.
- * @property id The unique identifier of the flight to be detailed.
  */
 @Suppress("UNCHECKED_CAST")
 class DetailsViewModel(context: Context, flightDataDao: FlightDataDao, id: String) : ViewModel() {
@@ -80,8 +71,7 @@ class DetailsViewModel(context: Context, flightDataDao: FlightDataDao, id: Strin
         private set
 
     /**
-     * Initializes the ViewModel by loading the specific flight's data using the provided [id]
-     * from the [flightDataDao] and updating the [flightData] state.
+     * Initializes the ViewModel by loading the specific flight's data using the provided
      */
     init {
         singleIntoMut(
@@ -89,31 +79,6 @@ class DetailsViewModel(context: Context, flightDataDao: FlightDataDao, id: Strin
             flightDataDao,
             id
         ) // On initialisation, pass db data into flightData
-    }
-
-    suspend fun updateFlightData(
-        flightDataDao: FlightDataDao,
-        flightData: FlightData,
-        settings: ApiSettings,
-        context: Context
-    ): Result<FlightData> {
-        val collectedFlightData = getData(
-            flightNumber = flightData.callSign.replace(" ", ""), // Whitespace removal
-            flightDataDao = flightDataDao,
-            date = flightData.departDate.format(DateTimeFormatter.ofPattern("yyyy-MM-dd")),
-            settings = settings,
-            context = context,
-            update = true
-        )
-
-        collectedFlightData.onSuccess { newFlight ->
-            Log.d("FlightUpdate", newFlight.toString())
-            flightDataDao.deleteFlight(flightData)
-            flightDataDao.addFlight(newFlight)
-            return Result.success(newFlight)
-        }
-
-        return Result.failure(FlightDataFetchException(FlightDataError.UpdateError))
     }
 
     /**
