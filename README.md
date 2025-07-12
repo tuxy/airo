@@ -28,6 +28,10 @@
 - Fix for timezones
 - Bugfixes
 
+## Contributing?
+
+For anyone that would like to help with this mess of a codebase, you are completely welcome! See [Contributing.md](/Contributing.md) for more information on how you can help.
+
 ## Libraries used/credits
 
 - MapCompose https://github.com/p-lr/MapCompose

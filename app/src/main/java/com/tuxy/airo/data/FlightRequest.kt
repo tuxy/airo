@@ -230,8 +230,10 @@ fun parseData(jsonRoot: Root): FlightData {
 
     val toGate = flightInfo.arrival.gate.orEmpty().ifNullOrEmptyLog("toGate", "—")
     val toTerminal = flightInfo.arrival.terminal.orEmpty().ifNullOrEmptyLog("toTerminal", "—")
-    val toBaggageClaim = flightInfo.arrival.baggageBelt.orEmpty().ifNullOrEmptyLog("toBaggageClaim", "—")
-    val checkInDesk = flightInfo.departure.checkInDesk.orEmpty().ifNullOrEmptyLog("checkInDesk", "—")
+    val toBaggageClaim =
+        flightInfo.arrival.baggageBelt.orEmpty().ifNullOrEmptyLog("toBaggageClaim", "—")
+    val checkInDesk =
+        flightInfo.departure.checkInDesk.orEmpty().ifNullOrEmptyLog("checkInDesk", "—")
 
     return FlightData(
         id = 0, // Auto-assigned id

@@ -1,5 +1,6 @@
 package com.tuxy.airo.viewmodel
 
+import android.util.Log
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -11,6 +12,7 @@ import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import java.time.ZoneOffset
 import java.util.SortedMap
+import kotlin.math.floor
 
 /**
  * ViewModel responsible for managing and providing flight data for the main flight display screen.
@@ -45,7 +47,7 @@ class MainFlightViewModel() : ViewModel() {
      */
     // Group by 3 days
     var flights = flightData.groupBy { flight ->
-        Math.round(
+        floor(
             flight.departDate.toEpochSecond(ZoneOffset.UTC)
                 .toDouble() / 86400 // 86400 seconds = 1 day
         ) * 86400 // Maybe for the future, make something to smart-combine flights close together.
@@ -70,7 +72,8 @@ class MainFlightViewModel() : ViewModel() {
             flightData = flightDataDao.readAll()
             // Group by 1 day
             flights = flightData.groupBy { flight ->
-                Math.round(
+                Log.d("FlightUpdate", flight.departDate.toEpochSecond(ZoneOffset.UTC).toString())
+                floor(
                     flight.departDate.toEpochSecond(ZoneOffset.UTC).toDouble() / 86400
                 ) * 86400
             }.toSortedMap()

@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Scaffold
@@ -29,6 +30,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.tooling.preview.Preview
@@ -44,6 +46,7 @@ import com.tuxy.airo.screens.settings.ApiServerView
 import com.tuxy.airo.screens.settings.CustomApiView
 import com.tuxy.airo.viewmodel.SettingsViewModel
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsView(
     navController: NavController
@@ -56,7 +59,8 @@ fun SettingsView(
         listOf(
             stringResource(R.string.default_server),
             stringResource(R.string.airo_api_server),
-            stringResource(R.string.direct_api))
+            stringResource(R.string.direct_api)
+        )
     var selectedIndex by remember { mutableIntStateOf(0) }
 
     // Initialise settings (Don't get API key for security)
@@ -74,6 +78,7 @@ fun SettingsView(
         topBar = { LargeAppBar(stringResource(R.string.settings), navController) },
         floatingActionButton = {
             ExtendedFloatingActionButton(
+                modifier = Modifier.testTag("apply_settings"),
                 onClick = {
                     when (selectedIndex) { // Parse and check for URL
                         // No checks for 0.
@@ -101,7 +106,9 @@ fun SettingsView(
 
                     navController.navigateUp()
                 },
-                icon = { Icon(Icons.Filled.Check, stringResource(R.string.apply_settings)) },
+                icon = { Icon(
+                    imageVector = Icons.Filled.Check,
+                    contentDescription = stringResource(R.string.apply_settings)) },
                 text = { Text(stringResource(R.string.apply_settings)) },
             )
         }
