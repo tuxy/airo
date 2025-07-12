@@ -64,7 +64,6 @@ import com.tuxy.airo.data.FlightDataDao
 import com.tuxy.airo.viewmodel.MainFlightViewModel
 import java.time.Duration
 import java.time.LocalDateTime
-import java.time.OffsetDateTime
 import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
 import kotlin.math.abs
@@ -121,7 +120,7 @@ fun MainFlightView(
                         stickyHeader {
                             DateHeader(
                                 LocalDateTime.ofEpochSecond(
-                                    header,
+                                    header.toLong(),
                                     0,
                                     ZoneOffset.UTC
                                 )
