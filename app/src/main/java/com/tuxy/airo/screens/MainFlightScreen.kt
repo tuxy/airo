@@ -45,6 +45,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -87,6 +88,7 @@ fun MainFlightView(
         topBar = { MainTopBar(navController, scrollBehavior) },
         floatingActionButton = {
             ExtendedFloatingActionButton(
+                modifier = Modifier.testTag("add_flight"),
                 onClick = {
                     navController.navigate(Screen.NewFlightScreen.route)
                 },
@@ -294,8 +296,7 @@ fun DateHeader(time: LocalDateTime) {
     ) {
         Text(
             // Lazy method
-            time
-                .format(DateTimeFormatter.ofPattern("dd MMM")),
+            time.plusHours(7).format(DateTimeFormatter.ofPattern("dd MMM")),
             fontSize = 24.sp,
             fontWeight = FontWeight.W500
         )
@@ -312,8 +313,10 @@ fun MainTopBar(
         title = { Text(stringResource(R.string.my_flights)) },
         colors = TopAppBarDefaults.topAppBarColors(),
         actions = {
-            IconButton(onClick = {
-                navController.navigate(route = Screen.SettingsScreen.route)
+            IconButton(
+                modifier = Modifier.testTag("settings_button"),
+                onClick = {
+                    navController.navigate(route = Screen.SettingsScreen.route)
             }) {
                 Icon(
                     imageVector = Icons.Filled.Settings,
