@@ -210,7 +210,7 @@ fun FlightBoardCard(
                             return@toComponents "${hours}hr ${minutes}m"
                         }
                     },
-                    color = MaterialTheme.colorScheme.inverseSurface,
+                    color = Color.Gray,
                     fontSize = 12.sp
                 )
                 Spacer(Modifier.padding(4.dp))

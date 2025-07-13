@@ -110,16 +110,13 @@ fun MainFlightView(
                     viewModel.flights.forEach { (header, flights) ->
 
                         val unsortedFlights = flights.groupBy { flight ->
-                            flight.departDate
-                                .atOffset(ZoneOffset.UTC)
-                                .atZoneSameInstant(flight.departTimeZone)
-                                .withZoneSameInstant(ZoneOffset.UTC)
-                                .toEpochSecond()
+                            flight.departDate.toEpochSecond(ZoneOffset.UTC)
                         }.toSortedMap()
 
                         stickyHeader {
                             DateHeader(
-                                LocalDateTime.ofEpochSecond(
+                                LocalDateTime
+                                    .ofEpochSecond(
                                     header.toLong(),
                                     0,
                                     ZoneOffset.UTC

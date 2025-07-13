@@ -21,6 +21,7 @@ import com.tuxy.airo.data.FlightDataBase
 import com.tuxy.airo.data.FlightDataDao
 import com.tuxy.airo.ui.theme.AeroTheme
 import java.time.ZoneId
+import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
 
 class MainActivity : ComponentActivity() {
@@ -60,7 +61,9 @@ class MainActivity : ComponentActivity() {
 fun setAlarm(context: Context, flightData: FlightData) {
 
     val depTime =
-        flightData.departDate.atZone(ZoneId.systemDefault()).toEpochSecond()
+        flightData.departDate
+            .atOffset(ZoneOffset.UTC)
+            .atZoneSameInstant(flightData.departTimeZone).toEpochSecond()
 
     if (depTime > System.currentTimeMillis() / 1000) {
         val alarmManager = context.getSystemService(ALARM_SERVICE) as AlarmManager

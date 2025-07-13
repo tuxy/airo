@@ -1,6 +1,5 @@
 package com.tuxy.airo.viewmodel
 
-import android.util.Log
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -12,7 +11,6 @@ import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import java.time.ZoneOffset
 import java.util.SortedMap
-import kotlin.math.floor
 
 /**
  * ViewModel responsible for managing and providing flight data for the main flight display screen.
@@ -45,11 +43,10 @@ class MainFlightViewModel() : ViewModel() {
      * The values are lists of [FlightData] objects that fall within that specific 2-day interval.
      * The map is sorted by its keys (interval start times).
      */
-    // Group by 3 days
+    // Group by 1 day
     var flights = flightData.groupBy { flight ->
-        floor(
-            flight.departDate.toEpochSecond(ZoneOffset.UTC)
-                .toDouble() / 86400 // 86400 seconds = 1 day
+        Math.round(
+            flight.departDate.toEpochSecond(ZoneOffset.UTC).toDouble() / 86400 // 86400 seconds = 1 day
         ) * 86400 // Maybe for the future, make something to smart-combine flights close together.
     }.toSortedMap()
 
@@ -72,10 +69,11 @@ class MainFlightViewModel() : ViewModel() {
             flightData = flightDataDao.readAll()
             // Group by 1 day
             flights = flightData.groupBy { flight ->
-                Log.d("FlightUpdate", flight.departDate.toEpochSecond(ZoneOffset.UTC).toString())
-                floor(
-                    flight.departDate.toEpochSecond(ZoneOffset.UTC).toDouble() / 86400
-                ) * 86400
+                (
+                    Math.round(
+                        flight.departDate.toEpochSecond(ZoneOffset.UTC).toDouble() / 86400
+                    ) * 86400
+                )
             }.toSortedMap()
         }
     }
