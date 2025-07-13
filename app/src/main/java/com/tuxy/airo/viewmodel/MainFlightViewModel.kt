@@ -43,12 +43,11 @@ class MainFlightViewModel() : ViewModel() {
      * The values are lists of [FlightData] objects that fall within that specific 2-day interval.
      * The map is sorted by its keys (interval start times).
      */
-    // Group by 3 days
+    // Group by 1 day
     var flights = flightData.groupBy { flight ->
         Math.round(
-            flight.departDate.toEpochSecond(ZoneOffset.UTC)
-                .toDouble() / 172800 // 172800 seconds = 2 days
-        ) * 172800
+            flight.departDate.toEpochSecond(ZoneOffset.UTC).toDouble() / 86400 // 86400 seconds = 1 day
+        ) * 86400 // Maybe for the future, make something to smart-combine flights close together.
     }.toSortedMap()
 
     /**
@@ -68,11 +67,13 @@ class MainFlightViewModel() : ViewModel() {
     fun loadData(flightDataDao: FlightDataDao) {
         GlobalScope.launch {
             flightData = flightDataDao.readAll()
-            // Group by 3 days (Note: actual logic is 2 days as per 172800 constant)
+            // Group by 1 day
             flights = flightData.groupBy { flight ->
-                Math.round(
-                    flight.departDate.toEpochSecond(ZoneOffset.UTC).toDouble() / 172800
-                ) * 172800
+                (
+                    Math.round(
+                        flight.departDate.toEpochSecond(ZoneOffset.UTC).toDouble() / 86400
+                    ) * 86400
+                )
             }.toSortedMap()
         }
     }

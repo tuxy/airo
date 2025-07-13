@@ -13,22 +13,20 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.compose.material3.Scaffold
 import androidx.compose.ui.platform.LocalContext
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
-import androidx.navigation.NavHostController
-import androidx.navigation.compose.rememberNavController
 import com.tuxy.airo.data.FlightData
 import com.tuxy.airo.data.FlightDataBase
 import com.tuxy.airo.data.FlightDataDao
 import com.tuxy.airo.ui.theme.AeroTheme
 import java.time.ZoneId
+import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
 
 class MainActivity : ComponentActivity() {
 
-    private lateinit var navController: NavHostController
+    // private lateinit var navController: NavHostController
     lateinit var data: FlightDataDao
 
 
@@ -54,10 +52,7 @@ class MainActivity : ComponentActivity() {
                     } // If the user denies notifications, we ignore forever
                 }
 
-                Scaffold {
-                    navController = rememberNavController()
-                    SetupNavGraph(navController, data)
-                }
+                MainScreen()
             }
         }
     }
@@ -66,7 +61,9 @@ class MainActivity : ComponentActivity() {
 fun setAlarm(context: Context, flightData: FlightData) {
 
     val depTime =
-        flightData.departDate.atZone(ZoneId.systemDefault()).toEpochSecond()
+        flightData.departDate
+            .atOffset(ZoneOffset.UTC)
+            .atZoneSameInstant(flightData.departTimeZone).toEpochSecond()
 
     if (depTime > System.currentTimeMillis() / 1000) {
         val alarmManager = context.getSystemService(ALARM_SERVICE) as AlarmManager
