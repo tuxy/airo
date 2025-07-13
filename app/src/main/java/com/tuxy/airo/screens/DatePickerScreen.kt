@@ -84,7 +84,8 @@ fun DatePickerView(
                                 viewModel.getDateAsString(timeMillis),
                                 // viewModel.toasts, // REMOVED
                                 settings,
-                                context
+                                context,
+                                false
                             )
 
                             if (result.isSuccess) {
@@ -100,7 +101,9 @@ fun DatePickerView(
                                         is FlightDataError.ParsingError -> viewModel.toasts[2].show()
                                         is FlightDataError.IncompleteDataError -> viewModel.toasts[2].show()
                                         is FlightDataError.FlightAlreadyExists -> viewModel.toasts[3].show()
-                                        is FlightDataError.UnknownError -> viewModel.toasts[1].show() // Using network error toast for unknown
+                                        is FlightDataError.UnknownError -> viewModel.toasts[4].show()
+                                        is FlightDataError.UpdateError -> viewModel.toasts[5].show()
+                                        // Realistically, this won't happen, but needed to complete case
                                     }
                                 } else {
                                     // Generic error for other unexpected exceptions

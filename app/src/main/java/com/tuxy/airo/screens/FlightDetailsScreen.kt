@@ -1,5 +1,6 @@
 package com.tuxy.airo.screens
 
+import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -42,8 +43,15 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
+import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -61,6 +69,7 @@ import com.tuxy.airo.cancelAlarm
 import com.tuxy.airo.composables.RouteBar
 import com.tuxy.airo.data.FlightData
 import com.tuxy.airo.data.FlightDataDao
+import com.tuxy.airo.data.getData
 import com.tuxy.airo.viewmodel.DetailsViewModel
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
@@ -76,15 +85,34 @@ import java.time.format.DateTimeFormatter
 import kotlin.math.absoluteValue
 import kotlin.time.toKotlinDuration
 
-@OptIn(DelicateCoroutinesApi::class)
+@OptIn(DelicateCoroutinesApi::class, ExperimentalMaterial3Api::class)
 @Composable
 fun FlightDetailsView(
     navController: NavController,
     id: String,
     flightDataDao: FlightDataDao,
 ) {
+    val context = LocalContext.current
+
     val viewModelFactory = DetailsViewModel.Factory(LocalContext.current, flightDataDao, id)
     val viewModel: DetailsViewModel = viewModel(factory = viewModelFactory)
+
+    val settings = ApiSettings(
+        viewModel.getValue("API_CHOICE"),
+        viewModel.getValue("ENDPOINT"),
+        viewModel.getValue("API_KEY"),
+        viewModel.getValue("API_SERVER"),
+    )
+
+    val refreshState = rememberPullToRefreshState()
+    var isRefreshing by remember { mutableStateOf(false) }
+    var isRefreshingFinished by remember { mutableStateOf(false) }
+
+    LaunchedEffect(isRefreshingFinished) {
+        if(isRefreshingFinished) {
+            navController.navigateUp()
+        }
+    }
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),
@@ -99,6 +127,7 @@ fun FlightDetailsView(
         Column(
             modifier = Modifier
                 .padding(innerPadding)
+
         ) {
             Column {
                 if (viewModel.openDialog.value) {
@@ -133,35 +162,74 @@ fun FlightDetailsView(
                         viewModel.progress.floatValue
                     }
                 )
-                Column(
-                    Modifier
-                        .verticalScroll(rememberScrollState())
-                        .fillMaxHeight()
-                ) {
-                    RouteBar(viewModel.flightData.value)
-                    FlightBoardCard(viewModel.flightData.value)
-                    Card(
-                        modifier = Modifier
-                            .padding(
-                                top = 17.dp,
-                                start = 17.dp,
-                                end = 17.dp
-                            ) // Not sure why, but map seems to pop out a bit more than the others
-                            .fillMaxWidth()
-                    ) {
-                        Box(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .background(Color.Gray)
-                                .aspectRatio(1280f / 847f)
-                        ) {
-                            MapUI(
-                                state = viewModel.mapState
+                PullToRefreshBox(
+                    isRefreshing = isRefreshing,
+                    state = refreshState,
+                    onRefresh = {
+                        isRefreshing = true
+                        GlobalScope.launch(Dispatchers.IO) {
+                            val collectedFlightData = getData(
+                                flightNumber = viewModel.flightData.value.callSign.replace(" ", ""), // Whitespace removal
+                                flightDataDao = flightDataDao,
+                                date = viewModel.flightData.value.departDate.format(DateTimeFormatter.ofPattern("yyyy-MM-dd")),
+                                settings = settings,
+                                context = context,
+                                update = true
                             )
+
+                            collectedFlightData.onSuccess { newFlight ->
+                                Log.d("FlightUpdate", newFlight.toString())
+                                flightDataDao.deleteFlight(viewModel.flightData.value)
+                                flightDataDao.addFlight(
+                                    newFlight.copy(ticketData = viewModel.flightData.value.ticketData) // Retain ticket information
+                                )
+                            }
+                            isRefreshing = false
+                            isRefreshingFinished = true
                         }
+
                     }
-                    FlightStatusCard(viewModel)
-                    FlightInformationInteract(navController, viewModel.flightData.value)
+                ) {
+                    Column(
+                        Modifier
+                            .verticalScroll(rememberScrollState())
+                            .fillMaxHeight()
+                    ) {
+                        RouteBar(viewModel.flightData.value)
+                        FlightBoardCard(viewModel.flightData.value)
+                        Card(
+                            modifier = Modifier
+                                .padding(
+                                    top = 17.dp,
+                                    start = 17.dp,
+                                    end = 17.dp
+                                ) // Not sure why, but map seems to pop out a bit more than the others
+                                .fillMaxWidth()
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .background(Color.Gray)
+                                    .aspectRatio(1280f / 847f)
+                            ) {
+                                MapUI(
+                                    state = viewModel.mapState
+                                )
+                            }
+                        }
+                        FlightStatusCard(viewModel)
+                        FlightInformationInteract(navController, viewModel.flightData.value)
+                        Text(
+                            modifier = Modifier.padding(16.dp),
+                            text = "Last updated: ${
+                                viewModel.flightData.value.lastUpdate.format(
+                                    DateTimeFormatter.ISO_DATE_TIME
+                                )
+                            }",
+                            color = Color.Gray
+                        )
+
+                    }
                 }
             }
         }

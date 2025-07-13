@@ -27,6 +27,7 @@ import java.time.ZoneOffset
 data class FlightData(
     @PrimaryKey(autoGenerate = true)
     val id: Int = 0,
+    val lastUpdate: LocalDateTime = LocalDateTime.now(),
     val callSign: String = "",
     val airline: String = "",
     val airlineIcao: String = "",
@@ -36,11 +37,11 @@ data class FlightData(
     val fromCountryCode: String = "",
     val toCountryCode: String = "",
     val fromName: String = "",
-    val departDate: LocalDateTime = LocalDateTime.of(2000, 1, 1, 1, 1, 1, 1),
-    val arriveDate: LocalDateTime = LocalDateTime.of(2000, 1, 1, 1, 1, 1, 1),
+    val departDate: LocalDateTime = LocalDateTime.now(),
+    val arriveDate: LocalDateTime = LocalDateTime.now(),
     val departTimeZone: ZoneId = ZoneOffset.UTC,
     val arriveTimeZone: ZoneId = ZoneOffset.UTC,
-    val duration: Duration = Duration.between(LocalDateTime.now(), LocalDateTime.now()),
+    val duration: Duration = Duration.ZERO,
     val toName: String = "",
     var ticketData: String = "",
     val gate: String = "",

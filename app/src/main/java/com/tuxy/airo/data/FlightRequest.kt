@@ -25,6 +25,7 @@ sealed class FlightDataError {
     object IncompleteDataError : FlightDataError() // Added for more specific error
     object FlightAlreadyExists : FlightDataError()
     object UnknownError : FlightDataError()
+    object UpdateError : FlightDataError()
 }
 
 // Custom exception for critical data missing during parsing
@@ -70,10 +71,11 @@ private fun buildFlightApiRequest(
 
 suspend fun getData(
     flightNumber: String,
-    data: FlightDataDao,
+    flightDataDao: FlightDataDao,
     date: String,
     settings: ApiSettings,
-    context: Context
+    context: Context,
+    update: Boolean
 ): Result<FlightData> { // Changed return type
     return withContext(Dispatchers.IO) {
         val request = buildFlightApiRequest(flightNumber, date, settings)
@@ -96,11 +98,25 @@ suspend fun getData(
                     val flightData =
                         parseData(jsonRoot) // parseData can throw MissingCriticalDataException
 
-                    if (data.queryExisting(flightData.departDate, flightData.callSign) > 0) {
-                        return@withContext Result.failure(FlightDataFetchException(FlightDataError.FlightAlreadyExists))
+
+                    if (!update) {
+                        if (flightDataDao.queryExisting(
+                                flightData.departDate,
+                                flightData.callSign
+                            ) > 0
+                        ) {
+                            return@withContext Result.failure(
+                                FlightDataFetchException(
+                                    FlightDataError.FlightAlreadyExists
+                                )
+                            )
+                        }
+                        flightDataDao.addFlight(flightData) // Not sure why this entire thing would both add a flight and then return it, but sure...
+                        setAlarm(context, flightData)
                     }
-                    data.addFlight(flightData)
-                    setAlarm(context, flightData)
+
+                    Log.d("FlightUpdate", flightData.toString())
+
                     return@withContext Result.success(flightData)
                 } catch (e: KlaxonException) {
                     e.printStackTrace()
@@ -237,6 +253,7 @@ fun parseData(jsonRoot: Root): FlightData {
 
     return FlightData(
         id = 0, // Auto-assigned id
+        lastUpdate = LocalDateTime.now(),
         callSign = callSign,
         airline = airlineName,
         airlineIcao = airlineIcao,

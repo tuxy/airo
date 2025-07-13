@@ -5,6 +5,8 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material3.Icon
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.Modifier
@@ -15,6 +17,7 @@ import androidx.lifecycle.ViewModelProvider
 import com.tuxy.airo.R
 import com.tuxy.airo.data.FlightData
 import com.tuxy.airo.data.FlightDataDao
+import com.tuxy.airo.data.UserPreferences
 import com.tuxy.airo.data.singleIntoMut
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.GlobalScope
@@ -37,8 +40,14 @@ import kotlin.math.floor
 import kotlin.math.pow
 import kotlin.math.sqrt
 
+/**
+ * Manages and provides data for the flight details screen, including map display and flight status information.
+ * The `@Suppress("UNCHECKED_CAST")` annotation is present due to the type casting in the [Factory] class.
+ */
 @Suppress("UNCHECKED_CAST")
 class DetailsViewModel(context: Context, flightDataDao: FlightDataDao, id: String) : ViewModel() {
+
+    private val dataStore = UserPreferences(context)
 
     var flightData = mutableStateOf(FlightData())
 
@@ -139,6 +148,17 @@ class DetailsViewModel(context: Context, flightDataDao: FlightDataDao, id: Strin
             return context.resources.getString(R.string.flying) // Still flying
         }
     }
+
+
+    @Composable // Definitely not a composable, but it works to get API Key
+    fun getValue(key: String): String {
+        return dataStore.getValueWithKey(key).collectAsState(initial = "").value
+    }
+
+    /**
+     * Provides map tiles from local application assets (`assets/tiles/...`) for offline map display.
+     * This allows the map to function without needing network connectivity to fetch tiles.
+     */
 
     private val tileStreamProvider =
         TileStreamProvider { row, col, zoomLvl -> // Local map tiles for full offline usage

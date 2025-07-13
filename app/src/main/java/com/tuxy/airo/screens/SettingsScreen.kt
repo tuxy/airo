@@ -117,7 +117,7 @@ fun SettingsView(
             SingleChoiceSegmentedButtonRow(
                 modifier = Modifier
                     .padding(innerPadding)
-                    .padding(start = 16.dp, end = 16.dp, top = 16.dp)
+                    .padding(horizontal = 16.dp)
                     .fillMaxWidth()
             ) {
                 options.forEachIndexed { index, label ->
