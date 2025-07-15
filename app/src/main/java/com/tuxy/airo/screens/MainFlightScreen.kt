@@ -66,7 +66,7 @@ import java.time.Duration
 import java.time.LocalDateTime
 import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
-import kotlin.math.abs
+import kotlin.math.absoluteValue
 
 @OptIn(ExperimentalFoundationApi::class, ExperimentalMaterial3Api::class)
 @Composable
@@ -241,14 +241,24 @@ fun FlightCard(
                 TicketInformationCard(flightData)
                 LinearProgressIndicator(
                     progress = {
-                        val now = Duration.between(LocalDateTime.now(), flightData.departDate)
-                            .toMillis()
+                        val now = LocalDateTime
+                            .now()
+                            .atZone(flightData.departTimeZone)
+                            .withZoneSameInstant(ZoneOffset.UTC)
 
-                        if (LocalDateTime.now() < flightData.departDate) {
+                        val departTime = flightData.departDate
+                            .atOffset(ZoneOffset.UTC)
+                            .withOffsetSameInstant(ZoneOffset.UTC)
+
+                        if (now < departTime.toZonedDateTime()) {
                             0.0F
                         } else {
+                            val timeFromStart = Duration.between(now, departTime).toMillis()
+
                             val duration = flightData.duration.toMillis()
-                            abs(now.toFloat() / duration.toFloat())
+
+                            val current = timeFromStart.toFloat() / duration.toFloat()
+                            current.absoluteValue
                         }
                     },
                     modifier = Modifier

@@ -141,20 +141,27 @@ fun FlightDetailsView(
                 LinearProgressIndicator(
                     modifier = Modifier.fillMaxWidth(),
                     progress = {
-                        GlobalScope.launch {
-                            val now = Duration.between(
-                                LocalDateTime.now(),
-                                viewModel.flightData.value.departDate
-                            ).toMillis()
+                        val now = LocalDateTime
+                            .now()
+                            .atZone(viewModel.flightData.value.departTimeZone)
+                            .withZoneSameInstant(ZoneOffset.UTC)
 
-                            if (LocalDateTime.now() < viewModel.flightData.value.departDate) {
+                        val departTime = viewModel.flightData.value.departDate
+                            .atOffset(ZoneOffset.UTC)
+                            .withOffsetSameInstant(ZoneOffset.UTC)
+
+                        GlobalScope.launch {
+
+                            val timeFromStart = Duration.between(now, departTime).toMillis()
+
+                            if (now < departTime.toZonedDateTime()) {
                                 viewModel.progress.floatValue = 0.0F
                                 return@launch
                             }
 
                             val duration = viewModel.flightData.value.duration.toMillis()
 
-                            val current = now.toFloat() / duration.toFloat()
+                            val current = timeFromStart.toFloat() / duration.toFloat()
 
                             viewModel.progress.floatValue = current.absoluteValue
                             delay(10000) // Improve performance
@@ -459,21 +466,27 @@ fun FlightStatusCard(viewModel: DetailsViewModel) {
             }
             LinearProgressIndicator(
                 progress = {
-                    GlobalScope.launch {
-                        delay(2000)
-                        val now = Duration.between(
-                            LocalDateTime.now(),
-                            viewModel.flightData.value.departDate
-                        ).toMillis()
+                    val now = LocalDateTime
+                        .now()
+                        .atZone(viewModel.flightData.value.departTimeZone)
+                        .withZoneSameInstant(ZoneOffset.UTC)
 
-                        if (LocalDateTime.now() < viewModel.flightData.value.departDate) {
+                    val departTime = viewModel.flightData.value.departDate
+                        .atOffset(ZoneOffset.UTC)
+                        .withOffsetSameInstant(ZoneOffset.UTC)
+
+                    GlobalScope.launch {
+
+                        val timeFromStart = Duration.between(now, departTime).toMillis()
+
+                        if (now < departTime.toZonedDateTime()) {
                             viewModel.progress.floatValue = 0.0F
                             return@launch
                         }
 
                         val duration = viewModel.flightData.value.duration.toMillis()
 
-                        val current = now.toFloat() / duration.toFloat()
+                        val current = timeFromStart.toFloat() / duration.toFloat()
 
                         viewModel.progress.floatValue = current.absoluteValue
                         delay(10000) // Improve performance
