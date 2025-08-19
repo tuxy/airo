@@ -117,10 +117,10 @@ fun MainFlightView(
                             DateHeader(
                                 LocalDateTime
                                     .ofEpochSecond(
-                                    header.toLong(),
-                                    0,
-                                    ZoneOffset.UTC
-                                )
+                                        header.toLong(),
+                                        0,
+                                        ZoneOffset.UTC
+                                    )
                             )
                         }
 

@@ -46,7 +46,8 @@ class MainFlightViewModel() : ViewModel() {
     // Group by 1 day
     var flights = flightData.groupBy { flight ->
         Math.round(
-            flight.departDate.toEpochSecond(ZoneOffset.UTC).toDouble() / 86400 // 86400 seconds = 1 day
+            flight.departDate.toEpochSecond(ZoneOffset.UTC)
+                .toDouble() / 86400 // 86400 seconds = 1 day
         ) * 86400 // Maybe for the future, make something to smart-combine flights close together.
     }.toSortedMap()
 
@@ -70,10 +71,10 @@ class MainFlightViewModel() : ViewModel() {
             // Group by 1 day
             flights = flightData.groupBy { flight ->
                 (
-                    Math.round(
-                        flight.departDate.toEpochSecond(ZoneOffset.UTC).toDouble() / 86400
-                    ) * 86400
-                )
+                        Math.round(
+                            flight.departDate.toEpochSecond(ZoneOffset.UTC).toDouble() / 86400
+                        ) * 86400
+                        )
             }.toSortedMap()
         }
     }

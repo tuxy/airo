@@ -10,6 +10,17 @@ private val klaxon = Klaxon()
 // For consistency with `Root.fromJson` in `FlightRequest.kt`, we'll keep the Root class for now.
 class Root(elements: Collection<RootElement>) : ArrayList<RootElement>(elements) {
     companion object {
+        /**
+         * Parses a JSON string representing a flight data array into a [Root] object.
+         *
+         * This function uses Klaxon to parse the JSON string. If the parsing is successful
+         * and results in a non-null list of [RootElement] objects, it constructs a [Root]
+         * object from this list. Otherwise, it returns null.
+         *
+         * @param json The JSON string to parse.
+         * @return A [Root] object if parsing is successful, or null if the JSON is malformed
+         *         or does not represent an array of [RootElement] objects.
+         */
         fun fromJson(json: String): Root? = klaxon.parseArray<RootElement>(json)?.let { Root(it) }
     }
 }

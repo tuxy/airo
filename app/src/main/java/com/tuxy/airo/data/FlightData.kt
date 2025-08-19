@@ -78,6 +78,13 @@ interface FlightDataDao {
     @Query("SELECT * FROM flight_table WHERE id=:id ")
     fun readSingle(id: String): FlightData
 
+    /**
+     * Checks if a flight with the given departure date and call sign already exists in the database.
+     *
+     * @param departDate The departure date and time of the flight.
+     * @param callSign The call sign of the flight.
+     * @return The number of flights matching the criteria (0 or 1, as duplicates are ignored on insert).
+     */
     @Query("SELECT COUNT() FROM flight_table WHERE departDate=:departDate AND callSign=:callSign")
     fun queryExisting(departDate: LocalDateTime, callSign: String): Int
 
@@ -106,6 +113,17 @@ abstract class FlightDataBase : RoomDatabase() {
     }
 }
 
+/**
+ * Reads a single flight data entry from the database and updates a MutableState.
+ *
+ * This function launches a coroutine in the GlobalScope to perform the database read operation
+ * asynchronously. The result is then used to update the provided `flightData` MutableState.
+ *
+ * @param flightData The MutableState to be updated with the fetched flight data.
+ * @param flightDataDao The DAO (Data Access Object) for accessing flight data in the database.
+ * @param id The ID of the flight data entry to retrieve.
+ * @return A Job representing the launched coroutine. This can be used to manage the coroutine's lifecycle (e.g., cancel it).
+ */
 @OptIn(DelicateCoroutinesApi::class)
 fun singleIntoMut(
     flightData: MutableState<FlightData>,

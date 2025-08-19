@@ -63,7 +63,8 @@ class DateViewModel(context: Context) : ViewModel() {
     }
 
     fun getDateAsString(time: Long): String {
-        val date = LocalDateTime.ofEpochSecond(time / 1000L, 0, ZoneOffset.UTC).atZone(ZoneOffset.systemDefault())
+        val date = LocalDateTime.ofEpochSecond(time / 1000L, 0, ZoneOffset.UTC)
+            .atZone(ZoneOffset.systemDefault())
         return date.format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))
     }
 

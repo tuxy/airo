@@ -29,7 +29,6 @@ class MainActivity : ComponentActivity() {
     // private lateinit var navController: NavHostController
     lateinit var data: FlightDataDao
 
-
     @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)

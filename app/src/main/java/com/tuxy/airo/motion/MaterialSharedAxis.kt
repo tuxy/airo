@@ -25,6 +25,13 @@ private val Int.ForIncoming: Int
 * Transitions taken from Read you's repository
 * */
 
+/**
+ * [materialSharedAxisXIn] allows to switch between two layouts that have a navigational relationship.
+ * For example, a layout could navigate to a detail page and back.
+ *
+ * @param initialOffsetX the starting offset X of the slide-in animation.
+ * @param durationMillis the duration of the animation.
+ */
 fun materialSharedAxisXIn(
     initialOffsetX: (fullWidth: Int) -> Int,
     durationMillis: Int = MotionConstants.DEFAULT_MOTION_DURATION,
@@ -42,6 +49,14 @@ fun materialSharedAxisXIn(
     )
 )
 
+/**
+ * [materialSharedAxisXOut] allows an [ExitTransition] to be created using a shared X-axis.
+ *
+ * @param targetOffsetX defines the end x position of the content. This should typically be a
+ * negative value for items that are moving towards the start/left, and positive for items that
+ * are moving towards the end/right.
+ * @param durationMillis the duration of the transition.
+ */
 fun materialSharedAxisXOut(
     targetOffsetX: (fullWidth: Int) -> Int,
     durationMillis: Int = MotionConstants.DEFAULT_MOTION_DURATION,
@@ -58,6 +73,11 @@ fun materialSharedAxisXOut(
         easing = FastOutLinearInEasing
     )
 )
+
+
+/**
+ * Unused functions... Could be useful, but currently the app functions smoothly without.
+ */
 
 fun materialSharedAxisYIn(
     initialOffsetY: (fullWidth: Int) -> Int,
