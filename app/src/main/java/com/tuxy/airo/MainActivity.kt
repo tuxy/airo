@@ -31,7 +31,6 @@ val Context.newDataStore: DataStore<Preferences> by preferencesDataStore(name = 
 
 class MainActivity : ComponentActivity() {
 
-    // private lateinit var navController: NavHostController
     lateinit var data: FlightDataDao
 
     @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
@@ -63,7 +62,6 @@ class MainActivity : ComponentActivity() {
 }
 
 fun setAlarm(context: Context, flightData: FlightData) {
-
     val depTime =
         flightData.departDate
             .atOffset(ZoneOffset.UTC)

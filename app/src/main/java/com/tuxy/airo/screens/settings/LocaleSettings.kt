@@ -27,17 +27,17 @@ fun LocaleSettingsView(navController: NavController) {
             PrefsScreen(LocalContext.current.newDataStore) {
                 prefsItem {
                     SwitchPref(
-                        key = "24-time",
+                        key = "24_time",
                         title = "Use 24-Hour time",
                         defaultChecked = false,
                     )
                     SwitchPref(
-                        key = "temperature-f",
+                        key = "temperature_f",
                         title = "Use Celsius instead of Fahrenheit",
                         defaultChecked = false,
                     )
                     SwitchPref(
-                        key = "american-date",
+                        key = "american_date",
                         title = "Use American date time",
                         defaultChecked = false,
                     )

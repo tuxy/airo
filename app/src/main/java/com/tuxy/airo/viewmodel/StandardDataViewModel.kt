@@ -1,17 +1,16 @@
 package com.tuxy.airo.viewmodel
 
 import android.content.Context
-import android.net.Uri
 import android.widget.Toast
 import androidx.browser.customtabs.CustomTabsIntent
 import androidx.compose.runtime.mutableStateOf
+import androidx.core.net.toUri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import com.tuxy.airo.R
 import com.tuxy.airo.data.FlightData
 import com.tuxy.airo.data.FlightDataDao
 import com.tuxy.airo.data.singleIntoMut
-import androidx.core.net.toUri
 
 @Suppress("UNCHECKED_CAST")
 class StandardDataViewModel(flightDataDao: FlightDataDao, id: String) : ViewModel() {

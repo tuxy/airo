@@ -1,15 +1,10 @@
 package com.tuxy.airo.screens.settings
 
-import android.webkit.URLUtil
-import android.widget.Toast
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Check
-import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.Switch
@@ -20,79 +15,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
-import com.tuxy.airo.R
-import com.tuxy.airo.viewmodel.ApiSettingsViewModel
-
-/**
- * A Composable function that displays an ExtendedFloatingActionButton (FAB)
- * for applying API settings.
- *
- * This FAB allows the user to save the selected API configuration.
- * It performs URL validation for custom API server and endpoint options.
- * If validation fails, a toast message is shown, and navigation is prevented.
- * On successful validation or for default options, the settings are saved
- * using the provided [viewModel], and the user is navigated back.
- *
- * @param selectedIndex The index of the currently selected API option.
- *                      Can be null if no specific option is selected yet.
- * @param viewModel The [ApiSettingsViewModel] used to access and save API settings.
- * @param toast A [Toast] instance used to display error messages.
- * @param navController The [NavController] used for navigating back after applying settings
- *                      or when validation fails.
- */
-@Composable
-fun ApplyFAB(
-    selectedIndex: Int?,
-    viewModel: ApiSettingsViewModel,
-    toast: Toast,
-    navController: NavController
-) {
-    ExtendedFloatingActionButton(
-        modifier = Modifier.testTag("apply_settings"),
-        onClick = {
-            if (selectedIndex != null) {
-                when (selectedIndex) { // Parse and check for URL
-                    // No checks for 0 (default airoapi.tuxy.stream).
-                    1 -> {
-                        if (!URLUtil.isValidUrl(viewModel.currentApiServer)) {
-                            navController.navigateUp()
-                            toast.show()
-                            return@ExtendedFloatingActionButton
-                        }
-                    }
-
-                    2 -> { // Checks whether the URL is valid. Cannot check API key for now.
-                        if (!URLUtil.isValidUrl(viewModel.currentEndpoint)) {
-                            navController.navigateUp()
-                            toast.show()
-                            return@ExtendedFloatingActionButton
-                        }
-                    }
-                }
-
-                viewModel.saveKey("API_CHOICE", selectedIndex.toString())
-            }
-
-            viewModel.saveKey("API_KEY", viewModel.currentApiKey)
-            viewModel.saveKey("ENDPOINT", viewModel.currentEndpoint)
-            viewModel.saveKey("API_SERVER", viewModel.currentApiServer)
-
-            navController.navigateUp()
-        },
-        icon = {
-            Icon(
-                imageVector = Icons.Filled.Check,
-                contentDescription = stringResource(R.string.apply_settings)
-            )
-        },
-        text = { Text(stringResource(R.string.apply_settings)) },
-    )
-}
 
 
 /**

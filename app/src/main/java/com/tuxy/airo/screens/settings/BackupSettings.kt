@@ -18,8 +18,6 @@ import com.tuxy.airo.composables.LargeAppBar
 @OptIn(ExperimentalComposeUiApi::class)
 @Composable
 fun BackupSettingsView(navController: NavController) {
-    println("")
-
     Scaffold(
         modifier = Modifier.fillMaxSize(),
         topBar = { LargeAppBar("Backup Settings", navController) },
