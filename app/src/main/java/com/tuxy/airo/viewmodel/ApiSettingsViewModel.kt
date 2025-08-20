@@ -14,7 +14,7 @@ import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 
 @Suppress("UNCHECKED_CAST")
-class SettingsViewModel(context: Context) : ViewModel() {
+class ApiSettingsViewModel(context: Context) : ViewModel() {
     private val dataStore = UserPreferences(context)
 
     // These 2 will be used if the user opts to directly use aerodatabox's api
@@ -41,7 +41,7 @@ class SettingsViewModel(context: Context) : ViewModel() {
         private val context: Context,
     ) : ViewModelProvider.NewInstanceFactory() {
         override fun <T : ViewModel> create(modelClass: Class<T>): T {
-            return SettingsViewModel(context) as T
+            return ApiSettingsViewModel(context) as T
         }
     }
 }

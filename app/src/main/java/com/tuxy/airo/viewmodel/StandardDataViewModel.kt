@@ -11,6 +11,7 @@ import com.tuxy.airo.R
 import com.tuxy.airo.data.FlightData
 import com.tuxy.airo.data.FlightDataDao
 import com.tuxy.airo.data.singleIntoMut
+import androidx.core.net.toUri
 
 @Suppress("UNCHECKED_CAST")
 class StandardDataViewModel(flightDataDao: FlightDataDao, id: String) : ViewModel() {
@@ -30,7 +31,7 @@ class StandardDataViewModel(flightDataDao: FlightDataDao, id: String) : ViewMode
                 .setShowTitle(true) //
                 .setUrlBarHidingEnabled(true)
                 .build()
-            intent.launchUrl(context, Uri.parse(url))
+            intent.launchUrl(context, url.toUri())
         } catch (e: Exception) {
             e.printStackTrace()
             Toast.makeText(

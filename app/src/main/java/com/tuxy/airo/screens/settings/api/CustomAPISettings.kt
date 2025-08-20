@@ -1,4 +1,4 @@
-package com.tuxy.airo.screens.settings
+package com.tuxy.airo.screens.settings.api
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -17,12 +17,12 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.ireward.htmlcompose.HtmlText
 import com.tuxy.airo.R
-import com.tuxy.airo.viewmodel.SettingsViewModel
+import com.tuxy.airo.viewmodel.ApiSettingsViewModel
 
 @Composable
 fun CustomApiView(
     navController: NavController,
-    viewModel: SettingsViewModel,
+    viewModel: ApiSettingsViewModel,
 ) {
     Column(
         modifier = Modifier.padding(horizontal = 16.dp)

@@ -14,7 +14,6 @@ import com.tuxy.airo.screens.MainFlightView
 import com.tuxy.airo.screens.NewFlightView
 import com.tuxy.airo.screens.SettingsView
 import com.tuxy.airo.screens.TicketInformationView
-import com.tuxy.airo.screens.settings.AboutSettingsView
 import com.tuxy.airo.screens.settings.ApiSettingsView
 import com.tuxy.airo.screens.settings.BackupSettingsView
 import com.tuxy.airo.screens.settings.LocaleSettingsView
@@ -94,9 +93,6 @@ fun SetupNavGraph(
         }
         composable(route = Screen.BackupSettingsScreen.route) {
             BackupSettingsView(navController = navController)
-        }
-        composable(route = Screen.AboutSettingsScreen.route) {
-            AboutSettingsView(navController = navController)
         }
     }
 }

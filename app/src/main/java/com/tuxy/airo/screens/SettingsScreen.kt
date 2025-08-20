@@ -1,5 +1,10 @@
 package com.tuxy.airo.screens
 
+import android.content.Context
+import android.net.Uri
+import android.widget.Toast
+import androidx.browser.customtabs.CustomTabsIntent
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -11,21 +16,30 @@ import androidx.compose.material.icons.outlined.LocationOn
 import androidx.compose.material.icons.outlined.Notifications
 import androidx.compose.material.icons.outlined.Save
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.ListItem
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
+import com.tuxy.airo.R
 import com.tuxy.airo.Screen
 import com.tuxy.airo.composables.LargeAppBar
 import com.tuxy.airo.screens.settings.SettingSub
+import androidx.core.net.toUri
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsView(
     navController: NavController
 ) {
+    val context = LocalContext.current
+
     Scaffold(
         modifier = Modifier.fillMaxSize(),
         topBar = { LargeAppBar("Settings", navController) },
@@ -61,20 +75,37 @@ fun SettingsView(
                 Screen.BackupSettingsScreen.route,
                 navController
             )
-            SettingSub(
-                "About",
-                Icons.Outlined.Info,
-                "App related information",
-                Screen.AboutSettingsScreen.route,
-                navController
+            ListItem(
+                modifier = Modifier.clickable(onClick = {
+                    openWebpage(context, "https://github.com/tuxy/airo")
+                }),
+                headlineContent = { Text("About") },
+                supportingContent = { Text("Source code") },
+                leadingContent = { Icon(imageVector = Icons.Outlined.Info, contentDescription = stringResource(R.string.about)) }
             )
         }
+    }
+}
+
+fun openWebpage(context: Context, url: String) {
+    try {
+        val intent = CustomTabsIntent.Builder()
+            .setShowTitle(true) //
+            .setUrlBarHidingEnabled(true)
+            .build()
+        intent.launchUrl(context, url.toUri())
+    } catch (e: Exception) {
+        e.printStackTrace()
+        Toast.makeText(
+            context,
+            context.resources.getString(R.string.not_avail),
+            Toast.LENGTH_SHORT
+        ).show()
     }
 }
 
 @Composable
 @Preview(showBackground = true)
 fun SettingsPreview() {
-    // SettingsView(rememberNavController())
-    SettingSub("Test", Icons.Filled.NetworkWifi, "Test description", "", rememberNavController())
+    SettingsView(rememberNavController())
 }

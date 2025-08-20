@@ -1,4 +1,4 @@
-package com.tuxy.airo.screens.settings
+package com.tuxy.airo.screens.settings.api
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -12,12 +12,12 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.tuxy.airo.R
-import com.tuxy.airo.viewmodel.SettingsViewModel
+import com.tuxy.airo.viewmodel.ApiSettingsViewModel
 
 @Composable
 fun ApiServerView(
     navController: NavController,
-    viewModel: SettingsViewModel
+    viewModel: ApiSettingsViewModel
 ) {
     Column {
         OutlinedTextField(

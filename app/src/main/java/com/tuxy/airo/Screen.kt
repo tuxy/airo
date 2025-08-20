@@ -14,5 +14,4 @@ sealed class Screen(val route: String) {
     data object NotificationsSettingsScreen : Screen("notifications_settings_screen")
     data object LocaleSettingsScreen : Screen("locale_settings_screen")
     data object BackupSettingsScreen : Screen("backup_settings_screen")
-    data object AboutSettingsScreen : Screen("about_settings_screen")
 }
