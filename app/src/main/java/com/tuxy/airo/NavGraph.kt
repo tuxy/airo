@@ -14,6 +14,10 @@ import com.tuxy.airo.screens.MainFlightView
 import com.tuxy.airo.screens.NewFlightView
 import com.tuxy.airo.screens.SettingsView
 import com.tuxy.airo.screens.TicketInformationView
+import com.tuxy.airo.screens.settings.ApiSettingsView
+import com.tuxy.airo.screens.settings.BackupSettingsView
+import com.tuxy.airo.screens.settings.LocaleSettingsView
+import com.tuxy.airo.screens.settings.NotificationsSettingsView
 
 private const val INITIAL_OFFSET_FACTOR = 0.10f
 
@@ -76,5 +80,20 @@ fun SetupNavGraph(
                 flightDataDao,
             )
         }
+
+        // Settings Sub-Screens
+        composable(route = Screen.ApiSettingsScreen.route) {
+            ApiSettingsView(navController = navController)
+        }
+        composable(route = Screen.NotificationsSettingsScreen.route) {
+            NotificationsSettingsView(navController = navController)
+        }
+        composable(route = Screen.LocaleSettingsScreen.route) {
+            LocaleSettingsView(navController = navController)
+        }
+        composable(route = Screen.BackupSettingsScreen.route) {
+            BackupSettingsView(navController = navController)
+        }
     }
 }
+

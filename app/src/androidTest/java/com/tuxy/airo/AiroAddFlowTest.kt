@@ -49,7 +49,7 @@ class AiroAddFlowTest {
         val textField = rule.onNodeWithText(context.getString(R.string.flight_number))
         textField.performTextInput(flightNumber)
         textField.performKeyInput {
-             pressKey(Key.Enter)
+            pressKey(Key.Enter)
         }
 
         // DatePickerScreen.kt

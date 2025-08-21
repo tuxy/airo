@@ -71,4 +71,21 @@
     <string name="default_server_extra">Server sẽ mặc định tới https://airoapi.tuxy.stream. Chế độ này không được khuyến khích và chỉ nên dùng khi đang thử.</string>
     <string name="adb_text">Xem <a href="https://aerodatabox.com/">https://aerodatabox.com</a> cho thêm thông tin</string>
     <string name="update_error">Lỗi đã xảy ra khi cập nhật</string>
+    <string name="about">Giới Thiệu</string>
+    <string name="source_and_license">Mã nguồn &amp; thảo thuận</string>
+    <string name="backup_and_restore">Sao lưu &amp; Khôi phục</string>
+    <string name="backup_and_restore_desc">Quản lý vị trí sao lưu &amp; dữ liệu ứng dụng</string>
+    <string name="locale_settings">Cài đặt ngôn ngữ</string>
+    <string name="locale_settings_desc">Định dạng ngày giờ &amp; nhiệt độ</string>
+    <string name="notifications">Thông báo</string>
+    <string name="notifications_desc">Cài đặt thông báo</string>
+    <string name="api_settings">Cài đặt API</string>
+    <string name="api_settings_desc">Chọn API</string>
+    <string name="backup_now">Sao lưu</string>
+    <string name="restore_now">Khôi phục</string>
+    <string name="time_setting">Dùng thời gian 24-giờ</string>
+    <string name="temperature_setting">Dùng Fahrenheit (WIP)</string>
+    <string name="american_date">Dùng thời gian Mỹ (WIP)</string>
+    <string name="enable_flight_alerts">Thông báo chuyến bay (WIP)</string>
+    <string name="increase_urgency">Thông báo cấp tốc (WIP)</string>
 </resources>

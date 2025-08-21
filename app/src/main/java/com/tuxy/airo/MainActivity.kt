@@ -16,6 +16,9 @@ import androidx.activity.enableEdgeToEdge
 import androidx.compose.ui.platform.LocalContext
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import androidx.datastore.core.DataStore
+import androidx.datastore.preferences.core.Preferences
+import androidx.datastore.preferences.preferencesDataStore
 import com.tuxy.airo.data.FlightData
 import com.tuxy.airo.data.FlightDataBase
 import com.tuxy.airo.data.FlightDataDao
@@ -24,11 +27,11 @@ import java.time.ZoneId
 import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
 
+val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "settings")
+
 class MainActivity : ComponentActivity() {
 
-    // private lateinit var navController: NavHostController
     lateinit var data: FlightDataDao
-
 
     @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -59,7 +62,6 @@ class MainActivity : ComponentActivity() {
 }
 
 fun setAlarm(context: Context, flightData: FlightData) {
-
     val depTime =
         flightData.departDate
             .atOffset(ZoneOffset.UTC)

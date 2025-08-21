@@ -5,8 +5,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material3.Icon
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.Modifier
@@ -17,7 +15,7 @@ import androidx.lifecycle.ViewModelProvider
 import com.tuxy.airo.R
 import com.tuxy.airo.data.FlightData
 import com.tuxy.airo.data.FlightDataDao
-import com.tuxy.airo.data.UserPreferences
+import com.tuxy.airo.data.PreferencesInterface
 import com.tuxy.airo.data.singleIntoMut
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.GlobalScope
@@ -46,11 +44,10 @@ import kotlin.math.sqrt
  */
 @Suppress("UNCHECKED_CAST")
 class DetailsViewModel(context: Context, flightDataDao: FlightDataDao, id: String) : ViewModel() {
-
-    private val dataStore = UserPreferences(context)
+    // Initialise preferences interface
+    val preferencesInterface = PreferencesInterface(context)
 
     var flightData = mutableStateOf(FlightData())
-
     var openDialog = mutableStateOf(false)
     var progress = mutableFloatStateOf(0.0F)
         private set
@@ -62,6 +59,7 @@ class DetailsViewModel(context: Context, flightDataDao: FlightDataDao, id: Strin
             id
         ) // On initialisation, pass db data into flightData
     }
+
 
     fun getDuration(context: Context): String {
         val duration = Duration.between(
@@ -149,12 +147,6 @@ class DetailsViewModel(context: Context, flightDataDao: FlightDataDao, id: Strin
         }
     }
 
-
-    @Composable // Definitely not a composable, but it works to get API Key
-    fun getValue(key: String): String {
-        return dataStore.getValueWithKey(key).collectAsState(initial = "").value
-    }
-
     /**
      * Provides map tiles from local application assets (`assets/tiles/...`) for offline map display.
      * This allows the map to function without needing network connectivity to fetch tiles.
@@ -209,14 +201,14 @@ class DetailsViewModel(context: Context, flightDataDao: FlightDataDao, id: Strin
             }
             // Scroll map to show both origin and destination
             scrollTo(
-                avr(flightData.value.mapOriginX, flightData.value.mapDestinationX), // Center X
-                avr(flightData.value.mapOriginY, flightData.value.mapDestinationY), // Center Y
-                calculateScale( // Calculated scale to fit points
+                x = avr(flightData.value.mapOriginX, flightData.value.mapDestinationX), // Center X
+                y = avr(flightData.value.mapOriginY, flightData.value.mapDestinationY), // Center Y
+                destScale = calculateScale( // Calculated scale to fit points
                     flightData.value.mapOriginX,
                     flightData.value.mapOriginY,
                     flightData.value.mapDestinationX,
                     flightData.value.mapDestinationY
-                )
+                ).toDouble()
             )
         }
     }

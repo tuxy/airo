@@ -72,4 +72,22 @@
     <string name="default_server_extra">Server will default to https://airoapi.tuxy.stream/flights. This is only recommended for testing due to the limited API calls available.</string>
     <string name="adb_text">Refer to <a href='https://aerodatabox.com/'>https://aerodatabox.com/</a> for more information</string>
     <string name="update_error">Error occurred when updating</string>
+    <string name="about">About</string>
+    <string name="source_code" translatable="false">https://github.com/tuxy/airo</string>
+    <string name="source_and_license">Source code &amp; Licenses</string>
+    <string name="backup_and_restore">Backup &amp; Restore</string>
+    <string name="backup_and_restore_desc">Manage backup location &amp; app data</string>
+    <string name="locale_settings">Locale settings</string>
+    <string name="locale_settings_desc">Date, time &amp; temperature formats</string>
+    <string name="notifications">Notifications</string>
+    <string name="notifications_desc">Set alert &amp; notification offsets</string>
+    <string name="api_settings">API Settings</string>
+    <string name="api_settings_desc">Select API to use</string>
+    <string name="backup_now">Backup now</string>
+    <string name="restore_now">Restore now</string>
+    <string name="time_setting">Use 24-hour time</string>
+    <string name="temperature_setting">Use Fahrenheit instead (WIP)</string>
+    <string name="american_date">Use American date (WIP)</string>
+    <string name="enable_flight_alerts">Enable flight alerts (WIP)</string>
+    <string name="increase_urgency">Increase urgency (WIP)</string>
 </resources>

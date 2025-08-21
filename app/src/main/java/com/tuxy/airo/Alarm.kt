@@ -27,6 +27,17 @@ class Alarm : BroadcastReceiver() {
     }
 }
 
+/**
+ * Shows a notification to the user.
+ *
+ * This function creates a notification channel (if it doesn't already exist)
+ * and then builds and displays a notification with the provided flight information
+ * and content.
+ *
+ * @param context The context from which to access system services.
+ * @param notification The [Notification] data object containing the flight and content
+ *                     for the notification.
+ */
 private fun showNotification(context: Context, notification: Notification) {
     val manager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
     val channelId = "flight_alert_channel"

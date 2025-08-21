@@ -33,12 +33,34 @@ class MissingCriticalDataException(message: String) : Exception(message)
 
 private val sharedOkHttpClient = OkHttpClient()
 
+/**
+ * Builds an OkHttp Request object for fetching flight data from the API.
+ *
+ * This function constructs the API request URL based on the provided flight number, date, and API settings.
+ * It supports different API endpoint configurations:
+ * - "0": Uses the default Airo API endpoint.
+ * - "1": Uses a custom server URL provided in `settings.server` and requires an API key in `settings.key`.
+ * - "2": Uses a custom endpoint URL provided in `settings.endpoint`.
+ *
+ * It also adds a query parameter `withAircraftImage=True` to request aircraft images and sets the
+ * "Accept" header to "application/json". If a custom server is used (choice "1"), it includes
+ * the API key in the "x-magicapi-key" header.
+ *
+ * @param flightNumber The flight number (e.g., "VJ 84").
+ * @param date The date of the flight in "YYYY-MM-DD" format.
+ * @param settings An [ApiSettings] object containing the API endpoint configuration and key.
+ * @return An OkHttp [Request] object if the configuration is valid and all required information is present,
+ *         otherwise returns `null`. Returns `null` if:
+ *         - The `settings.choice` is invalid or results in an empty URL.
+ *         - `settings.choice` is "1" (custom server) but `settings.key` is null or empty.
+ */
 private fun buildFlightApiRequest(
     flightNumber: String,
     date: String,
     settings: ApiSettings
 ): Request? {
     val urlChoice = when (settings.choice) {
+        "" -> "https://airoapi.tuxy.stream/flights" // When datastore hasn't initialised (user hasn't picked)
         "0" -> "https://airoapi.tuxy.stream/flights"
         "1" -> settings.server
         "2" -> settings.endpoint
@@ -69,6 +91,38 @@ private fun buildFlightApiRequest(
         .build()
 }
 
+/**
+ * Fetches flight data from an API, parses it, and optionally saves it to a local database.
+ *
+ * This function handles the entire process of retrieving flight information:
+ * 1. Constructs an API request using [buildFlightApiRequest].
+ * 2. Executes the network call using a shared OkHttpClient.
+ * 3. Parses the JSON response.
+ * 4. Transforms the parsed JSON into a [FlightData] object using [parseData].
+ * 5. If `update` is false:
+ *    - Checks if the flight already exists in the local database using [FlightDataDao.queryExisting].
+ *    - If it doesn't exist, adds the new [FlightData] to the database using [FlightDataDao.addFlight].
+ *    - Sets an alarm for the flight using [setAlarm].
+ * 6. Returns a [Result] object containing either the successfully fetched/processed [FlightData]
+ *    or a [FlightDataFetchException] wrapping a [FlightDataError] if any step fails.
+ *
+ * The function operates on the [Dispatchers.IO] coroutine dispatcher for network and database operations.
+ *
+ * @param flightNumber The flight number (e.g., "VJ 84") to fetch data for.
+ * @param flightDataDao The Data Access Object for interacting with the flight data database.
+ * @param date The date of the flight in "YYYY-MM-DD" format.
+ * @param settings An [ApiSettings] object containing API configuration (endpoint, key).
+ * @param context The Android [Context] used for operations like setting alarms.
+ * @param update A boolean flag indicating whether this is an update to existing flight data.
+ *               If `true`, the flight existence check and database insertion are skipped.
+ * @return A [Result<FlightData>] which is:
+ *         - [Result.Success] containing the [FlightData] on successful fetch and parse.
+ *         - [Result.Failure] containing a [FlightDataFetchException] with a specific [FlightDataError]
+ *           in case of any failure (e.g., API key missing, network error, parsing error,
+ *           incomplete data, flight already exists, or unknown error).
+ * @throws FlightDataFetchException for various errors encountered during the process.
+ * @see buildFlightApiRequest
+ */
 suspend fun getData(
     flightNumber: String,
     flightDataDao: FlightDataDao,

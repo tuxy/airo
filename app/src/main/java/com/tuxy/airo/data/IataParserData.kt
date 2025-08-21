@@ -16,6 +16,23 @@ data class IataParserData(
     val flightClass: String = "",
     val seat: String = "",
 ) {
+    /**
+     * Parses the IATA barcode string and extracts relevant flight information.
+     *
+     * This function takes a raw barcode string, typically scanned from a boarding pass,
+     * and attempts to parse it according to the IATA standard format.
+     * It extracts information such as passenger name, e-ticket indicator, booking reference,
+     * origin and destination IATA codes, carrier code, flight number, date, flight class, and seat number.
+     *
+     * If the parsing is successful, it returns an [IataParserData] object populated with the extracted data.
+     * If any error occurs during parsing (e.g., the barcode string is malformed or does not adhere to the expected format),
+     * it catches the exception and returns a default [IataParserData] object with empty or default values.
+     *
+     * @param barcode The raw barcode string to be parsed.
+     * @param context The Android [Context] used to access resources, such as localized strings for flight classes.
+     * @return An [IataParserData] object containing the parsed flight information.
+     *         Returns a default [IataParserData] object if parsing fails.
+     */
     fun parseData(barcode: String, context: Context): IataParserData {
         try {
             return IataParserData(
@@ -30,7 +47,7 @@ data class IataParserData(
                 flightClass = getClass(barcode.substring(47, 48).toCharArray()[0], context),
                 seat = barcode.substring(48, 52),
             )
-        } catch (e: Exception) {
+        } catch (_: Exception) {
             return IataParserData()
         }
     }

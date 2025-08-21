@@ -59,12 +59,13 @@ fun DatePickerView(
 
     val timeMillis = viewModel.maybe(datePickerState.selectedDateMillis)
 
+
     // Server settings
     val settings = ApiSettings(
-        viewModel.getValue("API_CHOICE"),
-        viewModel.getValue("ENDPOINT"),
-        viewModel.getValue("API_KEY"),
-        viewModel.getValue("API_SERVER"),
+        viewModel.preferencesInterface.getValue("selected_api"),
+        viewModel.preferencesInterface.getValue("endpoint_adb"),
+        viewModel.preferencesInterface.getValue("endpoint_adb_key"),
+        viewModel.preferencesInterface.getValue("endpoint_airoapi"),
     )
 
     Scaffold(

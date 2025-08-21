@@ -98,10 +98,10 @@ fun FlightDetailsView(
     val viewModel: DetailsViewModel = viewModel(factory = viewModelFactory)
 
     val settings = ApiSettings(
-        viewModel.getValue("API_CHOICE"),
-        viewModel.getValue("ENDPOINT"),
-        viewModel.getValue("API_KEY"),
-        viewModel.getValue("API_SERVER"),
+        viewModel.preferencesInterface.getValue("selected_api"),
+        viewModel.preferencesInterface.getValue("endpoint_adb"),
+        viewModel.preferencesInterface.getValue("endpoint_adb_key"),
+        viewModel.preferencesInterface.getValue("endpoint_airoapi"),
     )
 
     val refreshState = rememberPullToRefreshState()
@@ -109,7 +109,7 @@ fun FlightDetailsView(
     var isRefreshingFinished by remember { mutableStateOf(false) }
 
     LaunchedEffect(isRefreshingFinished) {
-        if(isRefreshingFinished) {
+        if (isRefreshingFinished) {
             navController.navigateUp()
         }
     }
@@ -176,9 +176,14 @@ fun FlightDetailsView(
                         isRefreshing = true
                         GlobalScope.launch(Dispatchers.IO) {
                             val collectedFlightData = getData(
-                                flightNumber = viewModel.flightData.value.callSign.replace(" ", ""), // Whitespace removal
+                                flightNumber = viewModel.flightData.value.callSign.replace(
+                                    " ",
+                                    ""
+                                ), // Whitespace removal
                                 flightDataDao = flightDataDao,
-                                date = viewModel.flightData.value.departDate.format(DateTimeFormatter.ofPattern("yyyy-MM-dd")),
+                                date = viewModel.flightData.value.departDate.format(
+                                    DateTimeFormatter.ofPattern("yyyy-MM-dd")
+                                ),
                                 settings = settings,
                                 context = context,
                                 update = true
