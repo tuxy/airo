@@ -201,14 +201,14 @@ class DetailsViewModel(context: Context, flightDataDao: FlightDataDao, id: Strin
             }
             // Scroll map to show both origin and destination
             scrollTo(
-                avr(flightData.value.mapOriginX, flightData.value.mapDestinationX), // Center X
-                avr(flightData.value.mapOriginY, flightData.value.mapDestinationY), // Center Y
-                calculateScale( // Calculated scale to fit points
+                x = avr(flightData.value.mapOriginX, flightData.value.mapDestinationX), // Center X
+                y = avr(flightData.value.mapOriginY, flightData.value.mapDestinationY), // Center Y
+                destScale = calculateScale( // Calculated scale to fit points
                     flightData.value.mapOriginX,
                     flightData.value.mapOriginY,
                     flightData.value.mapDestinationX,
                     flightData.value.mapDestinationY
-                )
+                ).toDouble()
             )
         }
     }
