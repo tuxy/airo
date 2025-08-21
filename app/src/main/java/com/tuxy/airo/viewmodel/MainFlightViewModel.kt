@@ -11,6 +11,7 @@ import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import java.time.ZoneOffset
 import java.util.SortedMap
+import kotlin.math.roundToLong
 
 /**
  * ViewModel responsible for managing and providing flight data for the main flight display screen.
@@ -45,10 +46,9 @@ class MainFlightViewModel() : ViewModel() {
      */
     // Group by 1 day
     var flights = flightData.groupBy { flight ->
-        Math.round(
-            flight.departDate.toEpochSecond(ZoneOffset.UTC)
-                .toDouble() / 86400 // 86400 seconds = 1 day
-        ) * 86400 // Maybe for the future, make something to smart-combine flights close together.
+        // 86400 seconds = 1 day
+                (flight.departDate.toEpochSecond(ZoneOffset.UTC)
+                    .toDouble() / 86400).roundToLong() * 86400 // Maybe for the future, make something to smart-combine flights close together.
     }.toSortedMap()
 
     /**
@@ -71,9 +71,8 @@ class MainFlightViewModel() : ViewModel() {
             // Group by 1 day
             flights = flightData.groupBy { flight ->
                 (
-                        Math.round(
-                            flight.departDate.toEpochSecond(ZoneOffset.UTC).toDouble() / 86400
-                        ) * 86400
+                        (flight.departDate.toEpochSecond(ZoneOffset.UTC)
+                            .toDouble() / 86400).roundToLong() * 86400
                         )
             }.toSortedMap()
         }

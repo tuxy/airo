@@ -53,7 +53,7 @@ data class Image(
     val title: String = "N/A",
     val description: String = "N/A",
     val license: String = "N/A",
-    val htmlAttributions: List<String> = emptyList<String>(),
+    val htmlAttributions: List<String> = emptyList(),
 )
 
 data class Airline(
