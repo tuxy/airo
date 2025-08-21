@@ -7,19 +7,21 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import com.ireward.htmlcompose.HtmlText
 import com.jamal.composeprefs3.ui.PrefsScreen
 import com.tuxy.airo.R
 import com.tuxy.airo.composables.LargeAppBar
-import com.tuxy.airo.newDataStore
+import com.tuxy.airo.dataStore
 import com.tuxy.airo.screens.settings.prefs.SingleSegmentedListPref
 import com.tuxy.airo.screens.settings.prefs.TextFieldPref
 import com.tuxy.airo.viewmodel.SettingsViewModel
@@ -42,7 +44,7 @@ fun ApiSettingsView(
             val selectedIndex = viewModel.getValueAsInt(LocalContext.current, "selected_api")
 
             PrefsScreen(
-                dataStore = LocalContext.current.newDataStore,
+                dataStore = LocalContext.current.dataStore,
                 modifier = Modifier.height(400.dp)
             ) {
                 prefsItem {
@@ -54,6 +56,13 @@ fun ApiSettingsView(
                             "2" to stringResource(R.string.direct_api)
                         ),
                     )
+                    AnimatedVisibility(selectedIndex == 0) {
+                        HtmlText(
+                            stringResource(R.string.default_server_extra),
+                            modifier = Modifier.padding(horizontal = 16.dp),
+                            style = TextStyle(color = Color.Gray)
+                        )
+                    }
                     AnimatedVisibility(selectedIndex == 1) {
                         TextFieldPref(
                             title = stringResource(R.string.airo_api_server),
@@ -62,7 +71,11 @@ fun ApiSettingsView(
                     }
                     AnimatedVisibility(selectedIndex == 2) {
                         Column {
-                            Text(stringResource(R.string.adb_text))
+                            HtmlText(
+                                stringResource(R.string.adb_text),
+                                modifier = Modifier.padding(horizontal = 16.dp),
+                                style = TextStyle(color = Color.Gray)
+                            )
                             TextFieldPref(
                                 title = stringResource(R.string.api_endpoint),
                                 key = "endpoint_adb"

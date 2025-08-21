@@ -11,9 +11,9 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.jamal.composeprefs3.ui.PrefsScreen
-import com.jamal.composeprefs3.ui.prefs.SwitchPref
 import com.tuxy.airo.composables.LargeAppBar
-import com.tuxy.airo.newDataStore
+import com.tuxy.airo.dataStore
+import com.tuxy.airo.screens.settings.prefs.SwitchPref
 
 @Composable
 fun NotificationsSettingsView(navController: NavController) {
@@ -24,17 +24,19 @@ fun NotificationsSettingsView(navController: NavController) {
         Column(
             modifier = Modifier.padding(innerPadding)
         ) {
-            PrefsScreen(LocalContext.current.newDataStore) {
+            PrefsScreen(LocalContext.current.dataStore) {
                 prefsItem {
                     SwitchPref(
                         key = "enable_alerts",
-                        title = "Enable flight alerts",
+                        title = "Enable flight alerts (WIP)",
                         defaultChecked = false,
+                        enabled = false
                     )
                     SwitchPref(
                         key = "alert_urgency",
-                        title = "Increase alert urgency",
+                        title = "Increase urgency (WIP)",
                         defaultChecked = false,
+                        enabled = false
                     )
                 }
             }

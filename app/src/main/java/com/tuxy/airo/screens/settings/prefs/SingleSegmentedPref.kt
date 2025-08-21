@@ -62,7 +62,7 @@ fun SingleSegmentedListPref(
 
     SingleChoiceSegmentedButtonRow(
         modifier = modifier
-            .padding(16.dp)
+            .padding(horizontal = 16.dp, vertical = 8.dp)
             .fillMaxWidth()
     ) {
         entryList.forEach { entry ->

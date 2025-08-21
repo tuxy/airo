@@ -10,7 +10,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.jamal.composeprefs3.ui.PrefsScreen
 import com.tuxy.airo.R
-import com.tuxy.airo.newDataStore
+import com.tuxy.airo.dataStore
 import com.tuxy.airo.screens.settings.prefs.TextFieldPref
 
 @OptIn(ExperimentalComposeUiApi::class)
@@ -21,7 +21,7 @@ fun CustomApiView() {
     Column(
         modifier = Modifier.padding(horizontal = 16.dp)
     ) {
-        PrefsScreen(LocalContext.current.newDataStore) {
+        PrefsScreen(LocalContext.current.dataStore) {
             prefsItem {
                 TextFieldPref(
                     title = stringResource(R.string.api_endpoint),

@@ -11,9 +11,9 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.jamal.composeprefs3.ui.PrefsScreen
-import com.jamal.composeprefs3.ui.prefs.SwitchPref
 import com.tuxy.airo.composables.LargeAppBar
-import com.tuxy.airo.newDataStore
+import com.tuxy.airo.dataStore
+import com.tuxy.airo.screens.settings.prefs.SwitchPref
 
 @Composable
 fun LocaleSettingsView(navController: NavController) {
@@ -24,7 +24,7 @@ fun LocaleSettingsView(navController: NavController) {
         Column(
             modifier = Modifier.padding(innerPadding)
         ) {
-            PrefsScreen(LocalContext.current.newDataStore) {
+            PrefsScreen(LocalContext.current.dataStore) {
                 prefsItem {
                     SwitchPref(
                         key = "24_time",
@@ -33,13 +33,15 @@ fun LocaleSettingsView(navController: NavController) {
                     )
                     SwitchPref(
                         key = "temperature_f",
-                        title = "Use Celsius instead of Fahrenheit",
+                        title = "Use Fahrenheit (WIP)",
                         defaultChecked = false,
+                        enabled = false,
                     )
                     SwitchPref(
                         key = "american_date",
-                        title = "Use American date time",
+                        title = "Use American dates (WIP)",
                         defaultChecked = false,
+                        enabled = false
                     )
                 }
             }

@@ -2,22 +2,22 @@ package com.tuxy.airo.viewmodel
 
 import android.content.Context
 import android.widget.Toast
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import com.tuxy.airo.R
-import com.tuxy.airo.data.UserPreferences
+import com.tuxy.airo.data.PreferencesInterface
 import java.time.LocalDateTime
 import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
 
 @Suppress("UNCHECKED_CAST")
 class DateViewModel(context: Context) : ViewModel() {
-    private val dataStore = UserPreferences(context)
+    // Initialise interface to preferences
+    val preferencesInterface = PreferencesInterface(context)
+
     val toasts = arrayOf( // Toasts on error
         Toast.makeText(
             context,
@@ -51,12 +51,6 @@ class DateViewModel(context: Context) : ViewModel() {
         )
     )
     var loading by mutableStateOf(false)
-
-    @Composable // Definitely not a composable, but it works to get API Key
-    fun getValue(key: String): String {
-        return dataStore.getValueWithKey(key).collectAsState(initial = "").value
-    }
-
 
     fun maybe(time: Long?): Long {
         return time ?: 0
