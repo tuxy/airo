@@ -40,45 +40,45 @@ fun SettingsView(
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),
-        topBar = { LargeAppBar("Settings", navController) },
+        topBar = { LargeAppBar(stringResource(R.string.settings), navController) },
     ) { innerPadding ->
         Column(
             modifier = Modifier.padding(innerPadding)
         ) {
             SettingSub(
-                "API Settings",
+                stringResource(R.string.api_settings),
                 Icons.Outlined.Link,
-                "Select API to use",
+                stringResource(R.string.api_settings_desc),
                 Screen.ApiSettingsScreen.route,
                 navController
             )
             SettingSub(
-                "Notifications",
+                stringResource(R.string.notifications),
                 Icons.Outlined.Notifications,
-                "Set alert & notification offsets",
+                stringResource(R.string.notifications_desc),
                 Screen.NotificationsSettingsScreen.route,
                 navController
             )
             SettingSub(
-                "Locale settings",
+                stringResource(R.string.locale_settings),
                 Icons.Outlined.LocationOn,
-                "Date, time and temperature formats",
+                stringResource(R.string.locale_settings_desc),
                 Screen.LocaleSettingsScreen.route,
                 navController
             )
             SettingSub(
-                "Backup & restore",
+                stringResource(R.string.backup_and_restore),
                 Icons.Outlined.Save,
-                "Manage backup location & app data",
+                stringResource(R.string.backup_and_restore_desc),
                 Screen.BackupSettingsScreen.route,
                 navController
             )
             ListItem(
                 modifier = Modifier.clickable(onClick = {
-                    openWebpage(context, "https://github.com/tuxy/airo")
+                    openWebpage(context, context.getString(R.string.source_code))
                 }),
-                headlineContent = { Text("About") },
-                supportingContent = { Text("Source code") },
+                headlineContent = { Text(stringResource(R.string.about)) },
+                supportingContent = { Text(stringResource(R.string.source_and_license)) },
                 leadingContent = {
                     Icon(
                         imageVector = Icons.Outlined.Info,

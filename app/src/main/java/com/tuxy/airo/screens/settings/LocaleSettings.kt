@@ -7,10 +7,12 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.jamal.composeprefs3.ui.PrefsScreen
+import com.tuxy.airo.R
 import com.tuxy.airo.composables.LargeAppBar
 import com.tuxy.airo.dataStore
 import com.tuxy.airo.screens.settings.prefs.SwitchPref
@@ -19,7 +21,7 @@ import com.tuxy.airo.screens.settings.prefs.SwitchPref
 fun LocaleSettingsView(navController: NavController) {
     Scaffold(
         modifier = Modifier.fillMaxSize(),
-        topBar = { LargeAppBar("Locale Settings", navController) },
+        topBar = { LargeAppBar(stringResource(R.string.locale_settings), navController) },
     ) { innerPadding ->
         Column(
             modifier = Modifier.padding(innerPadding)
@@ -28,18 +30,18 @@ fun LocaleSettingsView(navController: NavController) {
                 prefsItem {
                     SwitchPref(
                         key = "24_time",
-                        title = "Use 24-Hour time",
+                        title = stringResource(R.string.time_setting),
                         defaultChecked = false,
                     )
                     SwitchPref(
                         key = "temperature_f",
-                        title = "Use Fahrenheit (WIP)",
+                        title = stringResource(R.string.temperature_setting),
                         defaultChecked = false,
                         enabled = false,
                     )
                     SwitchPref(
                         key = "american_date",
-                        title = "Use American dates (WIP)",
+                        title = stringResource(R.string.american_date),
                         defaultChecked = false,
                         enabled = false
                     )

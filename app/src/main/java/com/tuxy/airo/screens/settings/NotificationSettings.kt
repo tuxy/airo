@@ -7,10 +7,12 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.jamal.composeprefs3.ui.PrefsScreen
+import com.tuxy.airo.R
 import com.tuxy.airo.composables.LargeAppBar
 import com.tuxy.airo.dataStore
 import com.tuxy.airo.screens.settings.prefs.SwitchPref
@@ -28,13 +30,13 @@ fun NotificationsSettingsView(navController: NavController) {
                 prefsItem {
                     SwitchPref(
                         key = "enable_alerts",
-                        title = "Enable flight alerts (WIP)",
+                        title = stringResource(R.string.enable_flight_alerts),
                         defaultChecked = false,
                         enabled = false
                     )
                     SwitchPref(
                         key = "alert_urgency",
-                        title = "Increase urgency (WIP)",
+                        title = stringResource(R.string.increase_urgency),
                         defaultChecked = false,
                         enabled = false
                     )
