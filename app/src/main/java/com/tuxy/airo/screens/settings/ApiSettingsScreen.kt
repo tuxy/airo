@@ -15,24 +15,22 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.ireward.htmlcompose.HtmlText
 import com.jamal.composeprefs3.ui.PrefsScreen
 import com.tuxy.airo.R
 import com.tuxy.airo.composables.LargeAppBar
+import com.tuxy.airo.data.PreferencesInterface
 import com.tuxy.airo.dataStore
 import com.tuxy.airo.screens.settings.prefs.SingleSegmentedListPref
 import com.tuxy.airo.screens.settings.prefs.TextFieldPref
-import com.tuxy.airo.viewmodel.SettingsViewModel
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalComposeUiApi::class)
 @Composable
 fun ApiSettingsView(
     navController: NavController
 ) {
-    val viewModelFactory = SettingsViewModel.Factory()
-    val viewModel: SettingsViewModel = viewModel(factory = viewModelFactory)
+    val preferencesInterface = PreferencesInterface(LocalContext.current)
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),
@@ -41,7 +39,7 @@ fun ApiSettingsView(
         Column(
             modifier = Modifier.padding(innerPadding)
         ) {
-            val selectedIndex = viewModel.getValueAsInt(LocalContext.current, "selected_api")
+            val selectedIndex = preferencesInterface.getValueAsInt("selected_api")
 
             PrefsScreen(
                 dataStore = LocalContext.current.dataStore,
@@ -55,6 +53,7 @@ fun ApiSettingsView(
                             "1" to stringResource(R.string.airo_api_server),
                             "2" to stringResource(R.string.direct_api)
                         ),
+                        defaultValue = "0"
                     )
                     AnimatedVisibility(selectedIndex == 0) {
                         HtmlText(

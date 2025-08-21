@@ -60,6 +60,7 @@ private fun buildFlightApiRequest(
     settings: ApiSettings
 ): Request? {
     val urlChoice = when (settings.choice) {
+        "" -> "https://airoapi.tuxy.stream/flights" // When datastore hasn't initialised (user hasn't picked)
         "0" -> "https://airoapi.tuxy.stream/flights"
         "1" -> settings.server
         "2" -> settings.endpoint

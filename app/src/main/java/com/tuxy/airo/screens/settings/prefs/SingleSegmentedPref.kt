@@ -32,6 +32,7 @@ import kotlinx.coroutines.launch
 fun SingleSegmentedListPref(
     key: String,
     modifier: Modifier = Modifier,
+    defaultValue: String? = null,
     enabled: Boolean = true,
     entries: Map<String, String> = mapOf(),
 ) {
@@ -42,7 +43,7 @@ fun SingleSegmentedListPref(
     val datastore = LocalPrefsDataStore.current
     val prefs by remember { datastore.data }.collectAsState(initial = null)
 
-    var selected = ""
+    var selected = defaultValue
     prefs?.get(selectionKey)?.also { selected = it } // starting value if it exists in datastore
 
     fun edit(current: Pair<String, String>) = run {
