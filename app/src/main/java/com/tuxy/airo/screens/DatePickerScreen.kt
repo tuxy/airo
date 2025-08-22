@@ -36,6 +36,7 @@ import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
+import java.time.format.DateTimeFormatter
 
 data class ApiSettings(
     val choice: String,
@@ -59,7 +60,6 @@ fun DatePickerView(
 
     val timeMillis = viewModel.maybe(datePickerState.selectedDateMillis)
 
-
     // Server settings
     val settings = ApiSettings(
         viewModel.preferencesInterface.getValue("selected_api"),
@@ -82,7 +82,9 @@ fun DatePickerView(
                             val result = getData( // FlightRequest.kt
                                 viewModel.formatFlightNumber(flightNumber),
                                 flightDataDao,
-                                viewModel.getDateAsString(timeMillis),
+                                viewModel
+                                    .getDateAsString(timeMillis)!! // Unless the API is broken, should work fine.
+                                    .format(DateTimeFormatter.ofPattern("yyyy-MM-dd")),
                                 // viewModel.toasts, // REMOVED
                                 settings,
                                 context,

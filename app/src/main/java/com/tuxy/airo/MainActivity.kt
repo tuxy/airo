@@ -22,7 +22,11 @@ import androidx.datastore.preferences.preferencesDataStore
 import com.tuxy.airo.data.FlightData
 import com.tuxy.airo.data.FlightDataBase
 import com.tuxy.airo.data.FlightDataDao
+import com.tuxy.airo.data.PreferencesInterface
 import com.tuxy.airo.ui.theme.AeroTheme
+import kotlinx.coroutines.DelicateCoroutinesApi
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
 import java.time.ZoneId
 import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
@@ -61,7 +65,16 @@ class MainActivity : ComponentActivity() {
     }
 }
 
+@OptIn(DelicateCoroutinesApi::class)
 fun setAlarm(context: Context, flightData: FlightData) {
+    val preferencesInterface = PreferencesInterface(context)
+    var timeFormatWait = ""
+
+    GlobalScope.launch {
+        val timeFormat = preferencesInterface.getValueTimeFormat("24_time")
+        timeFormatWait = timeFormat
+    }
+
     val depTime =
         flightData.departDate
             .atOffset(ZoneOffset.UTC)
@@ -72,7 +85,7 @@ fun setAlarm(context: Context, flightData: FlightData) {
         val intent = Intent(context, Alarm::class.java)
 
         val time = flightData.departDate.atZone(ZoneId.systemDefault())
-            .format(DateTimeFormatter.ofPattern("HH:mm"))
+            .format(DateTimeFormatter.ofPattern(timeFormatWait))
 
         val flight = context.getString(R.string.flight_alert_title)
         val content =

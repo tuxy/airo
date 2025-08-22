@@ -34,16 +34,16 @@ fun LocaleSettingsView(navController: NavController) {
                         defaultChecked = false,
                     )
                     SwitchPref(
+                        key = "american_date",
+                        title = stringResource(R.string.american_date),
+                        defaultChecked = false,
+                        enabled = true
+                    )
+                    SwitchPref(
                         key = "temperature_f",
                         title = stringResource(R.string.temperature_setting),
                         defaultChecked = false,
                         enabled = false,
-                    )
-                    SwitchPref(
-                        key = "american_date",
-                        title = stringResource(R.string.american_date),
-                        defaultChecked = false,
-                        enabled = false
                     )
                 }
             }

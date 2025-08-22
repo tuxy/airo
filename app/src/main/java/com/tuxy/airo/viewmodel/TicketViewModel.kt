@@ -17,6 +17,7 @@ import com.tuxy.airo.R
 import com.tuxy.airo.data.FlightData
 import com.tuxy.airo.data.FlightDataDao
 import com.tuxy.airo.data.IataParserData
+import com.tuxy.airo.data.PreferencesInterface
 import com.tuxy.airo.data.singleIntoMut
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
@@ -29,6 +30,8 @@ class TicketViewModel(
     id: String,
     context: Context,
 ) : ViewModel() {
+    val preferencesInterface = PreferencesInterface(context)
+
     var flightData = mutableStateOf(FlightData())
     var ticketData by mutableStateOf(IataParserData())
     var ticketString by mutableStateOf(flightData.value.ticketData) // This is needed to monitor for changes

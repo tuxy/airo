@@ -87,7 +87,7 @@
     <string name="restore_now">Restore now</string>
     <string name="time_setting">Use 24-hour time</string>
     <string name="temperature_setting">Use Fahrenheit instead (WIP)</string>
-    <string name="american_date">Use American date (WIP)</string>
+    <string name="american_date">Use American date</string>
     <string name="enable_flight_alerts">Enable flight alerts (WIP)</string>
     <string name="increase_urgency">Increase urgency (WIP)</string>
 </resources>

@@ -1,5 +1,6 @@
 package com.tuxy.airo.screens
 
+import android.content.ClipData
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
@@ -40,11 +41,13 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalClipboardManager
+import androidx.compose.ui.platform.LocalClipboard
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.toClipEntry
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontWeight
@@ -200,7 +203,9 @@ fun MainTicketView(
     flightData: FlightData,
     viewModel: TicketViewModel
 ) {
-    val clipboard = LocalClipboardManager.current
+    val clipboard = LocalClipboard.current
+    val timeFormat = viewModel.preferencesInterface.getValueTimeFormatComposable("24_time")
+    val scope = rememberCoroutineScope()
 
     Column(
         modifier = Modifier,
@@ -219,7 +224,7 @@ fun MainTicketView(
                 flightData.departDate
                     .atOffset(ZoneOffset.UTC)
                     .atZoneSameInstant(flightData.departTimeZone)
-                    .format(DateTimeFormatter.ofPattern("HH:mm")),
+                    .format(DateTimeFormatter.ofPattern(timeFormat)),
                 Alignment.Start
             )
             Icon(
@@ -233,7 +238,7 @@ fun MainTicketView(
                 flightData.arriveDate
                     .atOffset(ZoneOffset.UTC)
                     .atZoneSameInstant(flightData.departTimeZone)
-                    .format(DateTimeFormatter.ofPattern("HH:mm")),
+                    .format(DateTimeFormatter.ofPattern(timeFormat)),
                 Alignment.End
             )
         }
@@ -310,7 +315,16 @@ fun MainTicketView(
             horizontalArrangement = Arrangement.SpaceEvenly
         ) {
             OutlinedButton(onClick = {
-                clipboard.setText(AnnotatedString(iataParserData.bookingReference))
+                scope.launch {
+                    clipboard.setClipEntry(
+                        ClipData
+                            .newPlainText(
+                                "",
+                                AnnotatedString(iataParserData.bookingReference)
+                            )
+                            .toClipEntry()
+                    )
+                }
             }) {
                 Row(
                     Modifier.padding(4.dp),

@@ -108,9 +108,16 @@ class DetailsViewModel(context: Context, flightDataDao: FlightDataDao, id: Strin
         }
     }
 
+    @OptIn(DelicateCoroutinesApi::class)
     fun getEndTime(context: Context): String {
         val status = getStatus(context)
         val time = flightData.value.departDate
+
+        var timeFormatWait = ""
+        GlobalScope.launch {
+            val timeFormat = preferencesInterface.getValueTimeFormat("24_time")
+            timeFormatWait = timeFormat
+        }
 
         if (status == context.getString(R.string.check_in)) {
             val correctedTime = time.minusHours(1) // Check-in ends 1 hour before departure
@@ -119,7 +126,7 @@ class DetailsViewModel(context: Context, flightDataDao: FlightDataDao, id: Strin
                 correctedTime
                     .atOffset(ZoneOffset.UTC)
                     .atZoneSameInstant(flightData.value.departTimeZone)
-                    .format(DateTimeFormatter.ofPattern("HH:mm"))
+                    .format(DateTimeFormatter.ofPattern(timeFormatWait))
             }"
         }
 
@@ -193,10 +200,10 @@ class DetailsViewModel(context: Context, flightDataDao: FlightDataDao, id: Strin
             addPath("route", color = Color.DarkGray, width = 2.dp) {
                 // The y-offset of -0.0007 is likely a small visual adjustment for the path line
                 // relative to the marker's anchor point.
-                addPoint(x = flightData.value.mapOriginX, y = flightData.value.mapOriginY - 0.0007)
+                addPoint(x = flightData.value.mapOriginX, y = flightData.value.mapOriginY)
                 addPoint(
                     x = flightData.value.mapDestinationX,
-                    y = flightData.value.mapDestinationY - 0.0007
+                    y = flightData.value.mapDestinationY
                 )
             }
             // Scroll map to show both origin and destination
@@ -208,7 +215,7 @@ class DetailsViewModel(context: Context, flightDataDao: FlightDataDao, id: Strin
                     flightData.value.mapOriginY,
                     flightData.value.mapDestinationX,
                     flightData.value.mapDestinationY
-                ).toDouble()
+                )
             )
         }
     }
@@ -231,14 +238,14 @@ class DetailsViewModel(context: Context, flightDataDao: FlightDataDao, id: Strin
         return (a + b) / 2
     }
 
-    private fun calculateScale(x1: Double, y1: Double, x2: Double, y2: Double): Float {
-        val zoomConstant = 12.0 // Empirically determined constant to adjust the overall zoom level.
+    private fun calculateScale(x1: Double, y1: Double, x2: Double, y2: Double): Double {
+        val zoomConstant = 25.0 // Empirically determined constant to adjust the overall zoom level.
         // A smaller value zooms out more, a larger value zooms in more.
 
         val a = (x2 - x1) * (x2 - x1) // Squared difference in x
         val b = (y2 - y1) * (y2 - y1) // Squared difference in y
         // The scale is inversely related to the distance.
         // sqrt(a+b) is the distance between the two points.
-        return (1 / (sqrt(a + b) * zoomConstant)).toFloat()
+        return (1 / (sqrt(a + b) * zoomConstant))
     }
 }

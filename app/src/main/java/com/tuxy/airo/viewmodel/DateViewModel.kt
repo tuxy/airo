@@ -11,7 +11,7 @@ import com.tuxy.airo.R
 import com.tuxy.airo.data.PreferencesInterface
 import java.time.LocalDateTime
 import java.time.ZoneOffset
-import java.time.format.DateTimeFormatter
+import java.time.ZonedDateTime
 
 @Suppress("UNCHECKED_CAST")
 class DateViewModel(context: Context) : ViewModel() {
@@ -56,10 +56,10 @@ class DateViewModel(context: Context) : ViewModel() {
         return time ?: 0
     }
 
-    fun getDateAsString(time: Long): String {
-        val date = LocalDateTime.ofEpochSecond(time / 1000L, 0, ZoneOffset.UTC)
+    fun getDateAsString(time: Long): ZonedDateTime? {
+        return LocalDateTime.ofEpochSecond(time / 1000L, 0, ZoneOffset.UTC)
             .atZone(ZoneOffset.systemDefault())
-        return date.format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))
+        // return date.format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))
     }
 
     fun formatFlightNumber(string: String): String {

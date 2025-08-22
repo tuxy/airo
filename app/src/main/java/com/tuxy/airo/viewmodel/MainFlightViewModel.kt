@@ -1,11 +1,14 @@
 package com.tuxy.airo.viewmodel
 
+import android.content.Context
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
 import com.tuxy.airo.data.FlightData
 import com.tuxy.airo.data.FlightDataDao
+import com.tuxy.airo.data.PreferencesInterface
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
@@ -17,7 +20,9 @@ import kotlin.math.roundToLong
  * ViewModel responsible for managing and providing flight data for the main flight display screen.
  * It handles loading flight data from a persistent source and organizing it for presentation.
  */
-class MainFlightViewModel() : ViewModel() {
+class MainFlightViewModel(context: Context) : ViewModel() {
+    val preferencesInterface = PreferencesInterface(context)
+
     /**
      * Holds the raw, unsorted list of all [FlightData] objects.
      * This list is populated asynchronously via the [loadData] function.
@@ -47,8 +52,8 @@ class MainFlightViewModel() : ViewModel() {
     // Group by 1 day
     var flights = flightData.groupBy { flight ->
         // 86400 seconds = 1 day
-                (flight.departDate.toEpochSecond(ZoneOffset.UTC)
-                    .toDouble() / 86400).roundToLong() * 86400 // Maybe for the future, make something to smart-combine flights close together.
+        (flight.departDate.toEpochSecond(ZoneOffset.UTC)
+            .toDouble() / 86400).roundToLong() * 86400 // Maybe for the future, make something to smart-combine flights close together.
     }.toSortedMap()
 
     /**
@@ -77,4 +82,13 @@ class MainFlightViewModel() : ViewModel() {
             }.toSortedMap()
         }
     }
+
+    class Factory(
+        private val context: Context,
+    ) : ViewModelProvider.NewInstanceFactory() {
+        override fun <T : ViewModel> create(modelClass: Class<T>): T {
+            return MainFlightViewModel(context) as T
+        }
+    }
+
 }

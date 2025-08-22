@@ -45,6 +45,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -74,7 +75,9 @@ fun MainFlightView(
     navController: NavController,
     flightDataDao: FlightDataDao,
 ) {
-    val viewModel = viewModel<MainFlightViewModel>()
+    val viewModelFactory = MainFlightViewModel.Factory(LocalContext.current)
+    val viewModel: MainFlightViewModel = viewModel(factory = viewModelFactory)
+
     viewModel.loadData(flightDataDao)
 
     val scrollBehavior =
@@ -189,6 +192,8 @@ fun FlightCard(
     flightData: FlightData,
     viewModel: MainFlightViewModel
 ) {
+    val timeFormat = viewModel.preferencesInterface.getValueTimeFormatComposable("24_time")
+
     Column(
         modifier = Modifier
             .padding(horizontal = 16.dp, vertical = 8.dp)
@@ -220,7 +225,7 @@ fun FlightCard(
                         flightData.departDate
                             .atOffset(ZoneOffset.UTC)
                             .atZoneSameInstant(flightData.departTimeZone)
-                            .format(DateTimeFormatter.ofPattern("HH:mm")),
+                            .format(DateTimeFormatter.ofPattern(timeFormat)),
                         Alignment.Start
                     )
                     Icon(
@@ -234,7 +239,7 @@ fun FlightCard(
                         flightData.arriveDate
                             .atOffset(ZoneOffset.UTC)
                             .atZoneSameInstant(flightData.arriveTimeZone)
-                            .format(DateTimeFormatter.ofPattern("HH:mm")),
+                            .format(DateTimeFormatter.ofPattern(timeFormat)),
                         Alignment.End
                     )
                 }

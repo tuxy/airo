@@ -37,6 +37,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.ListItem
+import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
@@ -96,6 +97,8 @@ fun FlightDetailsView(
 
     val viewModelFactory = DetailsViewModel.Factory(LocalContext.current, flightDataDao, id)
     val viewModel: DetailsViewModel = viewModel(factory = viewModelFactory)
+
+    val timeFormat = viewModel.preferencesInterface.getValueTimeFormatComposable("24_time")
 
     val settings = ApiSettings(
         viewModel.preferencesInterface.getValue("selected_api"),
@@ -208,7 +211,7 @@ fun FlightDetailsView(
                             .fillMaxHeight()
                     ) {
                         RouteBar(viewModel.flightData.value)
-                        FlightBoardCard(viewModel.flightData.value)
+                        FlightBoardCard(viewModel.flightData.value, timeFormat)
                         Card(
                             modifier = Modifier
                                 .padding(
@@ -250,7 +253,8 @@ fun FlightDetailsView(
 
 @Composable
 fun FlightBoardCard(
-    flightData: FlightData
+    flightData: FlightData,
+    timeFormat: String
 ) {
     Card(
         modifier = Modifier
@@ -270,6 +274,7 @@ fun FlightBoardCard(
                 gate = flightData.gate,
                 baggageClaim = "",
                 checkIn = flightData.checkInDesk,
+                timeFormat = timeFormat,
                 date = flightData.departDate,
                 timeZone = flightData.departTimeZone
             )
@@ -306,6 +311,7 @@ fun FlightBoardCard(
                 gate = flightData.toGate,
                 baggageClaim = flightData.toBaggageClaim,
                 checkIn = "",
+                timeFormat = timeFormat,
                 date = flightData.arriveDate,
                 timeZone = flightData.arriveTimeZone,
                 to = true,
@@ -322,6 +328,7 @@ fun FlightBoard(
     gate: String,
     baggageClaim: String,
     checkIn: String,
+    timeFormat: String,
     date: LocalDateTime,
     timeZone: ZoneId,
     to: Boolean = false,
@@ -374,7 +381,7 @@ fun FlightBoard(
                 date
                     .atOffset(ZoneOffset.UTC)
                     .atZoneSameInstant(timeZone)
-                    .format(DateTimeFormatter.ofPattern("HH:mm")),
+                    .format(DateTimeFormatter.ofPattern(timeFormat)),
                 fontWeight = FontWeight.W500,
                 fontSize = 24.sp,
                 color = MaterialTheme.colorScheme.primary
@@ -539,17 +546,28 @@ fun SmallAppBarWithDelete(
 
 @Composable
 fun FlightInformationInteract(navController: NavController, flightData: FlightData) {
-    Column {
-        ListItem(
-            modifier = Modifier.clickable(onClick = { navController.navigate("${Screen.TicketInformationScreen.route}/${flightData.id}") }),
-            headlineContent = { Text(stringResource(R.string.ticket)) },
-            supportingContent = { Text(flightData.callSign) }
-        )
-        ListItem(
-            modifier = Modifier.clickable(onClick = { navController.navigate("${Screen.AircraftInformationScreen.route}/${flightData.id}") }),
-            headlineContent = { Text(stringResource(R.string.aircraft)) },
-            supportingContent = { Text(flightData.aircraftName) }
-        )
+    Card(
+        modifier = Modifier
+            .padding(horizontal = 16.dp)
+            .fillMaxWidth()
+    ) {
+        Column {
+            ListItem(
+                modifier = Modifier.clickable(onClick = { navController.navigate("${Screen.TicketInformationScreen.route}/${flightData.id}") }),
+                headlineContent = { Text(stringResource(R.string.ticket)) },
+                supportingContent = { Text(flightData.callSign) },
+                colors = ListItemDefaults.colors(
+                    containerColor = Color.Transparent
+                )
+            )
+            ListItem(
+                modifier = Modifier.clickable(onClick = { navController.navigate("${Screen.AircraftInformationScreen.route}/${flightData.id}") }),
+                headlineContent = { Text(stringResource(R.string.aircraft)) },
+                supportingContent = { Text(flightData.aircraftName) },
+                colors = ListItemDefaults.colors(
+                    containerColor = Color.Transparent
+                )
+            )
 //        No API or webpage really exists with good coverage for terminal maps. Please send me links to good ones
 //        ListItem(
 //            modifier = Modifier.clickable(onClick = {}),
@@ -557,6 +575,7 @@ fun FlightInformationInteract(navController: NavController, flightData: FlightDa
 //            supportingContent = { Text(flightData.fromName) },
 //            trailingContent = { Icon(Icons.Filled.Info, "Airport Information") }
 //        )
+        }
     }
 }
 
