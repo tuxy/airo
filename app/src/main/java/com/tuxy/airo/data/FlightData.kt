@@ -28,37 +28,37 @@ data class FlightData(
     @PrimaryKey(autoGenerate = true)
     val id: Int = 0,
     val lastUpdate: LocalDateTime = LocalDateTime.now(),
-    val callSign: String = "",
-    val airline: String = "",
-    val airlineIcao: String = "",
-    val airlineIata: String = "",
-    val from: String = "",
-    val to: String = "",
-    val fromCountryCode: String = "",
-    val toCountryCode: String = "",
-    val fromName: String = "",
+    val callSign: String = "---",
+    val airline: String = "---",
+    val airlineIcao: String = "---",
+    val airlineIata: String = "---",
+    val from: String = "---",
+    val to: String = "---",
+    val fromCountryCode: String = "---",
+    val toCountryCode: String = "---",
+    val fromName: String = "---",
     val departDate: LocalDateTime = LocalDateTime.now(),
     val arriveDate: LocalDateTime = LocalDateTime.now(),
     val departTimeZone: ZoneId = ZoneOffset.UTC,
     val arriveTimeZone: ZoneId = ZoneOffset.UTC,
-    val duration: Duration = Duration.ZERO,
-    val toName: String = "",
-    var ticketData: String = "",
-    val gate: String = "",
-    val toGate: String = "",
-    val terminal: String = "",
-    val toTerminal: String = "",
-    val toBaggageClaim: String = "",
-    val checkInDesk: String = "",
-    val aircraftName: String = "",
-    val aircraftUri: String = "",
-    val author: String = "",
-    val authorUri: String = "",
+    val duration: Duration = Duration.ofSeconds(1), // Prevents current = NaN
+    val toName: String = "---",
+    var ticketData: String = "---",
+    val gate: String = "---",
+    val toGate: String = "---",
+    val terminal: String = "---",
+    val toTerminal: String = "---",
+    val toBaggageClaim: String = "---",
+    val checkInDesk: String = "---",
+    val aircraftName: String = "---",
+    val aircraftUri: String = "---",
+    val author: String = "---",
+    val authorUri: String = "---",
     val mapOriginX: Double = 0.0,
     val mapOriginY: Double = 0.0,
     val mapDestinationX: Double = 0.0,
     val mapDestinationY: Double = 0.0,
-    val attribution: String = ""
+    val attribution: String = "---"
 )
 
 @Dao
@@ -105,7 +105,7 @@ abstract class FlightDataBase : RoomDatabase() {
         fun getDatabase(context: Context): FlightDataBase { // Gets database, creates if doesn't exist
             return Instance ?: synchronized(this) {
                 Room.databaseBuilder(context, FlightDataBase::class.java, "flight_database")
-                    .fallbackToDestructiveMigration()
+                    .fallbackToDestructiveMigration(false)
                     .build()
                     .also { Instance = it }
             }

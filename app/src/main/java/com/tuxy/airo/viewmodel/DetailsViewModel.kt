@@ -1,10 +1,12 @@
 package com.tuxy.airo.viewmodel
 
 import android.content.Context
+import android.util.Log
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material3.Icon
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.Modifier
@@ -16,9 +18,14 @@ import com.tuxy.airo.R
 import com.tuxy.airo.data.FlightData
 import com.tuxy.airo.data.FlightDataDao
 import com.tuxy.airo.data.PreferencesInterface
+import com.tuxy.airo.data.getData
 import com.tuxy.airo.data.singleIntoMut
+import com.tuxy.airo.screens.ApiSettings
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.DelicateCoroutinesApi
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import ovh.plrapps.mapcompose.api.addLayer
 import ovh.plrapps.mapcompose.api.addMarker
@@ -34,6 +41,7 @@ import java.time.Duration
 import java.time.LocalDateTime
 import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
+import kotlin.math.absoluteValue
 import kotlin.math.floor
 import kotlin.math.pow
 import kotlin.math.sqrt
@@ -43,9 +51,15 @@ import kotlin.math.sqrt
  * The `@Suppress("UNCHECKED_CAST")` annotation is present due to the type casting in the [Factory] class.
  */
 @Suppress("UNCHECKED_CAST")
-class DetailsViewModel(context: Context, flightDataDao: FlightDataDao, id: String) : ViewModel() {
+class DetailsViewModel(
+    context: Context,
+    flightDataDao: FlightDataDao,
+    id: String,
+    scope: CoroutineScope
+) : ViewModel() {
     // Initialise preferences interface
     val preferencesInterface = PreferencesInterface(context)
+    val viewModelScope = scope
 
     var flightData = mutableStateOf(FlightData())
     var openDialog = mutableStateOf(false)
@@ -60,6 +74,71 @@ class DetailsViewModel(context: Context, flightDataDao: FlightDataDao, id: Strin
         ) // On initialisation, pass db data into flightData
     }
 
+    fun getProgress(): Float {
+        val now = LocalDateTime
+            .now()
+            .atZone(flightData.value.departTimeZone)
+            .withZoneSameInstant(ZoneOffset.UTC)
+
+        val departTime = flightData.value.departDate
+            .atOffset(ZoneOffset.UTC)
+            .withOffsetSameInstant(ZoneOffset.UTC)
+
+        viewModelScope.launch {
+            val timeFromStart = Duration.between(now, departTime).toMillis()
+
+            if (now < departTime.toZonedDateTime()) {
+                progress.floatValue = 0.0F
+                return@launch
+            }
+
+            val duration = flightData.value.duration.toMillis()
+
+            val current = timeFromStart.toFloat() / duration.toFloat()
+
+            progress.floatValue = current.absoluteValue
+            delay(10000) // Improve performance
+        }
+        return progress.floatValue
+    }
+
+    fun refreshData(
+        flightDataDao: FlightDataDao,
+        context: Context,
+        settings: ApiSettings,
+        isRefreshing: MutableState<Boolean>
+    ) {
+        viewModelScope.launch(Dispatchers.IO) {
+            isRefreshing.value = true
+            val collectedFlightData = getData(
+                flightNumber = flightData.value.callSign.replace(
+                    " ",
+                    ""
+                ), // Whitespace removal
+                flightDataDao = flightDataDao,
+                date = flightData.value.departDate.format(
+                    DateTimeFormatter.ofPattern("yyyy-MM-dd")
+                ),
+                settings = settings,
+                context = context,
+                update = true
+            )
+
+            collectedFlightData.onSuccess { newFlight ->
+                Log.d("FlightUpdate", newFlight.toString())
+                val deleted = flightData.value.copy()
+                flightData.value = newFlight
+
+                flightDataDao.deleteFlight(deleted)
+                flightDataDao.addFlight(
+                    newFlight.copy(
+                        ticketData = flightData.value.ticketData,
+                    ) // Retain ticket information
+                )
+            }
+            isRefreshing.value = false
+        }
+    }
 
     fun getDuration(context: Context): String {
         val duration = Duration.between(
@@ -224,9 +303,10 @@ class DetailsViewModel(context: Context, flightDataDao: FlightDataDao, id: Strin
         private val context: Context,
         private val flightDataDao: FlightDataDao,
         private val id: String,
+        private val scope: CoroutineScope
     ) : ViewModelProvider.NewInstanceFactory() {
         override fun <T : ViewModel> create(modelClass: Class<T>): T {
-            return DetailsViewModel(context, flightDataDao, id) as T
+            return DetailsViewModel(context, flightDataDao, id, scope) as T
         }
     }
 

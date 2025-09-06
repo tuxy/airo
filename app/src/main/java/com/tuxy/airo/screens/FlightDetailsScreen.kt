@@ -1,6 +1,5 @@
 package com.tuxy.airo.screens
 
-import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -47,12 +46,10 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -70,7 +67,6 @@ import com.tuxy.airo.cancelAlarm
 import com.tuxy.airo.composables.RouteBar
 import com.tuxy.airo.data.FlightData
 import com.tuxy.airo.data.FlightDataDao
-import com.tuxy.airo.data.getData
 import com.tuxy.airo.viewmodel.DetailsViewModel
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
@@ -94,10 +90,15 @@ fun FlightDetailsView(
     flightDataDao: FlightDataDao,
 ) {
     val context = LocalContext.current
+    val scope = rememberCoroutineScope()
 
-    val viewModelFactory = DetailsViewModel.Factory(LocalContext.current, flightDataDao, id)
+    val viewModelFactory = DetailsViewModel.Factory(
+        LocalContext.current,
+        flightDataDao,
+        id,
+        scope
+    )
     val viewModel: DetailsViewModel = viewModel(factory = viewModelFactory)
-
     val timeFormat = viewModel.preferencesInterface.getValueTimeFormatComposable("24_time")
 
     val settings = ApiSettings(
@@ -108,14 +109,7 @@ fun FlightDetailsView(
     )
 
     val refreshState = rememberPullToRefreshState()
-    var isRefreshing by remember { mutableStateOf(false) }
-    var isRefreshingFinished by remember { mutableStateOf(false) }
-
-    LaunchedEffect(isRefreshingFinished) {
-        if (isRefreshingFinished) {
-            navController.navigateUp()
-        }
-    }
+    val isRefreshing = remember { mutableStateOf(false) }
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),
@@ -143,66 +137,18 @@ fun FlightDetailsView(
                 }
                 LinearProgressIndicator(
                     modifier = Modifier.fillMaxWidth(),
-                    progress = {
-                        val now = LocalDateTime
-                            .now()
-                            .atZone(viewModel.flightData.value.departTimeZone)
-                            .withZoneSameInstant(ZoneOffset.UTC)
-
-                        val departTime = viewModel.flightData.value.departDate
-                            .atOffset(ZoneOffset.UTC)
-                            .withOffsetSameInstant(ZoneOffset.UTC)
-
-                        GlobalScope.launch {
-
-                            val timeFromStart = Duration.between(now, departTime).toMillis()
-
-                            if (now < departTime.toZonedDateTime()) {
-                                viewModel.progress.floatValue = 0.0F
-                                return@launch
-                            }
-
-                            val duration = viewModel.flightData.value.duration.toMillis()
-
-                            val current = timeFromStart.toFloat() / duration.toFloat()
-
-                            viewModel.progress.floatValue = current.absoluteValue
-                            delay(10000) // Improve performance
-                        }
-                        viewModel.progress.floatValue
-                    }
+                    progress = { viewModel.getProgress() }
                 )
                 PullToRefreshBox(
-                    isRefreshing = isRefreshing,
+                    isRefreshing = isRefreshing.value,
                     state = refreshState,
                     onRefresh = {
-                        isRefreshing = true
-                        GlobalScope.launch(Dispatchers.IO) {
-                            val collectedFlightData = getData(
-                                flightNumber = viewModel.flightData.value.callSign.replace(
-                                    " ",
-                                    ""
-                                ), // Whitespace removal
-                                flightDataDao = flightDataDao,
-                                date = viewModel.flightData.value.departDate.format(
-                                    DateTimeFormatter.ofPattern("yyyy-MM-dd")
-                                ),
-                                settings = settings,
-                                context = context,
-                                update = true
-                            )
-
-                            collectedFlightData.onSuccess { newFlight ->
-                                Log.d("FlightUpdate", newFlight.toString())
-                                flightDataDao.deleteFlight(viewModel.flightData.value)
-                                flightDataDao.addFlight(
-                                    newFlight.copy(ticketData = viewModel.flightData.value.ticketData) // Retain ticket information
-                                )
-                            }
-                            isRefreshing = false
-                            isRefreshingFinished = true
-                        }
-
+                        viewModel.refreshData(
+                            flightDataDao,
+                            context,
+                            settings,
+                            isRefreshing
+                        )
                     }
                 ) {
                     Column(
