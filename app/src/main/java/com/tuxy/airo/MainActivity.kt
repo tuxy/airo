@@ -24,6 +24,7 @@ import com.tuxy.airo.data.FlightDataBase
 import com.tuxy.airo.data.FlightDataDao
 import com.tuxy.airo.data.PreferencesInterface
 import com.tuxy.airo.ui.theme.AeroTheme
+import de.raphaelebner.roomdatabasebackup.core.RoomBackup
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
@@ -40,6 +41,7 @@ class MainActivity : ComponentActivity() {
     @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        val backup = RoomBackup(this)
         data = FlightDataBase.getDatabase(this).flightDataDao()
 
         enableEdgeToEdge()
@@ -59,7 +61,7 @@ class MainActivity : ComponentActivity() {
                     } // If the user denies notifications, we ignore forever
                 }
 
-                MainScreen()
+                MainScreen(backup)
             }
         }
     }

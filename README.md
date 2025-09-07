@@ -35,6 +35,8 @@ See [Contributing.md](/Contributing.md) for more information on how you can help
 
 ## Libraries used/credits
 
+*all code from libraries are to follow their respective project licenses*
+
 - MapCompose https://github.com/p-lr/MapCompose
 - USGS Topo map https://www.usgs.gov/ (December 2024)
     - MOBAC (MOBile Atlas Creator) https://mobac.sourceforge.io/
@@ -46,3 +48,6 @@ See [Contributing.md](/Contributing.md) for more information on how you can help
 - Klaxon JSON Parsing https://github.com/cbeust/klaxon
 - Compose-html https://github.com/ireward/compose-html
 - Radarbox logo's provided by Jxck-S https://github.com/Jxck-S/airline-logos
+- PreferencesCompose for app preferences https://github.com/JamalMulla/ComposePrefs3
+- RoomBackup for backup/restore
+  functionality https://github.com/rafi0101/Android-Room-Database-Backup

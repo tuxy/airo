@@ -10,16 +10,25 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.tooling.preview.Preview
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
-import androidx.navigation.compose.rememberNavController
 import com.tuxy.airo.R
 import com.tuxy.airo.composables.LargeAppBar
+import com.tuxy.airo.viewmodel.settings.BackupViewModel
+import de.raphaelebner.roomdatabasebackup.core.RoomBackup
 
 @OptIn(ExperimentalComposeUiApi::class)
 @Composable
-fun BackupSettingsView(navController: NavController) {
+fun BackupSettingsView(
+    navController: NavController,
+    backup: RoomBackup
+) {
+    val context = LocalContext.current
+    val viewModelFactory = BackupViewModel.Factory(context, backup)
+    val viewModel: BackupViewModel = viewModel(factory = viewModelFactory)
+
     Scaffold(
         modifier = Modifier.fillMaxSize(),
         topBar = { LargeAppBar(stringResource(R.string.backup_and_restore), navController) },
@@ -29,22 +38,16 @@ fun BackupSettingsView(navController: NavController) {
         ) {
             ListItem(
                 modifier = Modifier.clickable(
-                    onClick = {}
+                    onClick = { viewModel.roomBackup(context) }
                 ),
                 headlineContent = { Text(stringResource(R.string.backup_now)) },
             )
             ListItem(
                 modifier = Modifier.clickable(
-                    onClick = {}
+                    onClick = { viewModel.roomRestore(context) }
                 ),
                 headlineContent = { Text(stringResource(R.string.restore_now)) },
             )
         }
     }
-}
-
-@Composable
-@Preview(showBackground = true)
-fun BackupSettingsViewPreview() {
-    BackupSettingsView(rememberNavController())
 }

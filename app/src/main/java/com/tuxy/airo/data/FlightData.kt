@@ -88,8 +88,8 @@ interface FlightDataDao {
     @Query("SELECT COUNT() FROM flight_table WHERE departDate=:departDate AND callSign=:callSign")
     fun queryExisting(departDate: LocalDateTime, callSign: String): Int
 
-    @Query("DELETE FROM flight_table") // ONLY FOR DEVELOPMENT
-    fun nukeTable()
+//    @Query("DELETE FROM flight_table") // ONLY FOR DEVELOPMENT
+//    fun nukeTable()
 }
 
 

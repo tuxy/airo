@@ -18,6 +18,7 @@ import com.tuxy.airo.screens.settings.ApiSettingsView
 import com.tuxy.airo.screens.settings.BackupSettingsView
 import com.tuxy.airo.screens.settings.LocaleSettingsView
 import com.tuxy.airo.screens.settings.NotificationsSettingsView
+import de.raphaelebner.roomdatabasebackup.core.RoomBackup
 
 private const val INITIAL_OFFSET_FACTOR = 0.10f
 
@@ -26,6 +27,7 @@ fun SetupNavGraph(
     // Transitions taken from Read You's repository
     navController: NavHostController,
     flightDataDao: FlightDataDao,
+    backup: RoomBackup
 ) {
     NavHost(
         navController = navController,
@@ -92,7 +94,10 @@ fun SetupNavGraph(
             LocaleSettingsView(navController = navController)
         }
         composable(route = Screen.BackupSettingsScreen.route) {
-            BackupSettingsView(navController = navController)
+            BackupSettingsView(
+                navController,
+                backup
+            )
         }
     }
 }

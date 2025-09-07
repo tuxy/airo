@@ -105,6 +105,9 @@ dependencies {
     // Preferences library (material 3 version!)
     implementation(libs.composeprefs)
 
+    // Room database extras
+    implementation(libs.roomdatabasebackup)
+
     // Klaxon is already an implementation dependency, so it's available for tests.
     // If a different version was needed for tests only: testImplementation("com.beust:klaxon:5.5")
     androidTestImplementation(libs.androidx.navigation.testing)
