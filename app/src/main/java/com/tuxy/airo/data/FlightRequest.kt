@@ -2,6 +2,7 @@ package com.tuxy.airo.data
 
 import android.content.Context
 import android.util.Log
+import com.beust.klaxon.Klaxon
 import com.beust.klaxon.KlaxonException
 import com.tuxy.airo.screens.ApiSettings
 import com.tuxy.airo.setAlarm
@@ -26,7 +27,35 @@ sealed class FlightDataError {
     object FlightAlreadyExists : FlightDataError()
     object UnknownError : FlightDataError()
     object UpdateError : FlightDataError()
+    object FlightNotFoundError : FlightDataError()
 }
+
+private val klaxon = Klaxon()
+
+// Root type alias for the JSON array - using Klaxon's direct parsing to List<RootElement>
+// typealias Root = ArrayList<RootElement> // Keep this if it's used elsewhere, or parse directly to List
+// For consistency with `Root.fromJson` in `FlightRequest.kt`, we'll keep the Root class for now.
+class AiroApiErrorRoot(elements: Collection<AiroApiError>) : ArrayList<AiroApiError>(elements) {
+    companion object {
+        /**
+         * Parses AiroApi error message into [AiroApiErrorRoot] object.
+         *
+         * This function uses Klaxon to parse the JSON string. If the parsing is successful
+         * and results in a non-null list of [AiroApiError] objects, it constructs a [AiroApiErrorRoot]
+         * object from this list. Otherwise, it returns null.
+         *
+         * @param json The JSON string to parse.
+         * @return A [AiroApiErrorRoot] object if parsing is successful, or null if the JSON is malformed
+         *         or does not represent an array of [RootElement] objects.
+         */
+        fun fromJson(json: String): AiroApiErrorRoot? =
+            klaxon.parseArray<AiroApiError>(json)?.let { AiroApiErrorRoot(it) }
+    }
+}
+
+data class AiroApiError(
+    val message: String,
+)
 
 // Custom exception for critical data missing during parsing
 class MissingCriticalDataException(message: String) : Exception(message)
@@ -140,6 +169,24 @@ suspend fun getData(
                 if (!response.isSuccessful) {
                     return@withContext Result.failure(FlightDataFetchException(FlightDataError.NetworkError))
                 }
+
+                try {
+                    // Handle both 204 from adb
+                    if (response.code == 204) {
+                        return@withContext Result.failure(FlightDataFetchException(FlightDataError.FlightNotFoundError))
+                    }
+
+                    // Handle no flight found from airoapi
+                    if (AiroApiErrorRoot.fromJson(response.body!!.string())!!
+                            .firstOrNull()?.message == "No flight found"
+                    ) {
+                        return@withContext Result.failure(FlightDataFetchException(FlightDataError.FlightNotFoundError))
+                    }
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                    return@withContext Result.failure(FlightDataFetchException(FlightDataError.ParsingError))
+                }
+
                 val jsonListResponse = response.body!!.string()
 
                 try {
@@ -168,8 +215,6 @@ suspend fun getData(
                         flightDataDao.addFlight(flightData) // Not sure why this entire thing would both add a flight and then return it, but sure...
                         setAlarm(context, flightData)
                     }
-
-                    Log.d("FlightUpdate", flightData.toString())
 
                     return@withContext Result.success(flightData)
                 } catch (e: KlaxonException) {

@@ -46,6 +46,10 @@ import kotlin.math.absoluteValue
 import kotlin.math.floor
 import kotlin.math.pow
 import kotlin.math.sqrt
+import kotlin.time.Clock
+import kotlin.time.ExperimentalTime
+import kotlin.time.toJavaInstant
+import kotlin.time.toKotlinDuration
 
 /**
  * Manages and provides data for the flight details screen, including map display and flight status information.
@@ -84,6 +88,32 @@ class DetailsViewModel(
         }
         // On initialisation, pass db data into flightData
         // Use empty FlightData if testId is used
+    }
+
+    @OptIn(ExperimentalTime::class)
+    fun getZoneDifference(): String {
+        val currentInstant = Clock.System.now()
+
+        val departZoneSeconds =
+            flightData.value.departTimeZone.rules.getOffset(currentInstant.toJavaInstant())
+        val arriveZoneSeconds =
+            flightData.value.arriveTimeZone.rules.getOffset(currentInstant.toJavaInstant())
+
+        val differenceInSeconds = arriveZoneSeconds.totalSeconds - departZoneSeconds.totalSeconds
+
+        val ahead = if (differenceInSeconds > 0) "+" else "-"
+
+        val difference = Duration.ofSeconds(differenceInSeconds.toLong()).toKotlinDuration()
+        difference.toComponents { hours, minutes, _, _ ->
+            if (hours == 0L && minutes == 0) {
+                return ""
+            }
+            return "$ahead${hours.time()}:${minutes.toLong().time()}"
+        }
+    }
+
+    fun Long.time(): String { // Add trailing zeroes and convert to string
+        return this.absoluteValue.toString().padStart(2, '0')
     }
 
     fun getProgress(): Float {

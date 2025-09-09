@@ -52,6 +52,11 @@ class DateViewModel(
                 context,
                 context.resources.getString(R.string.update_error),
                 Toast.LENGTH_SHORT
+            ),
+            Toast.makeText(
+                context,
+                context.resources.getString(R.string.no_flight),
+                Toast.LENGTH_SHORT
             )
         )
         return toasts[idx]

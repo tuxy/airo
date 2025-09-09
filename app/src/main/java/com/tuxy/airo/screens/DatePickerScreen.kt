@@ -97,32 +97,27 @@ fun DatePickerView(
                                 navController.navigateUp()
                             } else {
                                 val exception = result.exceptionOrNull()
+                                // Handle all error cases
                                 if (exception is FlightDataFetchException) {
                                     when (exception.errorType) {
-                                        is FlightDataError.ApiKeyMissing -> viewModel.toast(0)
-                                            .show()
-
-                                        is FlightDataError.NetworkError -> viewModel.toast(1).show()
-                                        is FlightDataError.ParsingError -> viewModel.toast(2).show()
-                                        is FlightDataError.IncompleteDataError -> viewModel.toast(2)
-                                            .show()
-
-                                        is FlightDataError.FlightAlreadyExists -> viewModel.toast(3)
-                                            .show()
-
-                                        is FlightDataError.UnknownError -> viewModel.toast(4).show()
-                                        is FlightDataError.UpdateError -> viewModel.toast(5).show()
-                                        // Realistically, this won't happen, but needed to complete case
+                                        FlightDataError.ApiKeyMissing -> viewModel.toast(0).show()
+                                        FlightDataError.NetworkError -> viewModel.toast(1).show()
+                                        FlightDataError.ParsingError -> viewModel.toast(2).show()
+                                        FlightDataError.IncompleteDataError -> viewModel.toast(2).show()
+                                        FlightDataError.FlightAlreadyExists -> viewModel.toast(3).show()
+                                        FlightDataError.UnknownError -> viewModel.toast(4).show()
+                                        FlightDataError.UpdateError -> viewModel.toast(5).show()
+                                        FlightDataError.FlightNotFoundError -> viewModel.toast(6).show()
                                     }
                                 } else {
-                                    // Generic error for other unexpected exceptions
+                                    // Generic error for other unexpected exceptions. Same as viewModel.toast(5)
                                     Toast.makeText(
                                         context,
                                         context.getString(R.string.error_unknown),
                                         Toast.LENGTH_SHORT
                                     ).show()
                                 }
-                                // No navigation on failure
+                                // No navigateUp() on failure
                             }
                         } finally {
                             viewModel.loading = false

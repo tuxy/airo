@@ -43,7 +43,7 @@ data class FlightData(
     val arriveTimeZone: ZoneId = ZoneOffset.UTC,
     val duration: Duration = Duration.ofSeconds(1), // Prevents current = NaN
     val toName: String = "---",
-    var ticketData: String = "---",
+    var ticketData: String = "",
     val gate: String = "---",
     val toGate: String = "---",
     val terminal: String = "---",

@@ -154,7 +154,7 @@ fun FlightDetailsView(
                             .fillMaxHeight()
                     ) {
                         RouteBar(viewModel.flightData.value)
-                        FlightBoardCard(viewModel.flightData.value, timeFormat)
+                        FlightBoardCard(viewModel, timeFormat)
                         Card(
                             modifier = Modifier
                                 .padding(
@@ -176,6 +176,7 @@ fun FlightDetailsView(
                             }
                         }
                         FlightStatusCard(viewModel)
+                        WeatherCard(viewModel)
                         FlightInformationInteract(navController, viewModel.flightData.value)
                         Text(
                             modifier = Modifier.padding(16.dp),
@@ -184,7 +185,8 @@ fun FlightDetailsView(
                                     DateTimeFormatter.ISO_DATE_TIME
                                 )
                             }",
-                            color = Color.Gray
+                            color = Color.Gray,
+                            fontSize = 12.sp
                         )
 
                     }
@@ -196,8 +198,9 @@ fun FlightDetailsView(
 
 @Composable
 fun FlightBoardCard(
-    flightData: FlightData,
-    timeFormat: String
+    viewModel: DetailsViewModel,
+    timeFormat: String,
+    flightData: FlightData = viewModel.flightData.value
 ) {
     Card(
         modifier = Modifier
@@ -258,6 +261,7 @@ fun FlightBoardCard(
                 date = flightData.arriveDate,
                 timeZone = flightData.arriveTimeZone,
                 to = true,
+                difference = viewModel.getZoneDifference()
             )
         }
     }
@@ -275,6 +279,7 @@ fun FlightBoard(
     date: LocalDateTime,
     timeZone: ZoneId,
     to: Boolean = false,
+    difference: String = ""
 ) {
     Row(
         horizontalArrangement = Arrangement.SpaceBetween,
@@ -327,8 +332,16 @@ fun FlightBoard(
                     .format(DateTimeFormatter.ofPattern(timeFormat)),
                 fontWeight = FontWeight.W500,
                 fontSize = 24.sp,
-                color = MaterialTheme.colorScheme.primary
+                color = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.padding(bottom = 4.dp)
             )
+            if (to) { // Time zone difference
+                Text(
+                    difference,
+                    color = Color.Gray,
+                    fontSize = 12.sp
+                )
+            }
         }
     }
 }
@@ -367,6 +380,24 @@ fun SmallCard(
                 color = Color.Black
             )
             Spacer(Modifier.padding(2.dp))
+        }
+    }
+}
+
+@Composable
+fun WeatherCard(
+    viewModel: DetailsViewModel
+) {
+    Row(
+        modifier = Modifier
+            .padding(start = 16.dp, end = 16.dp, bottom = 16.dp)
+
+    ) {
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(64.dp)
+        ) {
         }
     }
 }
