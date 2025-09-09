@@ -25,11 +25,13 @@ composeBom = "2025.08.01"
 mapcompose = "3.2.0"
 mockitoCore = "5.19.0"
 mockitoInline = "5.2.0"
+mockitoKotlin = "6.0.0"
 mockwebserver = "5.1.0"
 navigationCompose = "2.9.3"
 roomCompiler = "2.7.2"
 roomdatabasebackup = "1.1.0"
 zxingAndroidEmbedded = "4.3.0"
+monitor = "1.8.0"
 
 [libraries]
 androidx-activity-ktx = { module = "androidx.activity:activity-ktx" }
@@ -74,9 +76,11 @@ kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serializa
 mapcompose = { module = "ovh.plrapps:mapcompose", version.ref = "mapcompose" }
 mockito-inline = { module = "org.mockito:mockito-inline", version.ref = "mockitoInline" }
 mockito-core = { module = "org.mockito:mockito-core", version.ref = "mockitoCore" }
+mockito-kotlin = { module = "org.mockito.kotlin:mockito-kotlin", version.ref = "mockitoKotlin" }
 mockwebserver = { module = "com.squareup.okhttp3:mockwebserver", version.ref = "mockwebserver" }
 roomdatabasebackup = { module = "de.raphaelebner:roomdatabasebackup", version.ref = "roomdatabasebackup" }
 zxing-android-embedded = { module = "com.journeyapps:zxing-android-embedded", version.ref = "zxingAndroidEmbedded" }
+androidx-monitor = { group = "androidx.test", name = "monitor", version.ref = "monitor" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

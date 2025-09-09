@@ -54,10 +54,10 @@ data class FlightData(
     val aircraftUri: String = "---",
     val author: String = "---",
     val authorUri: String = "---",
-    val mapOriginX: Double = 0.0,
-    val mapOriginY: Double = 0.0,
-    val mapDestinationX: Double = 0.0,
-    val mapDestinationY: Double = 0.0,
+    val mapOriginX: Double = 1.0,
+    val mapOriginY: Double = 1.0,
+    val mapDestinationX: Double = 1.0,
+    val mapDestinationY: Double = 1.0,
     val attribution: String = "---"
 )
 

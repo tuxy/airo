@@ -39,6 +39,11 @@ android {
     buildFeatures {
         compose = true
     }
+    testOptions {
+        unitTests.all {
+            it.jvmArgs("-XX:+EnableDynamicAgentLoading")
+        }
+    }
 }
 
 kotlin {
@@ -67,6 +72,7 @@ dependencies {
 
     // more icons
     implementation(libs.androidx.material.icons.extended)
+    implementation(libs.androidx.monitor)
 
     // room
     ksp(libs.androidx.room.compiler)
@@ -101,6 +107,7 @@ dependencies {
     testImplementation(libs.mockito.inline) // For mocking final classes/methods if needed
     testImplementation(libs.mockwebserver) // Align with OkHttp if possible, using common recent
     testImplementation(libs.kotlinx.coroutines.test) // For testing coroutines
+    testImplementation(libs.mockito.kotlin)
 
     // Preferences library (material 3 version!)
     implementation(libs.composeprefs)

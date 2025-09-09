@@ -58,7 +58,7 @@ fun DatePickerView(
     val viewModelFactory = DateViewModel.Factory(context)
     val viewModel: DateViewModel = viewModel(factory = viewModelFactory)
 
-    val timeMillis = viewModel.maybe(datePickerState.selectedDateMillis)
+    val timeMillis = datePickerState.selectedDateMillis ?: 0
 
     // Server settings
     val settings = ApiSettings(
@@ -99,13 +99,19 @@ fun DatePickerView(
                                 val exception = result.exceptionOrNull()
                                 if (exception is FlightDataFetchException) {
                                     when (exception.errorType) {
-                                        is FlightDataError.ApiKeyMissing -> viewModel.toasts[0].show()
-                                        is FlightDataError.NetworkError -> viewModel.toasts[1].show()
-                                        is FlightDataError.ParsingError -> viewModel.toasts[2].show()
-                                        is FlightDataError.IncompleteDataError -> viewModel.toasts[2].show()
-                                        is FlightDataError.FlightAlreadyExists -> viewModel.toasts[3].show()
-                                        is FlightDataError.UnknownError -> viewModel.toasts[4].show()
-                                        is FlightDataError.UpdateError -> viewModel.toasts[5].show()
+                                        is FlightDataError.ApiKeyMissing -> viewModel.toast(0)
+                                            .show()
+
+                                        is FlightDataError.NetworkError -> viewModel.toast(1).show()
+                                        is FlightDataError.ParsingError -> viewModel.toast(2).show()
+                                        is FlightDataError.IncompleteDataError -> viewModel.toast(2)
+                                            .show()
+
+                                        is FlightDataError.FlightAlreadyExists -> viewModel.toast(3)
+                                            .show()
+
+                                        is FlightDataError.UnknownError -> viewModel.toast(4).show()
+                                        is FlightDataError.UpdateError -> viewModel.toast(5).show()
                                         // Realistically, this won't happen, but needed to complete case
                                     }
                                 } else {

@@ -25,6 +25,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import ovh.plrapps.mapcompose.api.addLayer
@@ -55,7 +56,8 @@ class DetailsViewModel(
     context: Context,
     flightDataDao: FlightDataDao,
     id: String,
-    scope: CoroutineScope
+    scope: CoroutineScope =
+        CoroutineScope(SupervisorJob() + Dispatchers.IO)
 ) : ViewModel() {
     // Initialise preferences interface
     val preferencesInterface = PreferencesInterface(context)
@@ -67,11 +69,21 @@ class DetailsViewModel(
         private set
 
     init {
-        singleIntoMut(
-            flightData,
-            flightDataDao,
-            id
-        ) // On initialisation, pass db data into flightData
+        when (id) {
+            "testId" -> {
+                flightData.value = FlightData()
+            }
+
+            else -> {
+                singleIntoMut(
+                    flightData,
+                    flightDataDao,
+                    id
+                )
+            }
+        }
+        // On initialisation, pass db data into flightData
+        // Use empty FlightData if testId is used
     }
 
     fun getProgress(): Float {
@@ -201,7 +213,7 @@ class DetailsViewModel(
         if (status == context.getString(R.string.check_in)) {
             val correctedTime = time.minusHours(1) // Check-in ends 1 hour before departure
 
-            return "${context.resources.getString(R.string.ends_at)} ${
+            return "${context.getString(R.string.ends_at)} ${
                 correctedTime
                     .atOffset(ZoneOffset.UTC)
                     .atZoneSameInstant(flightData.value.departTimeZone)
@@ -222,15 +234,16 @@ class DetailsViewModel(
         val seconds = duration.seconds
 
         if (seconds >= 3600) { // More than or equal to 1 hour until departure
-            return context.resources.getString(R.string.check_in) // Check-in
+            return context.getString(R.string.check_in) // Check-in
         } else { // Less than 1 hour until departure or already departed
             if (progress.floatValue >= 0.9F && progress.floatValue < 1.0F) {
-                return context.resources.getString(R.string.landing) // About to land
+                return context.getString(R.string.landing) // About to land
             } else if (progress.floatValue >= 1.0F) {
-                return context.resources.getString(R.string.landed) // Already landed
+                return context.getString(R.string.landed) // Already landed
             }
-            return context.resources.getString(R.string.flying) // Still flying
+            return context.getString(R.string.flying) // Still flying
         }
+
     }
 
     /**
@@ -302,11 +315,10 @@ class DetailsViewModel(
     class Factory(
         private val context: Context,
         private val flightDataDao: FlightDataDao,
-        private val id: String,
-        private val scope: CoroutineScope
+        private val id: String
     ) : ViewModelProvider.NewInstanceFactory() {
         override fun <T : ViewModel> create(modelClass: Class<T>): T {
-            return DetailsViewModel(context, flightDataDao, id, scope) as T
+            return DetailsViewModel(context, flightDataDao, id) as T
         }
     }
 
@@ -314,11 +326,11 @@ class DetailsViewModel(
         return 256 * 2.0.pow(5).toInt() // Hardcoded zoom level 5 for map size calculation
     }
 
-    private fun avr(a: Double, b: Double): Double {
+    fun avr(a: Double, b: Double): Double {
         return (a + b) / 2
     }
 
-    private fun calculateScale(x1: Double, y1: Double, x2: Double, y2: Double): Double {
+    fun calculateScale(x1: Double, y1: Double, x2: Double, y2: Double): Double {
         val zoomConstant = 25.0 // Empirically determined constant to adjust the overall zoom level.
         // A smaller value zooms out more, a larger value zooms in more.
 

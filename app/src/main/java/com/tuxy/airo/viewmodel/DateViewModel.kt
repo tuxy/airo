@@ -13,58 +13,58 @@ import java.time.LocalDateTime
 import java.time.ZoneOffset
 import java.time.ZonedDateTime
 
-@Suppress("UNCHECKED_CAST")
-class DateViewModel(context: Context) : ViewModel() {
+@Suppress("UNCHECKED_CAST", "StaticFieldLeak") // Determined to (probably) not be an issue
+class DateViewModel(
+    private val context: Context
+) : ViewModel() {
     // Initialise interface to preferences
     val preferencesInterface = PreferencesInterface(context)
-
-    val toasts = arrayOf( // Toasts on error
-        Toast.makeText(
-            context,
-            context.resources.getString(R.string.no_api),
-            Toast.LENGTH_SHORT
-        ),
-        Toast.makeText(
-            context,
-            context.resources.getString(R.string.invalid_api_network),
-            Toast.LENGTH_SHORT
-        ),
-        Toast.makeText(
-            context,
-            context.resources.getString(R.string.no_flight),
-            Toast.LENGTH_SHORT
-        ),
-        Toast.makeText(
-            context,
-            context.resources.getString(R.string.flight_exists),
-            Toast.LENGTH_SHORT
-        ),
-        Toast.makeText(
-            context,
-            context.resources.getString(R.string.error_unknown),
-            Toast.LENGTH_SHORT
-        ),
-        Toast.makeText(
-            context,
-            context.resources.getString(R.string.update_error),
-            Toast.LENGTH_SHORT
-        )
-    )
     var loading by mutableStateOf(false)
 
-    fun maybe(time: Long?): Long {
-        return time ?: 0
+    fun toast(idx: Int): Toast {
+        val toasts = arrayOf( // Toasts on error
+            Toast.makeText(
+                context,
+                context.resources.getString(R.string.no_api),
+                Toast.LENGTH_SHORT
+            ),
+            Toast.makeText(
+                context,
+                context.resources.getString(R.string.invalid_api_network),
+                Toast.LENGTH_SHORT
+            ),
+            Toast.makeText(
+                context,
+                context.resources.getString(R.string.no_flight),
+                Toast.LENGTH_SHORT
+            ),
+            Toast.makeText(
+                context,
+                context.resources.getString(R.string.flight_exists),
+                Toast.LENGTH_SHORT
+            ),
+            Toast.makeText(
+                context,
+                context.resources.getString(R.string.error_unknown),
+                Toast.LENGTH_SHORT
+            ),
+            Toast.makeText(
+                context,
+                context.resources.getString(R.string.update_error),
+                Toast.LENGTH_SHORT
+            )
+        )
+        return toasts[idx]
     }
 
     fun getDateAsString(time: Long): ZonedDateTime? {
         return LocalDateTime.ofEpochSecond(time / 1000L, 0, ZoneOffset.UTC)
             .atZone(ZoneOffset.systemDefault())
-        // return date.format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))
     }
 
     fun formatFlightNumber(string: String): String {
         // Using " " or "-" as a space in between the carrier and flight number will be split either way
-        val splitString = string.split("[- ]")
+        val splitString = string.split("[- ]".toRegex())
         if (splitString.size == 2) {
             return "${splitString[0]}${splitString[1]}"
         }

@@ -49,7 +49,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -90,13 +89,11 @@ fun FlightDetailsView(
     flightDataDao: FlightDataDao,
 ) {
     val context = LocalContext.current
-    val scope = rememberCoroutineScope()
 
     val viewModelFactory = DetailsViewModel.Factory(
         LocalContext.current,
         flightDataDao,
-        id,
-        scope
+        id
     )
     val viewModel: DetailsViewModel = viewModel(factory = viewModelFactory)
     val timeFormat = viewModel.preferencesInterface.getValueTimeFormatComposable("24_time")
