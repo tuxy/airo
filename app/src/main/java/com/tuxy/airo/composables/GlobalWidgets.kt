@@ -99,7 +99,7 @@ fun RouteBar(flightData: FlightData) {
 
 // Used in main flight and ticket screen
 @Composable
-fun LargeTopSmallBottom(top: String, bottom: String, modifier: Modifier = Modifier) {
+fun LargeTopSmallBottom(top: String, bottom: String) {
     Column {
         Text(
             top,
@@ -142,15 +142,17 @@ fun BoldDepartureAndDestinationText(
     ) {
         if (alignment == Alignment.Start) {
             Text(
-                "${countryCodeToEmoji(countryCode)}  $fullName",
+                "${countryCodeToEmoji(countryCode)}  ${fullName.wrap()}",
                 fontWeight = FontWeight.Normal,
-                fontSize = 12.sp
+                fontSize = 12.sp,
+                maxLines = 1,
             )
         } else {
             Text(
-                "$fullName  ${countryCodeToEmoji(countryCode)}",
+                "${fullName.wrap()}  ${countryCodeToEmoji(countryCode)}",
                 fontWeight = FontWeight.Normal,
-                fontSize = 12.sp
+                fontSize = 12.sp,
+                maxLines = 1,
             )
         }
         if (alignment == Alignment.Start) {
@@ -187,13 +189,21 @@ fun BoldDepartureAndDestinationText(
     }
 }
 
+fun String.wrap(): String {
+    if (this.length > 15) {
+        return "${this.substring(0, 14)}..."
+    } else {
+        return this
+    }
+}
+
 @Composable
 @Preview(showBackground = true)
 fun TextPreview() {
     BoldDepartureAndDestinationText(
-        icao = "SGN",
-        countryCode = "VN",
-        fullName = "Tan Son Nhat",
+        icao = "FCO",
+        countryCode = "IT",
+        fullName = "Leonardo Da Vinci-Fiumicino",
         time = "5:00",
         alignment = Alignment.Start
     )

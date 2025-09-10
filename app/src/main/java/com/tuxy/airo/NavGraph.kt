@@ -88,7 +88,7 @@ fun SetupNavGraph(
             ApiSettingsView(navController = navController)
         }
         composable(route = Screen.NotificationsSettingsScreen.route) {
-            NotificationsSettingsView(navController = navController)
+            NotificationsSettingsView(navController, flightDataDao)
         }
         composable(route = Screen.LocaleSettingsScreen.route) {
             LocaleSettingsView(navController = navController)

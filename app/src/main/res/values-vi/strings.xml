@@ -86,6 +86,5 @@
     <string name="time_setting">Dùng thời gian 24-giờ</string>
     <string name="temperature_setting">Dùng Fahrenheit (WIP)</string>
     <string name="american_date">Dùng thời gian Mỹ</string>
-    <string name="enable_flight_alerts">Thông báo chuyến bay (WIP)</string>
-    <string name="increase_urgency">Thông báo cấp tốc (WIP)</string>
+    <string name="enable_flight_alerts">Thông báo chuyến bay</string>
 </resources>

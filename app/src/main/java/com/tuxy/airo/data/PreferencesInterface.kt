@@ -28,7 +28,7 @@ class PreferencesInterface(private val context: Context) {
         }
     }
 
-    private fun getValueFlowBool(key: String): Flow<Boolean> {
+    fun getValueFlowBool(key: String): Flow<Boolean> {
         return context.dataStore.data.map { preferences ->
             preferences[booleanPreferencesKey(key)] ?: false
         }
@@ -37,6 +37,11 @@ class PreferencesInterface(private val context: Context) {
     @Composable
     fun getValue(key: String): String {
         return getValueFlowString(key).collectAsState(initial = "").value
+    }
+
+    @Composable
+    fun getValueBool(key: String): Boolean {
+        return getValueFlowBool(key).collectAsState(initial = false).value
     }
 
     suspend fun getValueTimeFormat(key: String): String {

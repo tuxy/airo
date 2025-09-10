@@ -8,17 +8,28 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.tooling.preview.Preview
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
-import androidx.navigation.compose.rememberNavController
 import com.jamal.composeprefs3.ui.PrefsScreen
 import com.tuxy.airo.R
 import com.tuxy.airo.composables.LargeAppBar
+import com.tuxy.airo.data.FlightDataDao
+import com.tuxy.airo.data.PreferencesInterface
 import com.tuxy.airo.dataStore
 import com.tuxy.airo.screens.settings.prefs.SwitchPref
+import com.tuxy.airo.viewmodel.settings.NotificationViewModel
 
 @Composable
-fun NotificationsSettingsView(navController: NavController) {
+fun NotificationsSettingsView(
+    navController: NavController,
+    flightDataDao: FlightDataDao
+) {
+    val context = LocalContext.current
+    val option = PreferencesInterface(context).getValueBool("enable_alerts")
+
+    val viewModelFactory = NotificationViewModel.Factory(context, flightDataDao)
+    val viewModel: NotificationViewModel = viewModel(factory = viewModelFactory)
+
     Scaffold(
         modifier = Modifier.fillMaxSize(),
         topBar = { LargeAppBar("Notification Settings", navController) },
@@ -31,23 +42,12 @@ fun NotificationsSettingsView(navController: NavController) {
                     SwitchPref(
                         key = "enable_alerts",
                         title = stringResource(R.string.enable_flight_alerts),
-                        defaultChecked = false,
-                        enabled = false
-                    )
-                    SwitchPref(
-                        key = "alert_urgency",
-                        title = stringResource(R.string.increase_urgency),
-                        defaultChecked = false,
-                        enabled = false
+                        defaultChecked = true,
+                        enabled = true,
+                        onCheckedChange = { viewModel.check(option) }
                     )
                 }
             }
         }
     }
-}
-
-@Composable
-@Preview(showBackground = true)
-fun NotificationsSettingsViewPreview() {
-    NotificationsSettingsView(rememberNavController())
 }

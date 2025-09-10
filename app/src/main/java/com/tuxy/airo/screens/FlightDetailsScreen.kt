@@ -62,13 +62,11 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.tuxy.airo.R
 import com.tuxy.airo.Screen
-import com.tuxy.airo.cancelAlarm
 import com.tuxy.airo.composables.RouteBar
 import com.tuxy.airo.data.FlightData
 import com.tuxy.airo.data.FlightDataDao
 import com.tuxy.airo.viewmodel.DetailsViewModel
 import kotlinx.coroutines.DelicateCoroutinesApi
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -126,10 +124,9 @@ fun FlightDetailsView(
             Column {
                 if (viewModel.openDialog.value) {
                     DeleteDialog(
-                        viewModel.openDialog,
                         navController,
                         flightDataDao,
-                        viewModel.flightData
+                        viewModel
                     )
                 }
                 LinearProgressIndicator(
@@ -556,16 +553,15 @@ fun FlightInformationInteract(navController: NavController, flightData: FlightDa
 @OptIn(ExperimentalMaterial3Api::class, DelicateCoroutinesApi::class)
 @Composable
 fun DeleteDialog(
-    openDialog: MutableState<Boolean>,
     navController: NavController,
     flightDataDao: FlightDataDao,
-    flightData: MutableState<FlightData>,
+    viewModel: DetailsViewModel,
 ) {
     val context = LocalContext.current
 
     BasicAlertDialog(
         onDismissRequest = {
-            openDialog.value = false
+            viewModel.openDialog.value = false
         }
     ) {
         Surface(
@@ -587,18 +583,14 @@ fun DeleteDialog(
                 Row {
                     TextButton(
                         onClick = {
-                            openDialog.value = false
+                            viewModel.openDialog.value = false
                         },
                     ) {
                         Text(stringResource(R.string.cancel))
                     }
                     TextButton(
                         onClick = {
-                            GlobalScope.launch(Dispatchers.IO) {
-                                flightDataDao.deleteFlight(flightData.value)
-                            }
-                            cancelAlarm(context, flightData.value)
-                            openDialog.value = false
+                            viewModel.deleteFlight(flightDataDao, context)
                             navController.navigateUp()
                         },
                     ) {
