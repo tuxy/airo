@@ -1,4 +1,4 @@
-package com.tuxy.airo.data
+package com.tuxy.airo.data.database
 
 import android.content.Context
 import androidx.compose.runtime.Composable

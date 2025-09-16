@@ -1,7 +1,7 @@
-package com.tuxy.airo.data
+package com.tuxy.airo.data.flightdata
 
 /**
- * Custom exception to wrap [FlightDataError] types when using [kotlin.Result] for [getData].
+ * Custom exception to wrap [FlightDataError] types when using [Result] for [getData].
  * This allows structured error types to be propagated through the standard Result failure channel.
  *
  * @property errorType The specific [FlightDataError] that occurred.

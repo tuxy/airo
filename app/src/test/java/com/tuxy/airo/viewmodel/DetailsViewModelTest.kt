@@ -2,8 +2,8 @@ package com.tuxy.airo.viewmodel
 
 import android.content.Context
 import android.content.res.Resources
-import com.tuxy.airo.data.FlightDataDao
-import com.tuxy.airo.data.PreferencesInterface
+import com.tuxy.airo.data.database.PreferencesInterface
+import com.tuxy.airo.data.flightdata.FlightDataDao
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi

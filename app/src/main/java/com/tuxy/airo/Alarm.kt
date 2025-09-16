@@ -10,9 +10,9 @@ import android.content.Context.ALARM_SERVICE
 import android.content.Intent
 import android.util.Log
 import androidx.core.app.NotificationCompat
-import com.tuxy.airo.data.FlightData
-import com.tuxy.airo.data.FlightDataDao
-import com.tuxy.airo.data.PreferencesInterface
+import com.tuxy.airo.data.database.PreferencesInterface
+import com.tuxy.airo.data.flightdata.FlightData
+import com.tuxy.airo.data.flightdata.FlightDataDao
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
@@ -83,7 +83,7 @@ class AlarmController(val context: Context) {
                 .atOffset(ZoneOffset.UTC)
                 .atZoneSameInstant(flightData.departTimeZone).toEpochSecond()
 
-        if (depTime > System.currentTimeMillis() / 1000) {
+        if (depTime > (System.currentTimeMillis() + 21600000) / 1000) { // If the flight is within 6 hours, don't set alarm
             val alarmManager = context.getSystemService(ALARM_SERVICE) as AlarmManager
             val intent = Intent(context, Alarm::class.java)
 

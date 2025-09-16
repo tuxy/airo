@@ -16,11 +16,11 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import com.tuxy.airo.AlarmController
 import com.tuxy.airo.R
-import com.tuxy.airo.data.FlightData
-import com.tuxy.airo.data.FlightDataDao
-import com.tuxy.airo.data.PreferencesInterface
-import com.tuxy.airo.data.getData
-import com.tuxy.airo.data.singleIntoMut
+import com.tuxy.airo.data.database.PreferencesInterface
+import com.tuxy.airo.data.flightdata.FlightData
+import com.tuxy.airo.data.flightdata.FlightDataDao
+import com.tuxy.airo.data.flightdata.getData
+import com.tuxy.airo.data.flightdata.singleIntoMut
 import com.tuxy.airo.screens.ApiSettings
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.DelicateCoroutinesApi

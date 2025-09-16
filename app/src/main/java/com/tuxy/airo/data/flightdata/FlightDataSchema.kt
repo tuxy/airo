@@ -1,4 +1,4 @@
-package com.tuxy.airo.data
+package com.tuxy.airo.data.flightdata
 
 import com.beust.klaxon.Json
 import com.beust.klaxon.Klaxon

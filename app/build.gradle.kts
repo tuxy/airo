@@ -115,6 +115,9 @@ dependencies {
     // Room database extras
     implementation(libs.roomdatabasebackup)
 
+    // workmanager for background tasks
+    implementation(libs.androidx.work.runtime.ktx)
+
     // Klaxon is already an implementation dependency, so it's available for tests.
     // If a different version was needed for tests only: testImplementation("com.beust:klaxon:5.5")
     androidTestImplementation(libs.androidx.navigation.testing)

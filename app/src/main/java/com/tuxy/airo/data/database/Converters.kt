@@ -1,4 +1,4 @@
-package com.tuxy.airo.data
+package com.tuxy.airo.data.database
 
 import androidx.room.TypeConverter
 import java.time.Duration

@@ -15,10 +15,17 @@ import androidx.core.content.ContextCompat
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.preferencesDataStore
-import com.tuxy.airo.data.FlightDataBase
-import com.tuxy.airo.data.FlightDataDao
+import androidx.work.Constraints
+import androidx.work.ExistingPeriodicWorkPolicy
+import androidx.work.NetworkType
+import androidx.work.PeriodicWorkRequestBuilder
+import androidx.work.WorkManager
+import com.tuxy.airo.data.background.UpdateWorker
+import com.tuxy.airo.data.flightdata.FlightDataBase
+import com.tuxy.airo.data.flightdata.FlightDataDao
 import com.tuxy.airo.ui.theme.AeroTheme
 import de.raphaelebner.roomdatabasebackup.core.RoomBackup
+import java.util.concurrent.TimeUnit
 
 val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "settings")
 
@@ -31,6 +38,21 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         val backup = RoomBackup(this)
         data = FlightDataBase.getDatabase(this).flightDataDao()
+
+        val constraints = Constraints.Builder()
+            .setRequiredNetworkType(NetworkType.CONNECTED)
+            .setRequiresCharging(false)
+            .build()
+
+        val periodicWorkRequest = PeriodicWorkRequestBuilder<UpdateWorker>(48, TimeUnit.HOURS)
+            .setConstraints(constraints)
+            .build()
+
+        WorkManager.getInstance(this).enqueueUniquePeriodicWork(
+            "download_work",
+            ExistingPeriodicWorkPolicy.UPDATE,
+            periodicWorkRequest
+        )
 
         enableEdgeToEdge()
         setContent {
@@ -48,7 +70,6 @@ class MainActivity : ComponentActivity() {
                         )
                     } // If the user denies notifications, we ignore forever
                 }
-
                 MainScreen(backup)
             }
         }

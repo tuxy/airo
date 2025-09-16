@@ -1,4 +1,4 @@
-package com.tuxy.airo.data
+package com.tuxy.airo.data.flightdata
 
 import android.content.Context
 import androidx.compose.runtime.MutableState
@@ -14,6 +14,7 @@ import androidx.room.Room
 import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
 import androidx.room.Update
+import com.tuxy.airo.data.database.Converters
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.Job

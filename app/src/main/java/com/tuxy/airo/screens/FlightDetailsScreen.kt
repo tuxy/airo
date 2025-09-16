@@ -63,8 +63,8 @@ import androidx.navigation.NavController
 import com.tuxy.airo.R
 import com.tuxy.airo.Screen
 import com.tuxy.airo.composables.RouteBar
-import com.tuxy.airo.data.FlightData
-import com.tuxy.airo.data.FlightDataDao
+import com.tuxy.airo.data.flightdata.FlightData
+import com.tuxy.airo.data.flightdata.FlightDataDao
 import com.tuxy.airo.viewmodel.DetailsViewModel
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.GlobalScope
@@ -173,7 +173,6 @@ fun FlightDetailsView(
                             }
                         }
                         FlightStatusCard(viewModel)
-                        WeatherCard(viewModel)
                         FlightInformationInteract(navController, viewModel.flightData.value)
                         Text(
                             modifier = Modifier.padding(16.dp),
@@ -377,24 +376,6 @@ fun SmallCard(
                 color = Color.Black
             )
             Spacer(Modifier.padding(2.dp))
-        }
-    }
-}
-
-@Composable
-fun WeatherCard(
-    viewModel: DetailsViewModel
-) {
-    Row(
-        modifier = Modifier
-            .padding(start = 16.dp, end = 16.dp, bottom = 16.dp)
-
-    ) {
-        Card(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(64.dp)
-        ) {
         }
     }
 }

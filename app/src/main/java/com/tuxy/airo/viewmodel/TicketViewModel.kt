@@ -14,11 +14,11 @@ import androidx.lifecycle.ViewModelProvider
 import com.journeyapps.barcodescanner.ScanIntentResult
 import com.journeyapps.barcodescanner.ScanOptions
 import com.tuxy.airo.R
-import com.tuxy.airo.data.FlightData
-import com.tuxy.airo.data.FlightDataDao
-import com.tuxy.airo.data.IataParserData
-import com.tuxy.airo.data.PreferencesInterface
-import com.tuxy.airo.data.singleIntoMut
+import com.tuxy.airo.data.database.IataParserData
+import com.tuxy.airo.data.database.PreferencesInterface
+import com.tuxy.airo.data.flightdata.FlightData
+import com.tuxy.airo.data.flightdata.FlightDataDao
+import com.tuxy.airo.data.flightdata.singleIntoMut
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch

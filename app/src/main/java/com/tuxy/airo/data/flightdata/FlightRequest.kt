@@ -1,4 +1,4 @@
-package com.tuxy.airo.data
+package com.tuxy.airo.data.flightdata
 
 import android.content.Context
 import android.util.Log

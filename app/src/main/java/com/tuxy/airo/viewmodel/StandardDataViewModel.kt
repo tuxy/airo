@@ -8,9 +8,9 @@ import androidx.core.net.toUri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import com.tuxy.airo.R
-import com.tuxy.airo.data.FlightData
-import com.tuxy.airo.data.FlightDataDao
-import com.tuxy.airo.data.singleIntoMut
+import com.tuxy.airo.data.flightdata.FlightData
+import com.tuxy.airo.data.flightdata.FlightDataDao
+import com.tuxy.airo.data.flightdata.singleIntoMut
 
 @Suppress("UNCHECKED_CAST")
 class StandardDataViewModel(flightDataDao: FlightDataDao, id: String) : ViewModel() {
