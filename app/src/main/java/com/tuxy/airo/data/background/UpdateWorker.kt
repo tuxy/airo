@@ -10,11 +10,12 @@ import com.tuxy.airo.data.flightdata.getData
 import com.tuxy.airo.screens.ApiSettings
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
+import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
 class UpdateWorker(
     workerParameters: WorkerParameters,
-    private val context: Context,
+    context: Context,
     private val flightDataDao: FlightDataDao,
     private val apiSettings: ApiSettings,
     private val scope: CoroutineScope
@@ -31,7 +32,20 @@ class UpdateWorker(
     private fun refreshFlightDataList() {
         val flightDataList = flightDataDao.readAll()
         for (i in flightDataList) { // Will this exceed the worker time limit?
-            scope.launch {
+            if (i.departDate < LocalDateTime.now()) { // Ignore flight if depart date has already passed
+                break
+            }
+
+            // Checks whether flight is within a week (refreshed every 2 days). If not, ignore to save api calls
+            if (!(
+                i.departDate > LocalDateTime.now()
+                &&
+                i.departDate < (LocalDateTime.now().plusDays(7))
+            )) {
+                break
+            }
+
+            scope.launch { // Get flight data and replace old data on success. TODO: Failure will be ignored
                 val result = getData(
                     flightNumber = i.callSign,
                     flightDataDao = flightDataDao,
