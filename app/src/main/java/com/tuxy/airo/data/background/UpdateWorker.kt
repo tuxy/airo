@@ -21,7 +21,7 @@ class UpdateWorker(
     private val scope: CoroutineScope
 ): Worker(context, workerParameters) {
     private val alarmController = AlarmController(context)
-    // private val preferencesInterface = PreferencesInterface(context)
+    // private val preferencesInterface = PreferencesInterface(context) // For future use
 
     override fun doWork(): Result {
         refreshFlightDataList()
@@ -62,6 +62,7 @@ class UpdateWorker(
                         flightDataDao.addFlight(flightData)
                     }
                     alarmController.setAlarm(flightData)
+                    alarmController.setAlarmOnChange(i, flightData)
                 }
             }
         }
