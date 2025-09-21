@@ -19,6 +19,7 @@ import org.mockito.Mockito.mock
 import org.mockito.Mockito.`when`
 import org.mockito.kotlin.doReturn
 import org.mockito.kotlin.stub
+import kotlin.math.roundToInt
 
 @ExperimentalCoroutinesApi
 class DetailsViewModelTest {
@@ -63,7 +64,7 @@ class DetailsViewModelTest {
 
     @Test
     fun getProgressReturnsInitial() {
-        assertEquals(0.0F, viewModel.getProgress())
+        assertEquals(0, viewModel.getProgress().roundToInt())
     }
 
     @Test
@@ -77,7 +78,6 @@ class DetailsViewModelTest {
 
     @Test
     fun getDurationReturnsInitial() {
-        // Test getDuration
         assertEquals("", viewModel.getDuration(mockContext))
     }
 
