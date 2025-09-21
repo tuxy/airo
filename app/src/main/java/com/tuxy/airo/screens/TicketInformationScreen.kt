@@ -288,7 +288,7 @@ fun MainTicketView(
                     .padding(vertical = 20.dp)
                     .width(250.dp)
                     .height(250.dp)
-                    .background(Color.Gray)
+                    .background(Color.White)
             ) {
                 if (viewModel.isDataPopulated()) {
                     when (BarcodeType.AZTEC.isValueValid(viewModel.ticketString)) {
