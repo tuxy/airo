@@ -89,4 +89,5 @@
     <string name="enable_flight_alerts">Thông báo chuyến bay</string>
     <string name="flight_update">Thông báo chuyến bay</string>
     <string name="has_updated">đã thay đổi thời gian khởi hành từ</string>
+    <string name="update_interval">Thời gian cập nhật (trong tiếng)</string>
 </resources>

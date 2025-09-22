@@ -23,6 +23,7 @@ import com.tuxy.airo.composables.LargeAppBar
 import com.tuxy.airo.data.database.PreferencesInterface
 import com.tuxy.airo.dataStore
 import com.tuxy.airo.screens.settings.prefs.SingleSegmentedListPref
+import com.tuxy.airo.screens.settings.prefs.SliderPref
 import com.tuxy.airo.screens.settings.prefs.TextFieldPref
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalComposeUiApi::class)
@@ -63,10 +64,20 @@ fun ApiSettingsView(
                         )
                     }
                     AnimatedVisibility(selectedIndex == 1) {
-                        TextFieldPref(
-                            title = stringResource(R.string.airo_api_server),
-                            key = "endpoint_airoapi",
-                        )
+                        Column {
+                            TextFieldPref(
+                                title = stringResource(R.string.airo_api_server),
+                                key = "endpoint_airoapi",
+                            )
+                            SliderPref(
+                                title = stringResource(R.string.update_interval),
+                                key = "update_interval",
+                                showValue = true,
+                                valueRange = 12f..96f,
+                                defaultValue = 48f,
+                                steps = 6
+                            )
+                        }
                     }
                     AnimatedVisibility(selectedIndex == 2) {
                         Column {
@@ -82,6 +93,14 @@ fun ApiSettingsView(
                             TextFieldPref(
                                 title = stringResource(R.string.api_key),
                                 key = "endpoint_adb_key"
+                            )
+                            SliderPref(
+                                title = stringResource(R.string.update_interval),
+                                key = "update_interval",
+                                showValue = true,
+                                valueRange = 12f..96f,
+                                defaultValue = 48f,
+                                steps = 6
                             )
                         }
                     }

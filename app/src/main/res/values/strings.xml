@@ -91,4 +91,5 @@
     <string name="enable_flight_alerts">Enable flight alerts</string>
     <string name="flight_update">Flight update</string>
     <string name="has_updated">has updated its departure from</string>
+    <string name="update_interval">Update interval (in hours)</string>
 </resources>

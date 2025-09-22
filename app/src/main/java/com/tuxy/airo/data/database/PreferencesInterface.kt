@@ -4,6 +4,7 @@ import android.content.Context
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.datastore.preferences.core.booleanPreferencesKey
+import androidx.datastore.preferences.core.floatPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import com.tuxy.airo.dataStore
 import kotlinx.coroutines.flow.Flow
@@ -28,6 +29,12 @@ class PreferencesInterface(private val context: Context) {
         }
     }
 
+    private fun getValueFlowFloat(key: String): Flow<Float> {
+        return context.dataStore.data.map { preferences ->
+            preferences[floatPreferencesKey(key)] ?: 0.0f
+        }
+    }
+
     fun getValueFlowBool(key: String): Flow<Boolean> {
         return context.dataStore.data.map { preferences ->
             preferences[booleanPreferencesKey(key)] ?: false
@@ -42,6 +49,11 @@ class PreferencesInterface(private val context: Context) {
     @Composable
     fun getValueBool(key: String): Boolean {
         return getValueFlowBool(key).collectAsState(initial = false).value
+    }
+
+    @Composable
+    fun getValueFloat(key: String): Float {
+        return getValueFlowFloat(key).collectAsState(initial = 0.0f).value
     }
 
     suspend fun getValueTimeFormat(key: String): String {
