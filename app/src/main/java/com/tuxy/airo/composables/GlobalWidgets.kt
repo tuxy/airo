@@ -29,7 +29,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.tuxy.airo.R
-import com.tuxy.airo.data.FlightData
+import com.tuxy.airo.data.flightdata.FlightData
 
 // Used in Airport, Aircraft, Ticket and Flight information screens
 @OptIn(ExperimentalMaterial3Api::class)

@@ -10,9 +10,9 @@ import android.content.Context.ALARM_SERVICE
 import android.content.Intent
 import android.util.Log
 import androidx.core.app.NotificationCompat
-import com.tuxy.airo.data.FlightData
-import com.tuxy.airo.data.FlightDataDao
-import com.tuxy.airo.data.PreferencesInterface
+import com.tuxy.airo.data.database.PreferencesInterface
+import com.tuxy.airo.data.flightdata.FlightData
+import com.tuxy.airo.data.flightdata.FlightDataDao
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
@@ -26,11 +26,11 @@ import java.time.format.DateTimeFormatter
  * This data class holds the title (flight identifier) and the main content (message)
  * for a notification that will be displayed to the user.
  *
- * @property flight The flight identifier, used as the notification's title.
+ * @property title The flight identifier, used as the notification's title.
  * @property content The detailed message of the notification, used as its content text.
  */
 data class Notification(
-    val flight: String,
+    val title: String,
     val content: String,
 ) {
     /**
@@ -52,7 +52,7 @@ data class Notification(
         manager.createNotificationChannel(channel)
 
         val builder = NotificationCompat.Builder(context, channelId)
-            .setContentTitle(this.flight)
+            .setContentTitle(this.title)
             .setContentText(this.content)
             .setSmallIcon(R.drawable.ic_launcher_foreground)
 
@@ -83,7 +83,7 @@ class AlarmController(val context: Context) {
                 .atOffset(ZoneOffset.UTC)
                 .atZoneSameInstant(flightData.departTimeZone).toEpochSecond()
 
-        if (depTime > System.currentTimeMillis() / 1000) {
+        if (depTime > (System.currentTimeMillis() + 21600000) / 1000) { // If the flight is within 6 hours, don't set alarm
             val alarmManager = context.getSystemService(ALARM_SERVICE) as AlarmManager
             val intent = Intent(context, Alarm::class.java)
 
@@ -96,7 +96,7 @@ class AlarmController(val context: Context) {
                     context.getString(R.string.at)
                 } $time"
 
-            intent.putExtra("flight", flight)
+            intent.putExtra("title", flight)
             intent.putExtra("content", content)
             val pendingIntent = PendingIntent.getBroadcast(
                 context,
@@ -107,6 +107,52 @@ class AlarmController(val context: Context) {
             alarmManager.setExactAndAllowWhileIdle(
                 AlarmManager.RTC_WAKEUP,
                 (depTime - 21600) * 1000,
+                pendingIntent
+            )
+        }
+    }
+
+    @OptIn(DelicateCoroutinesApi::class)
+    fun setAlarmOnChange(previous: FlightData, new: FlightData) {
+        val preferencesInterface = PreferencesInterface(context)
+        var timeFormatWait = ""
+
+        GlobalScope.launch {
+            val timeFormat = preferencesInterface.getValueTimeFormat("24_time")
+            timeFormatWait = timeFormat
+        } // Quite delicate
+
+        val oldDepTime =
+            previous.departDate
+                .atZone(previous.departTimeZone)
+
+        val newDepTime =
+            new.departDate
+                .atOffset(ZoneOffset.UTC)
+                .atZoneSameInstant(new.departTimeZone)
+
+        if (newDepTime != oldDepTime) {
+            val alarmManager = context.getSystemService(ALARM_SERVICE) as AlarmManager
+            val intent = Intent(context, Alarm::class.java)
+
+            val oldTime = oldDepTime.format(DateTimeFormatter.ofPattern(timeFormatWait))
+            val newTime = newDepTime.format(DateTimeFormatter.ofPattern(timeFormatWait))
+
+            val title = context.getString(R.string.flight_update)
+            val content =
+                "${context.getString(R.string.flight)} ${previous.callSign} ${context.getString(R.string.has_updated)} $oldTime ${context.getString(R.string.to)} $newTime"
+
+            intent.putExtra("title", title)
+            intent.putExtra("content", content)
+            val pendingIntent = PendingIntent.getBroadcast(
+                context,
+                new.id,
+                intent,
+                PendingIntent.FLAG_IMMUTABLE
+            )
+            alarmManager.setExactAndAllowWhileIdle(
+                AlarmManager.RTC_WAKEUP,
+                System.currentTimeMillis() - 1,
                 pendingIntent
             )
         }
@@ -151,7 +197,7 @@ class Alarm : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
         try {
             val notification = Notification(
-                flight = intent.getStringExtra("flight")!!,
+                title = intent.getStringExtra("title")!!,
                 content = intent.getStringExtra("content")!!
             )
             notification.showNotification(context)

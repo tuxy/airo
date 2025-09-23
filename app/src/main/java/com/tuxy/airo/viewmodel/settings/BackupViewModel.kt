@@ -7,7 +7,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import com.tuxy.airo.MainActivity
 import com.tuxy.airo.R
-import com.tuxy.airo.data.FlightDataBase
+import com.tuxy.airo.data.flightdata.FlightDataBase
 import de.raphaelebner.roomdatabasebackup.core.RoomBackup
 
 @Suppress("UNCHECKED_CAST")

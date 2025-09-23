@@ -32,7 +32,7 @@ import coil3.compose.AsyncImage
 import com.ireward.htmlcompose.HtmlText
 import com.tuxy.airo.R
 import com.tuxy.airo.composables.SmallAppBar
-import com.tuxy.airo.data.FlightDataDao
+import com.tuxy.airo.data.flightdata.FlightDataDao
 import com.tuxy.airo.viewmodel.StandardDataViewModel
 
 @Composable

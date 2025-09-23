@@ -27,10 +27,10 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.tuxy.airo.R
 import com.tuxy.airo.composables.SmallAppBar
-import com.tuxy.airo.data.FlightDataDao
-import com.tuxy.airo.data.FlightDataError
-import com.tuxy.airo.data.FlightDataFetchException
-import com.tuxy.airo.data.getData
+import com.tuxy.airo.data.flightdata.FlightDataDao
+import com.tuxy.airo.data.flightdata.FlightDataError
+import com.tuxy.airo.data.flightdata.FlightDataFetchException
+import com.tuxy.airo.data.flightdata.getData
 import com.tuxy.airo.viewmodel.DateViewModel
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers

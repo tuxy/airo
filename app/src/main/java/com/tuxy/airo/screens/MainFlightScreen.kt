@@ -61,8 +61,8 @@ import com.tuxy.airo.R
 import com.tuxy.airo.Screen
 import com.tuxy.airo.composables.BoldDepartureAndDestinationText
 import com.tuxy.airo.composables.LargeTopSmallBottom
-import com.tuxy.airo.data.FlightData
-import com.tuxy.airo.data.FlightDataDao
+import com.tuxy.airo.data.flightdata.FlightData
+import com.tuxy.airo.data.flightdata.FlightDataDao
 import com.tuxy.airo.viewmodel.MainFlightViewModel
 import java.time.Duration
 import java.time.LocalDateTime
