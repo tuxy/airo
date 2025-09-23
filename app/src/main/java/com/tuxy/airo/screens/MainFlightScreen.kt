@@ -1,5 +1,6 @@
 package com.tuxy.airo.screens
 
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -103,9 +104,27 @@ fun MainFlightView(
                 .verticalScroll(rememberScrollState()),
         ) {
             if (!viewModel.flights.isEmpty()) {
+                PrimaryTabRow(
+                    selectedTabIndex = viewModel.selectedTabIndex,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(innerPadding)
+                ) {
+                    Tab(
+                        selected = if (viewModel.selectedTabIndex == 0) true else false,
+                        onClick = { viewModel.selectedTabIndex = 0 },
+                        enabled = true,
+                        text = { Text(stringResource(R.string.upcoming_flights)) },
+                    )
+                    Tab(
+                        selected = if (viewModel.selectedTabIndex == 0) true else false,
+                        onClick = { viewModel.selectedTabIndex = 1 },
+                        enabled = true,
+                        text = { Text(stringResource(R.string.past_flights)) },
+                    )
+                }
                 LazyColumn(
                     modifier = Modifier
-                        .padding(innerPadding)
                         .fillMaxWidth()
                         .wrapContentHeight()
                         .heightIn(max = 2000.dp)
@@ -117,19 +136,28 @@ fun MainFlightView(
                         }.toSortedMap()
 
                         stickyHeader {
-                            DateHeader(
-                                LocalDateTime
-                                    .ofEpochSecond(
-                                        header.toLong(),
-                                        0,
-                                        ZoneOffset.UTC
-                                    )
-                            )
+                            AnimatedVisibility(upcomingOrPast(viewModel.selectedTabIndex, header)) {
+                                DateHeader(
+                                    LocalDateTime
+                                        .ofEpochSecond(
+                                            header.toLong(),
+                                            0,
+                                            ZoneOffset.UTC
+                                        )
+                                )
+                            }
                         }
 
                         unsortedFlights.forEach { (_, flights) -> // Another list, with un-rounded values (Performance?)
                             items(flights) { flight ->
-                                FlightCard(navController, flight, viewModel)
+                                AnimatedVisibility(
+                                    upcomingOrPast(
+                                        viewModel.selectedTabIndex,
+                                        flight.arriveDate.toEpochSecond(ZoneOffset.UTC)
+                                    )
+                                ) {
+                                    FlightCard(navController, flight, viewModel)
+                                }
                             }
                         }
                     }
@@ -156,6 +184,17 @@ fun MainFlightView(
                 }
             }
         }
+    }
+}
+
+fun upcomingOrPast(
+    selectedTabIndex: Int,
+    time: Long,
+): Boolean {
+    return if (selectedTabIndex == 0) {
+        time > LocalDateTime.now().toEpochSecond(ZoneOffset.UTC)
+    } else {
+        time < LocalDateTime.now().toEpochSecond(ZoneOffset.UTC)
     }
 }
 

@@ -2,6 +2,7 @@ package com.tuxy.airo.viewmodel
 
 import android.content.Context
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
@@ -22,6 +23,8 @@ import kotlin.math.roundToLong
  */
 class MainFlightViewModel(context: Context) : ViewModel() {
     val preferencesInterface = PreferencesInterface(context)
+
+    var selectedTabIndex by mutableIntStateOf(0)
 
     /**
      * Holds the raw, unsorted list of all [FlightData] objects.
