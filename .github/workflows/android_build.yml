@@ -2,6 +2,9 @@ name: Android Build
 on:
   push:
     branches: [ main, github-actions-android-build ]
+    paths-ignore:
+      - 'README.md'
+      - 'Contributing.md'
   pull_request:
     branches: [ main ]
 jobs:
