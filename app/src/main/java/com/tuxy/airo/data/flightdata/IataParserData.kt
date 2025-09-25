@@ -1,4 +1,4 @@
-package com.tuxy.airo.data.database
+package com.tuxy.airo.data.flightdata
 
 import android.content.Context
 import com.tuxy.airo.R
@@ -29,7 +29,7 @@ data class IataParserData(
      * it catches the exception and returns a default [IataParserData] object with empty or default values.
      *
      * @param barcode The raw barcode string to be parsed.
-     * @param context The Android [Context] used to access resources, such as localized strings for flight classes.
+     * @param context The Android [android.content.Context] used to access resources, such as localized strings for flight classes.
      * @return An [IataParserData] object containing the parsed flight information.
      *         Returns a default [IataParserData] object if parsing fails.
      */
