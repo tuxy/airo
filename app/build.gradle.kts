@@ -40,6 +40,7 @@ android {
         compose = true
     }
     testOptions {
+        unitTests.isReturnDefaultValues = true
         unitTests.all {
             it.jvmArgs("-XX:+EnableDynamicAgentLoading")
         }

@@ -88,7 +88,7 @@ fun AircraftListView(
                 .clickable {
                     viewModel.openWebpage(
                         context,
-                        "https://aerolopa.com/${viewModel.flightData.value.callSign}"
+                        "https://www.aerolopa.com/${viewModel.flightData.value.callSign.split(" ")[0].lowercase()}"
                     )
                 },
             headlineContent = { Text(stringResource(R.string.seat_maps)) },
