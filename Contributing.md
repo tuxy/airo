@@ -26,7 +26,7 @@ This project never followed specific structure. Essentially:
 - `MainActivity.kt`: fairly self-explanatory
 - `NavGraph.kt`: Navigation between screens
 - `Screen`: Standardised names for screens
-- `AiroTest`: Testing (0% coverage...)
+- `AiroTest`: Testing (currently only some coverage on error prone areas)
 
 ## Main focus points for improvement (currently)
 
