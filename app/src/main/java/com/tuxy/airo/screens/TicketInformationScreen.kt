@@ -1,5 +1,6 @@
 package com.tuxy.airo.screens
 
+import android.Manifest
 import android.content.ClipData
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.compose.animation.AnimatedVisibility
@@ -55,6 +56,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import com.google.accompanist.permissions.ExperimentalPermissionsApi
+import com.google.accompanist.permissions.rememberPermissionState
 import com.journeyapps.barcodescanner.ScanContract
 import com.simonsickle.compose.barcodes.Barcode
 import com.simonsickle.compose.barcodes.BarcodeType
@@ -72,7 +75,7 @@ import kotlinx.coroutines.launch
 import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalPermissionsApi::class)
 @Composable
 fun TicketInformationView(
     navController: NavController,
@@ -89,6 +92,14 @@ fun TicketInformationView(
             viewModel.updateData(flightDataDao, context)
         }
     }
+
+    val permissionState = rememberPermissionState(
+        permission = Manifest.permission.CAMERA,
+        onPermissionResult = { result ->
+            viewModel.hasCameraPermission = result
+            if (result) { viewModel.showCamera(barCodeLauncher, context) }
+        }
+    )
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),
@@ -122,6 +133,7 @@ fun TicketInformationView(
                 } else {
                     if (!viewModel.hasCameraPermission) {
                         viewModel.toast.show()
+                        permissionState.launchPermissionRequest()
                     }
                 }
             }) {
