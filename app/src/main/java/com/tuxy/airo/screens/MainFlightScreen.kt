@@ -2,6 +2,7 @@ package com.tuxy.airo.screens
 
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -48,8 +49,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalWindowInfo
-import androidx.compose.ui.platform.WindowInfo
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -88,8 +87,6 @@ fun MainFlightView(
     val selectedTabIndex = remember { derivedStateOf { pagerState.currentPage } }
     val scope = rememberCoroutineScope()
 
-    val windowInfo = LocalWindowInfo.current
-
     viewModel.loadData(flightDataDao)
 
     val scrollBehavior =
@@ -112,23 +109,23 @@ fun MainFlightView(
     ) { innerPadding ->
         Column(
             modifier = Modifier
-                .verticalScroll(rememberScrollState())
+                .padding(innerPadding)
                 .fillMaxSize()
-                .padding(innerPadding),
+                .verticalScroll(rememberScrollState())
         ) {
-            if (!viewModel.flights.isEmpty()) {
-                TabRow(
-                    selectedTabIndex.value,
-                    pagerState,
-                    scope
-                )
-                FlightsList(
-                    pagerState,
-                    windowInfo,
-                    viewModel,
-                    navController
-                )
-            }
+            TabRow(
+                selectedTabIndex.value,
+                pagerState,
+                scope,
+            )
+            FlightsList(
+                pagerState = pagerState,
+                viewModel = viewModel,
+                navController = navController,
+                modifier = Modifier
+                    .fillMaxSize()
+                    .weight(1f),
+            )
         }
     }
 }
@@ -171,25 +168,25 @@ fun TabRow(
 @Composable
 fun FlightsList(
     pagerState: PagerState,
-    windowInfo: WindowInfo,
     viewModel: MainFlightViewModel,
-    navController: NavController
+    navController: NavController,
+    modifier: Modifier = Modifier,
 ) {
     HorizontalPager(
         state = pagerState,
+        modifier = modifier
     ) { page ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .height(windowInfo.containerSize.height.dp)
         ) {
-            when(page) {
+            when (page) {
                 0 -> {
-                    if (viewModel.flightsUpcoming.isEmpty()) {
-                        NoFlight(windowInfo)
-                    }
-                    else {
-                        viewModel.flightsUpcoming.forEach { (_, flights) ->
+                    if (viewModel.flightsUpcomingList.isEmpty()) {
+                        NoFlight()
+                    } else {
+                        viewModel.flightsUpcomingList.forEach { flights ->
+                            DateHeader(flights[0].departDate)
                             flights.groupBy { flight ->
                                 FlightCard(navController, flight, viewModel)
                             }
@@ -197,11 +194,11 @@ fun FlightsList(
                     }
                 }
                 1 -> {
-                    if (viewModel.flightsPast.isEmpty()) {
-                        NoFlight(windowInfo)
-                    }
-                    else {
-                        viewModel.flightsPast.forEach { (_, flights) ->
+                    if (viewModel.flightsPastList.isEmpty()) {
+                        NoFlight()
+                    } else {
+                        viewModel.flightsPastList.forEach { flights ->
+                            DateHeader(flights[0].departDate)
                             flights.groupBy { flight ->
                                 FlightCard(navController, flight, viewModel)
                             }
@@ -214,26 +211,29 @@ fun FlightsList(
 }
 
 @Composable
-fun NoFlight(windowInfo: WindowInfo) {
-    Column(
+fun NoFlight() {
+    Box(
         modifier = Modifier.fillMaxSize(),
-        horizontalAlignment = Alignment.CenterHorizontally,
+        contentAlignment = Alignment.Center
     ) {
-        Spacer(Modifier.height(
-            (windowInfo.containerSize.height / 4).dp
-        ))
-        Icon(
-            modifier = Modifier.size(100.dp),
-            imageVector = Icons.Filled.FlightTakeoff,
-            contentDescription = stringResource(R.string.add_flight),
-            tint = Color.Gray
-        )
-        Text(
-            stringResource(R.string.no_flight_smile),
-            color = Color.Gray,
-            modifier = Modifier.padding(24.dp),
-            textAlign = TextAlign.Center
-        )
+        Column(
+            modifier = Modifier.fillMaxSize(),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
+        ) {
+            Icon(
+                modifier = Modifier.size(100.dp),
+                imageVector = Icons.Filled.FlightTakeoff,
+                contentDescription = stringResource(R.string.add_flight),
+                tint = Color.Gray
+            )
+            Text(
+                stringResource(R.string.no_flight_smile),
+                color = Color.Gray,
+                modifier = Modifier.padding(24.dp),
+                textAlign = TextAlign.Center
+            )
+        }
     }
 }
 
