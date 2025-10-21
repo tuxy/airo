@@ -86,6 +86,7 @@ class MainFlightViewModel(context: Context) : ViewModel() {
         }
     }
 
+    @Suppress("UNCHECKED_CAST")
     class Factory(
         private val context: Context,
     ) : ViewModelProvider.NewInstanceFactory() {

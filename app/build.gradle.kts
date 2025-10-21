@@ -101,6 +101,7 @@ dependencies {
     implementation(libs.zxing.android.embedded)
     implementation(libs.composed.barcodes)
     implementation(libs.core)
+    implementation(libs.accompanist.permissions)
 
     // Core testing dependencies
     testImplementation(libs.junit) // Already present
