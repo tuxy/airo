@@ -2,7 +2,6 @@ package com.tuxy.airo.viewmodel
 
 import android.content.Context
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
@@ -13,6 +12,7 @@ import com.tuxy.airo.data.flightdata.FlightDataDao
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
+import java.time.LocalDateTime
 import java.time.ZoneOffset
 import java.util.SortedMap
 import kotlin.math.roundToLong
@@ -23,8 +23,6 @@ import kotlin.math.roundToLong
  */
 class MainFlightViewModel(context: Context) : ViewModel() {
     val preferencesInterface = PreferencesInterface(context)
-
-    var selectedTabIndex by mutableIntStateOf(0)
 
     /**
      * Holds the raw, unsorted list of all [FlightData] objects.
@@ -59,6 +57,16 @@ class MainFlightViewModel(context: Context) : ViewModel() {
             .toDouble() / 86400).roundToLong() * 86400 // Maybe for the future, make something to smart-combine flights close together.
     }.toSortedMap()
 
+    var flightsUpcoming = flights
+        .filterKeys { it < LocalDateTime.now().toEpochSecond(ZoneOffset.UTC) }
+    var flightsPast = flights
+        .filterKeys { it > LocalDateTime.now().toEpochSecond(ZoneOffset.UTC) }
+
+    var flightColumnList = listOf<Map<Long, List<FlightData>>>(
+        flightsUpcoming,
+        flightsPast
+    )
+
     /**
      * Asynchronously loads flight data from the persistent storage using the provided DAO.
      *
@@ -83,9 +91,20 @@ class MainFlightViewModel(context: Context) : ViewModel() {
                             .toDouble() / 86400).roundToLong() * 86400
                         )
             }.toSortedMap()
+
+            flightsUpcoming = flights
+                .filterKeys { it < LocalDateTime.now().toEpochSecond(ZoneOffset.UTC) }
+            flightsPast = flights
+                .filterKeys { it > LocalDateTime.now().toEpochSecond(ZoneOffset.UTC) }
+
+            flightColumnList = listOf(
+                flightsUpcoming,
+                flightsPast
+            )
         }
     }
 
+    @Suppress("UNCHECKED_CAST")
     class Factory(
         private val context: Context,
     ) : ViewModelProvider.NewInstanceFactory() {
