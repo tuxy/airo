@@ -23,7 +23,7 @@ class PreferencesInterface(private val context: Context) {
      * @param key The key (String) for which to retrieve the value.
      * @return The String value associated with the key, or an empty string if not found.
      */
-    private fun getValueFlowString(key: String): Flow<String> {
+     fun getValueFlowString(key: String): Flow<String> {
         return context.dataStore.data.map { preferences ->
             preferences[stringPreferencesKey(key)] ?: ""
         }

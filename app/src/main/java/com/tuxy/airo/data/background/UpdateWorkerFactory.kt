@@ -13,11 +13,11 @@ class UpdateWorkerFactory : WorkerFactory() {
     ): ListenableWorker? {
         return when (workerClassName) {
             UpdateWorker::class.java.name -> {
-                // Return an instance of your worker
-                UpdateWorker(workerParameters, appContext)
+                UpdateWorker(
+                    workerParameters, appContext,
+                )
             }
-            // Add other workers here if needed
-            else -> null // Fallback to the default WorkerFactory
+            else -> null
         }
     }
 }

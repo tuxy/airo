@@ -64,7 +64,7 @@ private fun buildFlightApiRequest(
         "" -> "https://airoapi.tuxy.stream/flights" // When datastore hasn't initialised (user hasn't picked)
         "0" -> "https://airoapi.tuxy.stream/flights"
         "1" -> settings.server
-        "2" -> settings.endpoint
+        "2" -> settings.adbEndpoint
         else -> null
     }
 
@@ -72,7 +72,7 @@ private fun buildFlightApiRequest(
         return null // Invalid choice or empty server/endpoint
     }
 
-    if (settings.choice == "1" && settings.key.isNullOrEmpty()) {
+    if (settings.choice == "1" && settings.adbKey.isNullOrEmpty()) {
         return null // API key required for custom endpoint but missing
     }
 
@@ -86,7 +86,7 @@ private fun buildFlightApiRequest(
         .header("Accept", "application/json")
         .also {
             if (settings.choice == "1") { // Only add API key if custom endpoint is chosen
-                it.header("x-magicapi-key", settings.key.orEmpty())
+                it.header("x-magicapi-key", settings.adbKey.orEmpty())
             }
         }
         .build()

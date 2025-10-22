@@ -40,8 +40,8 @@ import java.time.format.DateTimeFormatter
 
 data class ApiSettings(
     val choice: String,
-    val endpoint: String?,
-    val key: String?,
+    val adbEndpoint: String?,
+    val adbKey: String?,
     val server: String?,
 )
 

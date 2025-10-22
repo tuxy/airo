@@ -2,15 +2,18 @@ package com.tuxy.airo.data.background
 
 import android.content.Context
 import android.util.Log
-import androidx.work.Worker
+import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
 import com.tuxy.airo.AlarmController
 import com.tuxy.airo.data.database.PreferencesInterface
 import com.tuxy.airo.data.flightdata.FlightData
-import com.tuxy.airo.data.flightdata.FlightDataDao
+import com.tuxy.airo.data.flightdata.FlightDataBase
 import com.tuxy.airo.data.flightdata.getData
 import com.tuxy.airo.screens.ApiSettings
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
@@ -18,20 +21,28 @@ import java.time.format.DateTimeFormatter
 class UpdateWorker(
     workerParameters: WorkerParameters,
     context: Context,
-    private val flightDataDao: FlightDataDao,
-    private val apiSettings: ApiSettings,
-    private val scope: CoroutineScope
-): Worker(context, workerParameters) {
+): CoroutineWorker(context, workerParameters) {
     private val alarmController = AlarmController(context)
+    private val preferencesInterface = PreferencesInterface(context)
+    private val flightDataDao = FlightDataBase.getDatabase(context).flightDataDao()
+    private val scope = CoroutineScope(Job() + Dispatchers.Default)
     // private val preferencesInterface = PreferencesInterface(context) // For future use
 
-    override fun doWork(): Result {
-        refreshFlightDataList()
+    override suspend fun doWork(): Result {
+
+        val apiSettings = ApiSettings(
+            choice = preferencesInterface.getValueFlowString("selected_api").first(),
+            adbEndpoint = preferencesInterface.getValueFlowString("endpoint_adb").first(),
+            adbKey = preferencesInterface.getValueFlowString("endpoint_adb_key").first(),
+            server = preferencesInterface.getValueFlowString("endpoint_airoapi").first()
+        )
+
+        refreshFlightDataList(apiSettings)
         Log.d("UpdateWorker", "Updating work")
         return Result.success()
     }
 
-    private fun refreshFlightDataList() {
+    private fun refreshFlightDataList(apiSettings: ApiSettings) {
         val flightDataList = flightDataDao.readAll()
         for (i in flightDataList) { // Will this exceed the worker time limit?
             if (i.departDate < LocalDateTime.now()) { // Ignore flight if depart date has already passed

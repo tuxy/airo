@@ -183,7 +183,9 @@ fun FlightsList(
             when (page) {
                 0 -> {
                     if (viewModel.flightsUpcomingList.isEmpty()) {
-                        NoFlight()
+                        NoFlight(
+                            modifier = Modifier.fillMaxSize().padding(128.dp),
+                        )
                     } else {
                         viewModel.flightsUpcomingList.forEach { flights ->
                             DateHeader(flights[0].departDate, flights.size)
@@ -195,7 +197,9 @@ fun FlightsList(
                 }
                 1 -> {
                     if (viewModel.flightsPastList.isEmpty()) {
-                        NoFlight()
+                        NoFlight(
+                            modifier = Modifier.fillMaxSize().padding(128.dp),
+                        )
                     } else {
                         viewModel.flightsPastList.forEach { flights ->
                             DateHeader(flights[0].departDate, flights.size)
@@ -212,9 +216,10 @@ fun FlightsList(
 }
 
 @Composable
-fun NoFlight() {
+fun NoFlight(
+    modifier: Modifier = Modifier
+) {
     Box(
-        modifier = Modifier.fillMaxSize(),
         contentAlignment = Alignment.Center
     ) {
         Column(
