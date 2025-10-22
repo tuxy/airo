@@ -1,21 +1,21 @@
 package com.tuxy.airo.screens
 
-import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.PagerState
+import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
@@ -39,7 +39,9 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.TopAppBarScrollBehavior
 import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.MutableIntState
+import androidx.compose.runtime.derivedStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -64,6 +66,8 @@ import com.tuxy.airo.composables.LargeTopSmallBottom
 import com.tuxy.airo.data.flightdata.FlightData
 import com.tuxy.airo.data.flightdata.FlightDataDao
 import com.tuxy.airo.viewmodel.MainFlightViewModel
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.launch
 import java.time.Duration
 import java.time.LocalDateTime
 import java.time.ZoneOffset
@@ -78,6 +82,10 @@ fun MainFlightView(
 ) {
     val viewModelFactory = MainFlightViewModel.Factory(LocalContext.current)
     val viewModel: MainFlightViewModel = viewModel(factory = viewModelFactory)
+
+    val pagerState = rememberPagerState(pageCount = {2})
+    val selectedTabIndex = remember { derivedStateOf { pagerState.currentPage } }
+    val scope = rememberCoroutineScope()
 
     viewModel.loadData(flightDataDao)
 
@@ -101,127 +109,131 @@ fun MainFlightView(
     ) { innerPadding ->
         Column(
             modifier = Modifier
-                .verticalScroll(rememberScrollState()),
+                .padding(innerPadding)
+                .fillMaxSize()
+                .verticalScroll(rememberScrollState())
         ) {
-            if (!viewModel.flights.isEmpty()) {
-                PrimaryTabRow(
-                    selectedTabIndex = viewModel.selectedTabIndex,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(innerPadding)
-                ) {
-                    Tab(
-                        selected = if (viewModel.selectedTabIndex == 0) true else false,
-                        onClick = { viewModel.selectedTabIndex = 0 },
-                        enabled = true,
-                        text = { Text(stringResource(R.string.upcoming_flights)) },
-                    )
-                    Tab(
-                        selected = if (viewModel.selectedTabIndex == 0) true else false,
-                        onClick = { viewModel.selectedTabIndex = 1 },
-                        enabled = true,
-                        text = { Text(stringResource(R.string.past_flights)) },
-                    )
+            TabRow(
+                selectedTabIndex.value,
+                pagerState,
+                scope,
+            )
+            FlightsList(
+                pagerState = pagerState,
+                viewModel = viewModel,
+                navController = navController,
+                modifier = Modifier
+                    .fillMaxSize()
+                    .weight(1f),
+            )
+        }
+    }
+}
+
+@Composable
+fun TabRow(
+    selectedTabIndex: Int,
+    pagerState: PagerState,
+    scope: CoroutineScope,
+) {
+    PrimaryTabRow(
+        selectedTabIndex = selectedTabIndex,
+        modifier = Modifier
+            .wrapContentHeight()
+    ) {
+        Tab(
+            selected = selectedTabIndex == 0,
+            onClick = {
+                scope.launch {
+                    pagerState.animateScrollToPage(0)
                 }
-                LazyColumn(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .wrapContentHeight()
-                        .heightIn(max = 2000.dp)
-                ) {
-                    viewModel.flights.forEach { (header, flights) ->
+            },
+            enabled = true,
+            text = { Text(stringResource(R.string.upcoming_flights)) },
+        )
+        Tab(
+            selected = selectedTabIndex == 1,
+            onClick = {
+                scope.launch {
+                    pagerState.animateScrollToPage(1)
+                }
+            },
+            enabled = true,
+            text = { Text(stringResource(R.string.past_flights)) },
+        )
+    }
+    Spacer(modifier = Modifier.height(16.dp))
+}
 
-                        val unsortedFlights = flights.groupBy { flight ->
-                            flight.departDate.toEpochSecond(ZoneOffset.UTC)
-                        }.toSortedMap()
-
-                        stickyHeader {
-                            AnimatedVisibility(upcomingOrPast(viewModel.selectedTabIndex, header)) {
-                                DateHeader(
-                                    LocalDateTime
-                                        .ofEpochSecond(
-                                            header.toLong(),
-                                            0,
-                                            ZoneOffset.UTC
-                                        )
-                                )
-                            }
-                        }
-
-                        unsortedFlights.forEach { (_, flights) -> // Another list, with un-rounded values (Performance?)
-                            items(flights) { flight ->
-                                AnimatedVisibility(
-                                    upcomingOrPast(
-                                        viewModel.selectedTabIndex,
-                                        flight.arriveDate.toEpochSecond(ZoneOffset.UTC)
-                                    )
-                                ) {
-                                    FlightCard(navController, flight, viewModel)
-                                }
+@Composable
+fun FlightsList(
+    pagerState: PagerState,
+    viewModel: MainFlightViewModel,
+    navController: NavController,
+    modifier: Modifier = Modifier,
+) {
+    HorizontalPager(
+        state = pagerState,
+        modifier = modifier
+    ) { page ->
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+        ) {
+            when (page) {
+                0 -> {
+                    if (viewModel.flightsUpcomingList.isEmpty()) {
+                        NoFlight()
+                    } else {
+                        viewModel.flightsUpcomingList.forEach { flights ->
+                            DateHeader(flights[0].departDate)
+                            flights.groupBy { flight ->
+                                FlightCard(navController, flight, viewModel)
                             }
                         }
                     }
                 }
-                Spacer(Modifier.padding(56.dp))
-            } else {
-                Column(
-                    modifier = Modifier.fillMaxSize(),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                ) {
-                    Spacer(Modifier.height(360.dp))
-                    Icon(
-                        modifier = Modifier.size(100.dp),
-                        imageVector = Icons.Filled.FlightTakeoff,
-                        contentDescription = stringResource(R.string.add_flight),
-                        tint = Color.Gray
-                    )
-                    Text(
-                        stringResource(R.string.no_flight_smile),
-                        color = Color.Gray,
-                        modifier = Modifier.padding(24.dp),
-                        textAlign = TextAlign.Center
-                    )
+                1 -> {
+                    if (viewModel.flightsPastList.isEmpty()) {
+                        NoFlight()
+                    } else {
+                        viewModel.flightsPastList.forEach { flights ->
+                            DateHeader(flights[0].departDate)
+                            flights.groupBy { flight ->
+                                FlightCard(navController, flight, viewModel)
+                            }
+                        }
+                    }
                 }
             }
         }
     }
 }
 
-fun upcomingOrPast(
-    selectedTabIndex: Int,
-    time: Long,
-): Boolean {
-    return if (selectedTabIndex == 0) {
-        time > LocalDateTime.now().toEpochSecond(ZoneOffset.UTC)
-    } else {
-        time < LocalDateTime.now().toEpochSecond(ZoneOffset.UTC)
-    }
-}
-
-// Currently not used
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun TabRow(
-    index: MutableIntState
-) {
-    PrimaryTabRow(
-        selectedTabIndex = index.intValue,
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(top = 56.dp)
+fun NoFlight() {
+    Box(
+        modifier = Modifier.fillMaxSize(),
+        contentAlignment = Alignment.Center
     ) {
-        Tab(
-            modifier = Modifier.padding(12.dp),
-            selected = index.intValue == 0,
-            onClick = { index.intValue = 0 },
-            content = { Text(stringResource(R.string.upcoming_flights)) }
-        )
-        Tab(
-            modifier = Modifier.padding(12.dp),
-            selected = index.intValue == 1,
-            onClick = { index.intValue = 1 },
-            content = { Text(stringResource(R.string.past_flights)) }
-        )
+        Column(
+            modifier = Modifier.fillMaxSize(),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
+        ) {
+            Icon(
+                modifier = Modifier.size(100.dp),
+                imageVector = Icons.Filled.FlightTakeoff,
+                contentDescription = stringResource(R.string.add_flight),
+                tint = Color.Gray
+            )
+            Text(
+                stringResource(R.string.no_flight_smile),
+                color = Color.Gray,
+                modifier = Modifier.padding(24.dp),
+                textAlign = TextAlign.Center
+            )
+        }
     }
 }
 

@@ -2,7 +2,6 @@ package com.tuxy.airo.viewmodel
 
 import android.content.Context
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
@@ -13,9 +12,10 @@ import com.tuxy.airo.data.flightdata.FlightDataDao
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
+import java.time.Duration
+import java.time.LocalDateTime
 import java.time.ZoneOffset
 import java.util.SortedMap
-import kotlin.math.roundToLong
 
 /**
  * ViewModel responsible for managing and providing flight data for the main flight display screen.
@@ -23,8 +23,6 @@ import kotlin.math.roundToLong
  */
 class MainFlightViewModel(context: Context) : ViewModel() {
     val preferencesInterface = PreferencesInterface(context)
-
-    var selectedTabIndex by mutableIntStateOf(0)
 
     /**
      * Holds the raw, unsorted list of all [FlightData] objects.
@@ -52,12 +50,12 @@ class MainFlightViewModel(context: Context) : ViewModel() {
      * The values are lists of [FlightData] objects that fall within that specific 2-day interval.
      * The map is sorted by its keys (interval start times).
      */
-    // Group by 1 day
-    var flights = flightData.groupBy { flight ->
-        // 86400 seconds = 1 day
-        (flight.departDate.toEpochSecond(ZoneOffset.UTC)
-            .toDouble() / 86400).roundToLong() * 86400 // Maybe for the future, make something to smart-combine flights close together.
+    var flights = flightData.associateBy { flight ->
+        flight.departDate.toEpochSecond(ZoneOffset.UTC)
     }.toSortedMap()
+
+    var flightsUpcomingList = emptyList<List<FlightData>>()
+    var flightsPastList = emptyList<List<FlightData>>()
 
     /**
      * Asynchronously loads flight data from the persistent storage using the provided DAO.
@@ -77,12 +75,55 @@ class MainFlightViewModel(context: Context) : ViewModel() {
         GlobalScope.launch {
             flightData = flightDataDao.readAll()
             // Group by 1 day
-            flights = flightData.groupBy { flight ->
-                (
-                        (flight.departDate.toEpochSecond(ZoneOffset.UTC)
-                            .toDouble() / 86400).roundToLong() * 86400
-                        )
+            flights = flightData.associateBy { flight ->
+                flight.arriveDate.toEpochSecond(ZoneOffset.UTC)
             }.toSortedMap()
+
+            val flightsUpcoming = flights
+                .filterKeys { it > LocalDateTime.now().toEpochSecond(ZoneOffset.UTC) }
+                .toSortedMap()
+            val flightsPast = flights
+                .filterKeys { it < LocalDateTime.now().toEpochSecond(ZoneOffset.UTC) }
+                .toSortedMap()
+
+            flightsUpcomingList = groupFlightsByProximity(flightsUpcoming)
+            flightsPastList = groupFlightsByProximity(flightsPast)
+        }
+    }
+
+    /*
+    The grouping process is as follows:
+    1. Initialize with an empty list of groups.
+    2. For each flight, check if it fits into the last group.
+    3. If it fits (its departure time is within 6 hours of the last flight in the last group), add it to that group.
+    4. If it does not fit, start a new group containing just this flight.
+     */
+    fun groupFlightsByProximity(
+        flights: Map<Long, FlightData> // Implement threshold with preferencesInterface
+    ): List<List<FlightData>> {
+        var list = emptyList<FlightData>()
+
+        for ((_, value) in flights) {
+            list = list + value
+        }
+
+        return list.fold(initial = emptyList()) { current: List<List<FlightData>>, flight: FlightData ->
+            val lastGroup = current.lastOrNull()
+            val lastFlightInGroup = lastGroup?.lastOrNull()
+
+            if (lastFlightInGroup != null) {
+                val timeDiff = Duration.between(lastFlightInGroup.departDate, flight.departDate).abs()
+
+                if (timeDiff <= Duration.ofHours(24)) {
+                    val updatedLastGroup = lastGroup + flight
+
+                    current.dropLast(1) + listOf(updatedLastGroup)
+                } else {
+                    current + listOf(listOf(flight))
+                }
+            } else {
+                current + listOf(listOf(flight))
+            }
         }
     }
 
