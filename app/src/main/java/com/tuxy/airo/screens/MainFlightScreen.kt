@@ -111,7 +111,6 @@ fun MainFlightView(
             modifier = Modifier
                 .padding(innerPadding)
                 .fillMaxSize()
-                .verticalScroll(rememberScrollState())
         ) {
             TabRow(
                 selectedTabIndex.value,
@@ -162,7 +161,6 @@ fun TabRow(
             text = { Text(stringResource(R.string.past_flights)) },
         )
     }
-    Spacer(modifier = Modifier.height(16.dp))
 }
 
 @Composable
@@ -179,14 +177,16 @@ fun FlightsList(
         Column(
             modifier = Modifier
                 .fillMaxSize()
+                .verticalScroll(rememberScrollState())
         ) {
+            Spacer(Modifier.height(16.dp))
             when (page) {
                 0 -> {
                     if (viewModel.flightsUpcomingList.isEmpty()) {
                         NoFlight()
                     } else {
                         viewModel.flightsUpcomingList.forEach { flights ->
-                            DateHeader(flights[0].departDate)
+                            DateHeader(flights[0].departDate, flights.size)
                             flights.groupBy { flight ->
                                 FlightCard(navController, flight, viewModel)
                             }
@@ -198,7 +198,7 @@ fun FlightsList(
                         NoFlight()
                     } else {
                         viewModel.flightsPastList.forEach { flights ->
-                            DateHeader(flights[0].departDate)
+                            DateHeader(flights[0].departDate, flights.size)
                             flights.groupBy { flight ->
                                 FlightCard(navController, flight, viewModel)
                             }
@@ -206,6 +206,7 @@ fun FlightsList(
                     }
                 }
             }
+            Spacer(Modifier.height(56.dp))
         }
     }
 }
@@ -351,7 +352,7 @@ fun TicketInformationCard(flight: FlightData) {
 }
 
 @Composable
-fun DateHeader(time: LocalDateTime) {
+fun DateHeader(time: LocalDateTime, count: Int) {
     Row(
         modifier = Modifier
             .padding(horizontal = 20.dp, vertical = 16.dp)
@@ -364,6 +365,12 @@ fun DateHeader(time: LocalDateTime) {
             fontSize = 24.sp,
             fontWeight = FontWeight.W500
         )
+        if (count > 1) {
+            Text(
+                "$count ${stringResource(R.string.flights)}",
+                color = Color.Gray
+            )
+        }
     }
 }
 

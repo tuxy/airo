@@ -9,6 +9,8 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.ui.platform.LocalContext
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
@@ -33,7 +35,6 @@ val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "se
 class MainActivity : ComponentActivity() {
 
     lateinit var data: FlightDataDao
-
     val preferencesInterface = PreferencesInterface(this)
 
     @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
@@ -42,15 +43,11 @@ class MainActivity : ComponentActivity() {
         val backup = RoomBackup(this)
         data = FlightDataBase.getDatabase(this).flightDataDao()
 
-        val constraints = Constraints.Builder()
-            .setRequiredNetworkType(NetworkType.CONNECTED)
-            .setRequiresCharging(false)
-            .build()
-
         enableEdgeToEdge()
         setContent {
             val current = preferencesInterface.getValue("selected_api")
             val interval = if (current != "0") preferencesInterface.getValueFloat("update_interval") else 48f // Try to enforce 48h on pre-provided api
+
             AeroTheme {
                 // Attempts to set up notification permissions
                 if (Build.VERSION.SDK_INT >= 33) {
@@ -66,19 +63,25 @@ class MainActivity : ComponentActivity() {
                     } // If the user denies notifications, we ignore forever
                 }
 
-                val periodicWorkRequest = PeriodicWorkRequestBuilder<UpdateWorker>(interval.toLong(), TimeUnit.HOURS)
+                val constraints = Constraints.Builder()
+                    .setRequiredNetworkType(NetworkType.CONNECTED)
+                    .setRequiresCharging(false)
+                    .build()
+
+                val periodicWorkRequest = PeriodicWorkRequestBuilder<UpdateWorker>(interval.toLong(), TimeUnit.SECONDS)
                     .setConstraints(constraints)
                     .build()
 
-                WorkManager.getInstance(this).enqueueUniquePeriodicWork( // Only create once, keep existing and don't replace
-                    "download_work",
-                    ExistingPeriodicWorkPolicy.KEEP,
+                WorkManager.getInstance(LocalContext.current).enqueueUniquePeriodicWork(
+                    "airo_update_work",
+                    ExistingPeriodicWorkPolicy.UPDATE,
                     periodicWorkRequest
                 )
 
-                MainScreen(backup)
+                Surface(color = MaterialTheme.colorScheme.background) {
+                    MainScreen(backup)
+                }
             }
         }
     }
 }
-

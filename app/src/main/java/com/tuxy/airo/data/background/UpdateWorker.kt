@@ -1,9 +1,11 @@
 package com.tuxy.airo.data.background
 
 import android.content.Context
+import android.util.Log
 import androidx.work.Worker
 import androidx.work.WorkerParameters
 import com.tuxy.airo.AlarmController
+import com.tuxy.airo.data.database.PreferencesInterface
 import com.tuxy.airo.data.flightdata.FlightData
 import com.tuxy.airo.data.flightdata.FlightDataDao
 import com.tuxy.airo.data.flightdata.getData
@@ -25,7 +27,7 @@ class UpdateWorker(
 
     override fun doWork(): Result {
         refreshFlightDataList()
-
+        Log.d("UpdateWorker", "Updating work")
         return Result.success()
     }
 
