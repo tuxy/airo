@@ -5,6 +5,10 @@ updates:
     schedule:
       interval: "weekly"
     rebase-strategy: "disabled"
+    groups:
+      periodic-updates:
+        patterns:
+          - "*"
 
   - package-ecosystem: "github-actions"
     directory: "/"
