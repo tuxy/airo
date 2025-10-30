@@ -151,6 +151,11 @@ fun FlightDetailsView(
                             .fillMaxHeight()
                     ) {
                         RouteBar(viewModel.flightData.value)
+                        Text(
+                            text = viewModel.flightData.value.departDate.format(DateTimeFormatter.ofPattern("EEEE, MMM d, yyyy")),
+                            modifier = Modifier.padding(start = 16.dp),
+                            color = Color.Gray
+                        )
                         FlightBoardCard(viewModel, timeFormat)
                         Card(
                             modifier = Modifier
@@ -581,4 +586,5 @@ fun DeleteDialog(
             }
         }
     }
+
 }
