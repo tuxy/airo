@@ -112,19 +112,23 @@ fun MainFlightView(
                 .padding(innerPadding)
                 .fillMaxSize()
         ) {
-            TabRow(
-                selectedTabIndex.value,
-                pagerState,
-                scope,
-            )
-            FlightsList(
-                pagerState = pagerState,
-                viewModel = viewModel,
-                navController = navController,
-                modifier = Modifier
-                    .fillMaxSize()
-                    .weight(1f),
-            )
+            if (viewModel.flightData.isEmpty()) {
+                NoFlight(Modifier.fillMaxSize().padding(96.dp))
+            } else {
+                TabRow(
+                    selectedTabIndex.value,
+                    pagerState,
+                    scope,
+                )
+                FlightsList(
+                    pagerState = pagerState,
+                    viewModel = viewModel,
+                    navController = navController,
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .weight(1f),
+                )
+            }
         }
     }
 }
@@ -183,9 +187,7 @@ fun FlightsList(
             when (page) {
                 0 -> {
                     if (viewModel.flightsUpcomingList.isEmpty()) {
-                        NoFlight(
-                            modifier = Modifier.fillMaxSize().padding(128.dp),
-                        )
+                        NoFlight(Modifier.fillMaxSize().padding(128.dp))
                     } else {
                         viewModel.flightsUpcomingList.forEach { flights ->
                             DateHeader(flights[0].departDate, flights.size)
@@ -197,9 +199,7 @@ fun FlightsList(
                 }
                 1 -> {
                     if (viewModel.flightsPastList.isEmpty()) {
-                        NoFlight(
-                            modifier = Modifier.fillMaxSize().padding(128.dp),
-                        )
+                        NoFlight(Modifier.fillMaxSize().padding(128.dp))
                     } else {
                         viewModel.flightsPastList.forEach { flights ->
                             DateHeader(flights[0].departDate, flights.size)
@@ -220,7 +220,8 @@ fun NoFlight(
     modifier: Modifier = Modifier
 ) {
     Box(
-        contentAlignment = Alignment.Center
+        contentAlignment = Alignment.Center,
+        modifier = modifier,
     ) {
         Column(
             modifier = Modifier.fillMaxSize(),
