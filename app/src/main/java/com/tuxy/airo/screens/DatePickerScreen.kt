@@ -35,6 +35,7 @@ import com.tuxy.airo.viewmodel.DateViewModel
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.time.format.DateTimeFormatter
 
@@ -93,6 +94,7 @@ fun DatePickerView(
 
                             if (result.isSuccess) {
                                 // Optional: Toast.makeText(context, "Flight added successfully!", Toast.LENGTH_SHORT).show()
+                                delay(200) // Prevent missing flights until recompose; temp fix
                                 navController.navigateUp()
                                 navController.navigateUp()
                             } else {

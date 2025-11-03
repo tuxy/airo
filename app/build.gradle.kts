@@ -86,8 +86,9 @@ dependencies {
     // datastore
     implementation(libs.androidx.datastore.preferences)
 
-    // map-compose
+    // map-compose & other map utils
     implementation(libs.mapcompose)
+    implementation(libs.androidx.graphics.shapes)
 
     // browser
     implementation(libs.androidx.browser)

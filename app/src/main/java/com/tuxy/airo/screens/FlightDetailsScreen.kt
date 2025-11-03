@@ -51,13 +51,18 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.drawWithCache
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.asComposePath
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.graphics.shapes.RoundedPolygon
+import androidx.graphics.shapes.toPath
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.tuxy.airo.R
@@ -91,7 +96,8 @@ fun FlightDetailsView(
     val viewModelFactory = DetailsViewModel.Factory(
         LocalContext.current,
         flightDataDao,
-        id
+        id,
+        MaterialTheme.colorScheme
     )
     val viewModel: DetailsViewModel = viewModel(factory = viewModelFactory)
     val timeFormat = viewModel.preferencesInterface.getValueTimeFormatComposable("24_time")
@@ -586,5 +592,31 @@ fun DeleteDialog(
             }
         }
     }
+}
 
+@Composable
+fun getColor(): Color { // ...don't ask
+    return MaterialTheme.colorScheme.primary
+}
+
+@Composable
+fun CustomMapMarker() { // Only used in viewmodel
+    val primary = MaterialTheme.colorScheme.primary
+
+    Box(
+        modifier = Modifier
+            .drawWithCache {
+                val roundedPolygon = RoundedPolygon(
+                    numVertices = 20,
+                    radius = 22f,
+                    centerX = size.width / 2,
+                    centerY = size.height / 2
+                )
+                val roundedPolygonPath = roundedPolygon.toPath().asComposePath()
+                onDrawBehind {
+                    drawPath(roundedPolygonPath, color = primary, alpha = 0.4f)
+                    drawPath(roundedPolygonPath, color = primary, alpha = 1f, style = Stroke(width = 4.0f))
+                }
+            }
+    )
 }

@@ -2,15 +2,10 @@ package com.tuxy.airo.viewmodel
 
 import android.content.Context
 import android.util.Log
-import androidx.compose.foundation.layout.size
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.LocationOn
-import androidx.compose.material3.Icon
+import androidx.compose.material3.ColorScheme
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
@@ -22,6 +17,7 @@ import com.tuxy.airo.data.flightdata.FlightDataDao
 import com.tuxy.airo.data.flightdata.getData
 import com.tuxy.airo.data.flightdata.singleIntoMut
 import com.tuxy.airo.screens.ApiSettings
+import com.tuxy.airo.screens.CustomMapMarker
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
@@ -61,6 +57,7 @@ class DetailsViewModel(
     context: Context,
     flightDataDao: FlightDataDao,
     id: String,
+    scheme: ColorScheme,
     scope: CoroutineScope =
         CoroutineScope(SupervisorJob() + Dispatchers.IO)
 ) : ViewModel() {
@@ -314,39 +311,6 @@ class DetailsViewModel(
         disableScrolling()
         addLayer(tileStreamProvider)
         GlobalScope.launch {
-            addMarker(
-                "origin",
-                x = flightData.value.mapOriginX,
-                y = flightData.value.mapOriginY,
-            ) {
-                Icon(
-                    Icons.Filled.LocationOn,
-                    "",
-                    modifier = Modifier.size(16.dp), // Fixed marker size
-                    tint = Color.DarkGray            // Fixed marker color
-                )
-            }
-            addMarker(
-                "destination",
-                x = flightData.value.mapDestinationX,
-                y = flightData.value.mapDestinationY,
-            ) {
-                Icon(
-                    Icons.Filled.LocationOn,
-                    "",
-                    modifier = Modifier.size(16.dp), // Fixed marker size
-                    tint = Color.DarkGray            // Fixed marker color
-                )
-            }
-            addPath("route", color = Color.DarkGray, width = 2.dp) {
-                // The y-offset of -0.0007 is likely a small visual adjustment for the path line
-                // relative to the marker's anchor point.
-                addPoint(x = flightData.value.mapOriginX, y = flightData.value.mapOriginY)
-                addPoint(
-                    x = flightData.value.mapDestinationX,
-                    y = flightData.value.mapDestinationY
-                )
-            }
             // Scroll map to show both origin and destination
             scrollTo(
                 x = avr(flightData.value.mapOriginX, flightData.value.mapDestinationX), // Center X
@@ -358,19 +322,31 @@ class DetailsViewModel(
                     flightData.value.mapDestinationY
                 )
             )
+            addPath("route", color = scheme.primary, width = 2.dp) {
+                // The y-offset of -0.0007 is likely a small visual adjustment for the path line
+                // relative to the marker's anchor point.
+                addPoint(x = flightData.value.mapOriginX, y = flightData.value.mapOriginY)
+                addPoint(
+                    x = flightData.value.mapDestinationX,
+                    y = flightData.value.mapDestinationY
+                )
+            }
+            addMarker(
+                "origin",
+                x = flightData.value.mapOriginX,
+                y = flightData.value.mapOriginY,
+            ) {
+                CustomMapMarker()
+            }
+            addMarker(
+                "destination",
+                x = flightData.value.mapDestinationX,
+                y = flightData.value.mapDestinationY,
+            ) {
+                CustomMapMarker()
+            }
         }
     }
-
-    class Factory(
-        private val context: Context,
-        private val flightDataDao: FlightDataDao,
-        private val id: String
-    ) : ViewModelProvider.NewInstanceFactory() {
-        override fun <T : ViewModel> create(modelClass: Class<T>): T {
-            return DetailsViewModel(context, flightDataDao, id) as T
-        }
-    }
-
     private fun mapSizeAtLevel(): Int {
         return 256 * 2.0.pow(5).toInt() // Hardcoded zoom level 5 for map size calculation
     }
@@ -380,13 +356,23 @@ class DetailsViewModel(
     }
 
     fun calculateScale(x1: Double, y1: Double, x2: Double, y2: Double): Double {
-        val zoomConstant = 25.0 // Empirically determined constant to adjust the overall zoom level.
-        // A smaller value zooms out more, a larger value zooms in more.
+        val zoomConstant = 12.0 // Empirically determined constant to adjust the overall zoom level.
 
         val a = (x2 - x1) * (x2 - x1) // Squared difference in x
         val b = (y2 - y1) * (y2 - y1) // Squared difference in y
         // The scale is inversely related to the distance.
         // sqrt(a+b) is the distance between the two points.
         return (1 / (sqrt(a + b) * zoomConstant))
+    }
+
+    class Factory(
+        private val context: Context,
+        private val flightDataDao: FlightDataDao,
+        private val id: String,
+        private val scheme: ColorScheme
+    ) : ViewModelProvider.NewInstanceFactory() {
+        override fun <T : ViewModel> create(modelClass: Class<T>): T {
+            return DetailsViewModel(context, flightDataDao, id, scheme) as T
+        }
     }
 }
