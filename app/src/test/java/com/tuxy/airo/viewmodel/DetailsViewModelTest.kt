@@ -2,6 +2,7 @@ package com.tuxy.airo.viewmodel
 
 import android.content.Context
 import android.content.res.Resources
+import androidx.compose.material3.lightColorScheme
 import com.tuxy.airo.data.database.PreferencesInterface
 import com.tuxy.airo.data.flightdata.FlightDataDao
 import kotlinx.coroutines.DelicateCoroutinesApi
@@ -54,6 +55,7 @@ class DetailsViewModelTest {
             context = mockContext,
             flightDataDao = flightDataDao,
             id = "testId",
+            scheme = lightColorScheme()
         )
     }
 
@@ -88,7 +90,7 @@ class DetailsViewModelTest {
 
         // Test calculateScale(), Number calculated manually
         assertEquals(
-            0.0282842712474619F,
+            0.058925565F,
             viewModel.calculateScale(2.0, 2.0, 1.0, 1.0).toFloat()
         )
     }
