@@ -43,6 +43,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.lightColorScheme
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.runtime.Composable
@@ -97,7 +98,7 @@ fun FlightDetailsView(
         LocalContext.current,
         flightDataDao,
         id,
-        MaterialTheme.colorScheme
+        lightColorScheme()
     )
     val viewModel: DetailsViewModel = viewModel(factory = viewModelFactory)
     val timeFormat = viewModel.preferencesInterface.getValueTimeFormatComposable("24_time")
@@ -596,12 +597,12 @@ fun DeleteDialog(
 
 @Composable
 fun getColor(): Color { // ...don't ask
-    return MaterialTheme.colorScheme.primary
+    return lightColorScheme().primary
 }
 
 @Composable
 fun CustomMapMarker() { // Only used in viewmodel
-    val primary = MaterialTheme.colorScheme.primary
+    val primary = lightColorScheme().primary
 
     Box(
         modifier = Modifier

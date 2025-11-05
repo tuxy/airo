@@ -33,6 +33,7 @@ import ovh.plrapps.mapcompose.api.disableRotation
 import ovh.plrapps.mapcompose.api.disableScrolling
 import ovh.plrapps.mapcompose.api.disableZooming
 import ovh.plrapps.mapcompose.api.scrollTo
+import ovh.plrapps.mapcompose.api.snapScrollTo
 import ovh.plrapps.mapcompose.core.TileStreamProvider
 import ovh.plrapps.mapcompose.ui.state.MapState
 import java.time.Duration
@@ -312,6 +313,10 @@ class DetailsViewModel(
         addLayer(tileStreamProvider)
         GlobalScope.launch {
             // Scroll map to show both origin and destination
+            snapScrollTo(
+                x = avr(flightData.value.mapOriginX, flightData.value.mapDestinationX), // Center X
+                y = avr(flightData.value.mapOriginY, flightData.value.mapDestinationY), // Center Y
+            )
             scrollTo(
                 x = avr(flightData.value.mapOriginX, flightData.value.mapDestinationX), // Center X
                 y = avr(flightData.value.mapOriginY, flightData.value.mapDestinationY), // Center Y
