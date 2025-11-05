@@ -150,6 +150,7 @@ class DetailsViewModel(
         val alarmController = AlarmController(context)
         viewModelScope.launch(Dispatchers.IO) {
             flightDataDao.deleteFlight(flightData.value)
+            delay(200)
         }
         alarmController.cancelAlarm(flightData.value)
         openDialog.value = false
