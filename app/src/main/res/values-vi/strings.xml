@@ -4,7 +4,6 @@
     <string name="aircraft">Máy bay</string>
     <string name="seat_maps">Bản đồ ghế ngồi</string>
     <string name="author">Tác giả</string>
-    <string name="empty">" "</string>
     <string name="add_flight">Thêm chuyến bay</string>
     <string name="no_api">Không tìm thấy khóa API</string>
     <string name="invalid_api_network">Lỗi mạng / Khóa API Không hợp</string>
@@ -91,4 +90,6 @@
     <string name="has_updated">đã thay đổi thời gian khởi hành từ</string>
     <string name="update_interval">Thời gian cập nhật (trong tiếng)</string>
     <string name="flights">chuyến bay</string>
+    <string name="restore_warning">Lưu ý: Khôi phục sẽ tẩy thông tin hiện tại</string>
+    <string name="last_updated">Cập nhật cuối:</string>
 </resources>

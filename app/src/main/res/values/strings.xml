@@ -4,7 +4,7 @@
     <string name="aircraft">Aircraft</string>
     <string name="seat_maps">Seat Maps</string>
     <string name="author">Author</string>
-    <string name="empty" />
+    <string name="empty" translatable="false" />
     <string name="add_flight">Add flight</string>
     <string name="no_api">API Key not found</string>
     <string name="invalid_api_network">Network error / Invalid API Key</string>
@@ -93,4 +93,6 @@
     <string name="has_updated">has updated its departure from</string>
     <string name="update_interval">Update interval (in hours)</string>
     <string name="flights">flights</string>
+    <string name="restore_warning">Warning: Restore will wipe all existing data!</string>
+    <string name="last_updated">Last updated:</string>
 </resources>

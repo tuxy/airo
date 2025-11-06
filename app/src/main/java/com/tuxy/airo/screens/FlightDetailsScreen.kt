@@ -188,7 +188,7 @@ fun FlightDetailsView(
                         FlightInformationInteract(navController, viewModel.flightData.value)
                         Text(
                             modifier = Modifier.padding(16.dp),
-                            text = "Last updated: ${
+                            text = "${stringResource(R.string.last_updated)} ${
                                 viewModel.flightData.value.lastUpdate.format(
                                     DateTimeFormatter.ISO_DATE_TIME
                                 )
