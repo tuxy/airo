@@ -9,18 +9,22 @@
 
 **Now with public AiroAPI server at `https://airoapi.tuxy.stream/flights`!**
 
-## Current features
+## Features
 
 - Adding, removing flights using [aerodatabox's](https://aerodatabox.com/)
-  api [link](https://aerodatabox.com/)
+  api
     - Adding flights with schedules 8 months in advance
+    - ...with past flight support for archival    
 - Usage with AiroAPI caching server
 - Automatic refreshing of flight data and flight updates
+  - Notification support
+- Sort by upcoming and past flights, with flight grouping
 - Route map and progress
 - Aircraft information with photos
 - Flights organised by date
 - Scanning boarding passes for information and boarding
 - Notifications 6 hour before flight
+- Backup/Restore flights into file
 
 ## Contributing?
 
