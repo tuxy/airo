@@ -209,7 +209,7 @@ class DetailsViewModel(
         )
 
         val offset =
-            mutableFloatStateOf(10800F) // 3 hours in seconds, potentially for check-in window start
+            mutableFloatStateOf(3600F) // 3 hours in seconds, potentially for check-in window start
 
         val days = mutableFloatStateOf(0.0F)
         val hours = mutableFloatStateOf(0.0F)
@@ -239,34 +239,20 @@ class DetailsViewModel(
             floor((seconds - days.floatValue * 86400.0F - hours.floatValue * 3600.0F) / 60.0F)
 
         return if (days.floatValue >= 1.0F) {
-            "${context.resources.getString(R.string.ins)} ${days.floatValue.toInt()}d ${hours.floatValue.toInt()}h"
+            "${days.floatValue.toInt()}d ${hours.floatValue.toInt()}h"
         } else if (hours.floatValue >= 1.0F) {
-            "${context.resources.getString(R.string.ins)} ${hours.floatValue.toInt()}h ${minutes.floatValue.toInt()}m"
+            "${hours.floatValue.toInt()}h ${minutes.floatValue.toInt()}m"
         } else {
-            "${context.resources.getString(R.string.ins)} ${minutes.floatValue.toInt()}m"
+            "${minutes.floatValue.toInt()}m"
         }
     }
 
     @OptIn(DelicateCoroutinesApi::class)
     fun getEndTime(context: Context): String {
         val status = getStatus(context)
-        val time = flightData.value.departDate
-
-        var timeFormatWait = ""
-        GlobalScope.launch {
-            val timeFormat = preferencesInterface.getValueTimeFormat("24_time")
-            timeFormatWait = timeFormat
-        }
 
         if (status == context.getString(R.string.check_in)) {
-            val correctedTime = time.minusHours(1) // Check-in ends 1 hour before departure
-
-            return "${context.getString(R.string.ends_at)} ${
-                correctedTime
-                    .atOffset(ZoneOffset.UTC)
-                    .atZoneSameInstant(flightData.value.departTimeZone)
-                    .format(DateTimeFormatter.ofPattern(timeFormatWait))
-            }"
+            return context.getString(R.string.ends_at)
         }
 
         return ""
@@ -284,7 +270,7 @@ class DetailsViewModel(
         if (seconds >= 3600) { // More than or equal to 1 hour until departure
             return context.getString(R.string.check_in) // Check-in
         } else { // Less than 1 hour until departure or already departed
-            if (progress.floatValue >= 0.9F && progress.floatValue < 1.0F) {
+            if (progress.floatValue in 0.9F..<1.0F) {
                 return context.getString(R.string.landing) // About to land
             } else if (progress.floatValue >= 1.0F) {
                 return context.getString(R.string.landed) // Already landed

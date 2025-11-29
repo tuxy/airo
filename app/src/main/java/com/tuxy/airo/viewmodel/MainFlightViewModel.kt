@@ -14,6 +14,7 @@ import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import java.time.Duration
 import java.time.LocalDateTime
+import java.time.ZoneId
 import java.time.ZoneOffset
 import java.util.SortedMap
 
@@ -76,18 +77,20 @@ class MainFlightViewModel(context: Context) : ViewModel() {
             flightData = flightDataDao.readAll()
             // Group by 1 day
             flights = flightData.associateBy { flight ->
-                flight.arriveDate.toEpochSecond(ZoneOffset.UTC)
+                flight.arriveDate.atZone(flight.arriveTimeZone).toEpochSecond()
             }.toSortedMap()
 
+            val nowInEpochSeconds = LocalDateTime.now().atZone(ZoneId.systemDefault()).toEpochSecond()
+
             val flightsUpcoming = flights
-                .filterKeys { it > LocalDateTime.now().toEpochSecond(ZoneOffset.UTC) }
+                .filterKeys { it > nowInEpochSeconds }
                 .toSortedMap(compareBy { it })
             val flightsPast = flights
-                .filterKeys { it < LocalDateTime.now().toEpochSecond(ZoneOffset.UTC) }
+                .filterKeys { it <= nowInEpochSeconds }
                 .toSortedMap(compareBy { it })
 
             flightsUpcomingList = groupFlightsByProximity(flightsUpcoming)
-            flightsPastList = groupFlightsByProximity(flightsPast)
+            flightsPastList = groupFlightsByProximity(flightsPast).reversed()
         }
     }
 

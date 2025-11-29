@@ -11,7 +11,7 @@
     <string name="no_flight">No flight found</string>
     <string name="check_in">Check-in</string>
     <string name="ins">in</string>
-    <string name="ends_at">Ends at</string>
+    <string name="ends_at">Ends in</string>
     <string name="flying">Flying</string>
     <string name="now">Now</string>
     <string name="back">Back</string>
