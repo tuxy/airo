@@ -81,10 +81,10 @@ class MainFlightViewModel(context: Context) : ViewModel() {
 
             val flightsUpcoming = flights
                 .filterKeys { it > LocalDateTime.now().toEpochSecond(ZoneOffset.UTC) }
-                .toSortedMap(compareByDescending { it })
+                .toSortedMap(compareBy { it })
             val flightsPast = flights
                 .filterKeys { it < LocalDateTime.now().toEpochSecond(ZoneOffset.UTC) }
-                .toSortedMap(compareByDescending { it })
+                .toSortedMap(compareBy { it })
 
             flightsUpcomingList = groupFlightsByProximity(flightsUpcoming)
             flightsPastList = groupFlightsByProximity(flightsPast)
