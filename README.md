@@ -9,6 +9,8 @@
 
 **Now with public AiroAPI server at `https://airoapi.tuxy.stream/flights`!**
 
+> NOTE: This development of this application has utilised some form of generative LLM in its code, through either documentation or support. Take of this what you will.
+
 ## Features
 
 - Adding, removing flights using [aerodatabox's](https://aerodatabox.com/)

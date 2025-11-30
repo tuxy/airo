@@ -12,6 +12,13 @@ import com.tuxy.airo.data.flightdata.FlightData
 import com.tuxy.airo.data.flightdata.FlightDataDao
 import com.tuxy.airo.data.flightdata.singleIntoMut
 
+/**
+ * A ViewModel that provides standard data for a flight.
+ *
+ * @property flightData The flight data for the current flight.
+ * @param flightDataDao The DAO for accessing flight data.
+ * @param id The ID of the flight.
+ */
 @Suppress("UNCHECKED_CAST")
 class StandardDataViewModel(flightDataDao: FlightDataDao, id: String) : ViewModel() {
     var flightData = mutableStateOf(FlightData())
@@ -24,6 +31,11 @@ class StandardDataViewModel(flightDataDao: FlightDataDao, id: String) : ViewMode
         ) // On initialisation, pass db data into flightData
     }
 
+    /**
+     * Opens a webpage in a custom tab.
+     * @param context The application context.
+     * @param url The URL of the webpage to open.
+     */
     fun openWebpage(context: Context, url: String) {
         try {
             val intent = CustomTabsIntent.Builder()
@@ -41,7 +53,9 @@ class StandardDataViewModel(flightDataDao: FlightDataDao, id: String) : ViewMode
         }
     }
 
-    // Factory
+    /**
+     * Factory for creating [StandardDataViewModel] instances.
+     */
     class Factory(
         private val flightDataDao: FlightDataDao,
         private val id: String,

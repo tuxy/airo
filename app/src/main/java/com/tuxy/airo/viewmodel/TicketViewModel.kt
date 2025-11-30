@@ -23,7 +23,23 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 
-
+/**
+ * ViewModel for the ticket screen.
+ *
+ * This ViewModel is responsible for handling the ticket data, including parsing IATA barcode data,
+ * handling camera permissions, and updating the database with the ticket information.
+ *
+ * @property preferencesInterface For accessing user preferences.
+ * @property flightData The flight data for the current flight.
+ * @property ticketData The parsed IATA ticket data.
+ * @property ticketString The raw string from the ticket barcode.
+ * @property toast The toast message to be displayed when camera permission is denied.
+ * @property hasCameraPermission A mutable state to indicate if camera permission has been granted.
+ * @property openDialog A mutable state to control the visibility of the delete confirmation dialog.
+ * @param flightDataDao The DAO for accessing flight data.
+ * @param id The ID of the flight.
+ * @param context The application context.
+ */
 @Suppress("UNCHECKED_CAST", "OPT_IN_USAGE")
 class TicketViewModel(
     flightDataDao: FlightDataDao,
@@ -54,6 +70,11 @@ class TicketViewModel(
         ticketData = IataParserData().parseData(flightData.value.ticketData, context)
     }
 
+    /**
+     * Updates the ticket data in the database.
+     * @param flightDataDao The DAO for accessing flight data.
+     * @param context The application context.
+     */
     fun updateData(flightDataDao: FlightDataDao, context: Context) {
         flightData.value.ticketData = ticketString
         getData(context)
@@ -62,6 +83,11 @@ class TicketViewModel(
         }
     }
 
+    /**
+     * Deletes the ticket data from the database.
+     * @param flightDataDao The DAO for accessing flight data.
+     * @param context The application context.
+     */
     fun deleteData(flightDataDao: FlightDataDao, context: Context) {
         ticketString = ""
         flightData.value.ticketData = ""
@@ -84,11 +110,19 @@ class TicketViewModel(
         }
     }
 
+    /**
+     * Checks if the ticket data is populated.
+     * @return True if ticket data exists, false otherwise.
+     */
     fun isDataPopulated(): Boolean {
         return ticketString != ""
     }
 
-    // Show the camera
+    /**
+     * Shows the camera for scanning a barcode.
+     * @param barCodeLauncher The activity result launcher for the barcode scanner.
+     * @param context The application context.
+     */
     fun showCamera(
         barCodeLauncher: ManagedActivityResultLauncher<ScanOptions, ScanIntentResult>,
         context: Context
@@ -105,7 +139,9 @@ class TicketViewModel(
         barCodeLauncher.launch(options)
     }
 
-    // Factory
+    /**
+     * Factory for creating [TicketViewModel] instances.
+     */
     class Factory(
         private val flightDataDao: FlightDataDao,
         private val id: String,

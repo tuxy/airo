@@ -50,8 +50,21 @@ import kotlin.time.toJavaInstant
 import kotlin.time.toKotlinDuration
 
 /**
- * Manages and provides data for the flight details screen, including map display and flight status information.
- * The `@Suppress("UNCHECKED_CAST")` annotation is present due to the type casting in the [Factory] class.
+ * ViewModel for the flight details screen.
+ *
+ * This ViewModel is responsible for fetching and holding the details of a specific flight,
+ * calculating flight progress, handling flight deletion, and managing the map display.
+ *
+ * @property preferencesInterface For accessing user preferences.
+ * @property viewModelScope The coroutine scope for this ViewModel.
+ * @property flightData The flight data for the current flight.
+ * @property openDialog A mutable state to control the visibility of the delete confirmation dialog.
+ * @property progress The current progress of the flight.
+ * @param context The application context.
+ * @param flightDataDao The DAO for accessing flight data.
+ * @param id The ID of the flight to display.
+ * @param scheme The color scheme for the map.
+ * @param scope The coroutine scope for this ViewModel.
  */
 @Suppress("UNCHECKED_CAST")
 class DetailsViewModel(
@@ -89,6 +102,10 @@ class DetailsViewModel(
         // Use empty FlightData if testId is used
     }
 
+    /**
+     * Calculates the time difference between the departure and arrival timezones.
+     * @return A string representing the time difference, e.g., "+02:00".
+     */
     @OptIn(ExperimentalTime::class)
     fun getZoneDifference(): String {
         val currentInstant = Clock.System.now()
@@ -111,10 +128,17 @@ class DetailsViewModel(
         }
     }
 
+    /**
+     * Formats a Long to a string with a leading zero if needed.
+     */
     fun Long.time(): String { // Add trailing zeroes and convert to string
         return this.absoluteValue.toString().padStart(2, '0')
     }
 
+    /**
+     * Calculates the flight's progress as a float between 0.0 and 1.0.
+     * @return The flight's progress.
+     */
     fun getProgress(): Float {
         val now = LocalDateTime
             .now()
@@ -143,6 +167,11 @@ class DetailsViewModel(
         return progress.floatValue
     }
 
+    /**
+     * Deletes the current flight from the database.
+     * @param flightDataDao The DAO for accessing flight data.
+     * @param context The application context.
+     */
     fun deleteFlight(
         flightDataDao: FlightDataDao,
         context: Context,
@@ -156,6 +185,13 @@ class DetailsViewModel(
         openDialog.value = false
     }
 
+    /**
+     * Refreshes the flight data from the API.
+     * @param flightDataDao The DAO for accessing flight data.
+     * @param context The application context.
+     * @param settings The API settings.
+     * @param isRefreshing A mutable state to indicate if the data is being refreshed.
+     */
     fun refreshData(
         flightDataDao: FlightDataDao,
         context: Context,
@@ -200,6 +236,11 @@ class DetailsViewModel(
         }
     }
 
+    /**
+     * Returns a string representing the duration until departure.
+     * @param context The application context.
+     * @return A string like "in 2d 3h" or "in 4h 5m".
+     */
     fun getDuration(context: Context): String {
         val duration = Duration.between(
             LocalDateTime.now(),
@@ -247,6 +288,11 @@ class DetailsViewModel(
         }
     }
 
+    /**
+     * Returns the end time for check-in.
+     * @param context The application context.
+     * @return "Ends at" string if check-in is active, otherwise empty.
+     */
     @OptIn(DelicateCoroutinesApi::class)
     fun getEndTime(context: Context): String {
         val status = getStatus(context)
@@ -258,6 +304,11 @@ class DetailsViewModel(
         return ""
     }
 
+    /**
+     * Returns the current status of the flight.
+     * @param context The application context.
+     * @return "Check-in", "Flying", "Landed", or "Landing".
+     */
     fun getStatus(context: Context): String {
         val duration = Duration.between(
             LocalDateTime.now(),
@@ -291,6 +342,9 @@ class DetailsViewModel(
         }
     private val mapSize = mapSizeAtLevel()
 
+    /**
+     * The state of the map, including layers, markers, and paths.
+     */
     @OptIn(DelicateCoroutinesApi::class)
     val mapState = MapState(6, mapSize, mapSize).apply { // Max zoom level 6
         disableZooming()
@@ -343,10 +397,16 @@ class DetailsViewModel(
         return 256 * 2.0.pow(5).toInt() // Hardcoded zoom level 5 for map size calculation
     }
 
+    /**
+     * Calculates the average of two Double values.
+     */
     fun avr(a: Double, b: Double): Double {
         return (a + b) / 2
     }
 
+    /**
+     * Calculates the appropriate map scale to fit two points on the screen.
+     */
     fun calculateScale(x1: Double, y1: Double, x2: Double, y2: Double): Double {
         val zoomConstant = 12.0 // Empirically determined constant to adjust the overall zoom level.
 
@@ -357,6 +417,9 @@ class DetailsViewModel(
         return (1 / (sqrt(a + b) * zoomConstant))
     }
 
+    /**
+     * Factory for creating [DetailsViewModel] instances.
+     */
     class Factory(
         private val context: Context,
         private val flightDataDao: FlightDataDao,
