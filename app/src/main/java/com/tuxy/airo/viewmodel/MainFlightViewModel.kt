@@ -76,16 +76,21 @@ class MainFlightViewModel(context: Context) : ViewModel() {
             flightData = flightDataDao.readAll()
             // Group by 1 day
             flights = flightData.associateBy { flight ->
-                flight.arriveDate.atZone(flight.arriveTimeZone).toEpochSecond()
+                flight.arriveDate.toEpochSecond(ZoneOffset.UTC)
             }.toSortedMap()
 
-            val nowInEpochSeconds = LocalDateTime.now(ZoneOffset.UTC).toEpochSecond(ZoneOffset.UTC)
+            val nowInEpochSeconds = LocalDateTime.now().atZone(ZoneOffset.systemDefault()).toEpochSecond()
+
 
             val flightsUpcoming = flights
                 .filterKeys { it > nowInEpochSeconds }
                 .toSortedMap(compareBy { it })
             val flightsPast = flights
-                .filterKeys { it <= nowInEpochSeconds }
+                .filterKeys {
+                    println(nowInEpochSeconds)
+                    println(it)
+                    it <= nowInEpochSeconds
+                }
                 .toSortedMap(compareBy { it })
 
             flightsUpcomingList = groupFlightsByProximity(flightsUpcoming)
