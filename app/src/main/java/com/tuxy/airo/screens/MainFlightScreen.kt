@@ -1,5 +1,7 @@
 package com.tuxy.airo.screens
 
+import android.annotation.SuppressLint
+import android.widget.Toast
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -103,7 +105,7 @@ fun MainFlightView(
         modifier = Modifier
             .fillMaxSize()
             .nestedScroll(scrollBehavior.nestedScrollConnection),
-        topBar = { MainTopBar(navController, scrollBehavior) },
+        topBar = { MainTopBar(navController, scrollBehavior, viewModel) },
         floatingActionButton = {
             ExtendedFloatingActionButton(
                 onClick = {
@@ -387,16 +389,37 @@ fun DateHeader(time: LocalDateTime, count: Int) {
     }
 }
 
+@SuppressLint("ShowToast")
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MainTopBar(
     navController: NavController,
-    scrollBehavior: TopAppBarScrollBehavior
+    scrollBehavior: TopAppBarScrollBehavior,
+    viewModel: MainFlightViewModel,
 ) {
+    val toast = Toast.makeText(LocalContext.current, R.string.no_flight, Toast.LENGTH_SHORT)
+
     LargeTopAppBar(
         title = { Text(stringResource(R.string.my_flights)) },
         colors = TopAppBarDefaults.topAppBarColors(),
         actions = {
+            IconButton(onClick = {
+                val closestFlight = viewModel.findClosestFlightId()
+
+                if (closestFlight == null) {
+                    toast.show()
+                    return@IconButton
+                } else closestFlight.let {
+                    if (it > 0) {
+                        navController.navigate("${Screen.FlightDetailsScreen.route}/${closestFlight}")
+                    }
+                }
+            }) {
+                Icon(
+                    imageVector = Icons.Filled.FlightTakeoff,
+                    contentDescription = stringResource(R.string.upcoming_flights)
+                )
+            }
             IconButton(onClick = {
                 navController.navigate(route = Screen.SettingsScreen.route)
             }) {

@@ -14,7 +14,6 @@ import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import java.time.Duration
 import java.time.LocalDateTime
-import java.time.ZoneId
 import java.time.ZoneOffset
 import java.util.SortedMap
 
@@ -80,7 +79,7 @@ class MainFlightViewModel(context: Context) : ViewModel() {
                 flight.arriveDate.atZone(flight.arriveTimeZone).toEpochSecond()
             }.toSortedMap()
 
-            val nowInEpochSeconds = LocalDateTime.now().atZone(ZoneId.systemDefault()).toEpochSecond()
+            val nowInEpochSeconds = LocalDateTime.now(ZoneOffset.UTC).toEpochSecond(ZoneOffset.UTC)
 
             val flightsUpcoming = flights
                 .filterKeys { it > nowInEpochSeconds }
@@ -127,6 +126,19 @@ class MainFlightViewModel(context: Context) : ViewModel() {
             } else {
                 current + listOf(listOf(flight))
             }
+        }
+    }
+
+    fun findClosestFlightId(): Int? {
+        if (flights.isEmpty()) return null
+
+        val nowInEpochSeconds = LocalDateTime.now(ZoneOffset.UTC).toEpochSecond(ZoneOffset.UTC)
+
+        val upcomingFlightKey = flights.keys.firstOrNull { it > nowInEpochSeconds }
+
+        return when {
+            upcomingFlightKey == null -> null
+            else -> flights[upcomingFlightKey]?.id
         }
     }
 

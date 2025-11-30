@@ -239,11 +239,11 @@ class DetailsViewModel(
             floor((seconds - days.floatValue * 86400.0F - hours.floatValue * 3600.0F) / 60.0F)
 
         return if (days.floatValue >= 1.0F) {
-            "${days.floatValue.toInt()}d ${hours.floatValue.toInt()}h"
+            "${context.resources.getString(R.string.ins)} ${days.floatValue.toInt()}d ${hours.floatValue.toInt()}h"
         } else if (hours.floatValue >= 1.0F) {
-            "${hours.floatValue.toInt()}h ${minutes.floatValue.toInt()}m"
+            "${context.resources.getString(R.string.ins)} ${hours.floatValue.toInt()}h ${minutes.floatValue.toInt()}m"
         } else {
-            "${minutes.floatValue.toInt()}m"
+            "${context.resources.getString(R.string.ins)} ${minutes.floatValue.toInt()}m"
         }
     }
 
