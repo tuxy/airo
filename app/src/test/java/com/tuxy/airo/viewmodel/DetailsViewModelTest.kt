@@ -75,7 +75,7 @@ class DetailsViewModelTest {
         assertEquals("testString", viewModel.getStatus(mockContext))
 
         // Test getEndTime
-        assertEquals("testString ", viewModel.getEndTime(mockContext))
+        assertEquals("testString", viewModel.getEndTime(mockContext))
     }
 
     @Test
