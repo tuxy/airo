@@ -54,6 +54,7 @@ fun DatePickerView(
     flightDataDao: FlightDataDao,
 ) {
     val context = LocalContext.current
+    val unknownErrorString = stringResource(R.string.error_unknown)
 
     val datePickerState = rememberDatePickerState(initialDisplayMode = DisplayMode.Picker)
     val viewModelFactory = DateViewModel.Factory(context)
@@ -115,7 +116,7 @@ fun DatePickerView(
                                     // Generic error for other unexpected exceptions. Same as viewModel.toast(5)
                                     Toast.makeText(
                                         context,
-                                        context.getString(R.string.error_unknown),
+                                        unknownErrorString,
                                         Toast.LENGTH_SHORT
                                     ).show()
                                 }

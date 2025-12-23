@@ -1,5 +1,6 @@
 package com.tuxy.airo.screens
 
+import android.content.Context
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -95,7 +96,7 @@ fun FlightDetailsView(
     val context = LocalContext.current
 
     val viewModelFactory = DetailsViewModel.Factory(
-        LocalContext.current,
+        context,
         flightDataDao,
         id,
         lightColorScheme()
@@ -133,7 +134,8 @@ fun FlightDetailsView(
                     DeleteDialog(
                         navController,
                         flightDataDao,
-                        viewModel
+                        viewModel,
+                        context
                     )
                 }
                 LinearProgressIndicator(
@@ -184,7 +186,7 @@ fun FlightDetailsView(
                                 )
                             }
                         }
-                        FlightStatusCard(viewModel)
+                        FlightStatusCard(viewModel, context)
                         FlightInformationInteract(navController, viewModel.flightData.value)
                         Text(
                             modifier = Modifier.padding(16.dp),
@@ -394,9 +396,7 @@ fun SmallCard(
 
 @OptIn(DelicateCoroutinesApi::class)
 @Composable
-fun FlightStatusCard(viewModel: DetailsViewModel) {
-    val context = LocalContext.current
-
+fun FlightStatusCard(viewModel: DetailsViewModel, context: Context) {
     Card(
         modifier = Modifier
             .padding(16.dp)
@@ -549,9 +549,8 @@ fun DeleteDialog(
     navController: NavController,
     flightDataDao: FlightDataDao,
     viewModel: DetailsViewModel,
+    context: Context
 ) {
-    val context = LocalContext.current
-
     BasicAlertDialog(
         onDismissRequest = {
             viewModel.openDialog.value = false

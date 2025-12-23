@@ -37,6 +37,7 @@ fun SettingsView(
     navController: NavController
 ) {
     val context = LocalContext.current
+    val webpageString = stringResource(R.string.source_code)
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),
@@ -75,7 +76,7 @@ fun SettingsView(
             )
             ListItem(
                 modifier = Modifier.clickable(onClick = {
-                    openWebpage(context, context.getString(R.string.source_code))
+                    openWebpage(context, webpageString)
                 }),
                 headlineContent = { Text(stringResource(R.string.about)) },
                 supportingContent = { Text(stringResource(R.string.source_and_license)) },
