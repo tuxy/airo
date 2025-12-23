@@ -10,7 +10,7 @@ import com.tuxy.airo.motion.materialSharedAxisXOut
 import com.tuxy.airo.screens.AircraftInformationView
 import com.tuxy.airo.screens.DatePickerView
 import com.tuxy.airo.screens.FlightDetailsView
-import com.tuxy.airo.screens.MainFlightView
+import com.tuxy.airo.screens.FoldableFlightScreen
 import com.tuxy.airo.screens.NewFlightView
 import com.tuxy.airo.screens.SettingsView
 import com.tuxy.airo.screens.TicketInformationView
@@ -38,7 +38,7 @@ fun SetupNavGraph(
         popExitTransition = { materialSharedAxisXOut(targetOffsetX = { (it * INITIAL_OFFSET_FACTOR).toInt() }) },
     ) {
         composable(route = Screen.MainFlightsScreen.route) {
-            MainFlightView(
+            FoldableFlightScreen(
                 navController,
                 flightDataDao,
             )
@@ -101,4 +101,3 @@ fun SetupNavGraph(
         }
     }
 }
-

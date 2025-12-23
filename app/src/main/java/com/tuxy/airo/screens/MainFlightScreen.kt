@@ -85,6 +85,7 @@ import kotlin.math.absoluteValue
 fun MainFlightView(
     navController: NavController,
     flightDataDao: FlightDataDao,
+    onFlightClick: (String) -> Unit = {}
 ) {
     val viewModelFactory = MainFlightViewModel.Factory(LocalContext.current)
     val viewModel: MainFlightViewModel = viewModel(factory = viewModelFactory)
@@ -136,6 +137,7 @@ fun MainFlightView(
                     modifier = Modifier
                         .fillMaxSize()
                         .weight(1f),
+                    onFlightClick = onFlightClick
                 )
             }
         }
@@ -182,6 +184,7 @@ fun FlightsList(
     viewModel: MainFlightViewModel,
     navController: NavController,
     modifier: Modifier = Modifier,
+    onFlightClick: (String) -> Unit
 ) {
     HorizontalPager(
         state = pagerState,
@@ -201,7 +204,7 @@ fun FlightsList(
                         viewModel.flightsUpcomingList.forEach { flights ->
                             DateHeader(flights[0].departDate, flights.size)
                             flights.groupBy { flight ->
-                                FlightCard(navController, flight, viewModel)
+                                FlightCard(navController, flight, viewModel, onFlightClick)
                             }
                         }
                     }
@@ -213,7 +216,7 @@ fun FlightsList(
                         viewModel.flightsPastList.forEach { flights ->
                             DateHeader(flights[0].departDate, flights.size)
                             flights.groupBy { flight ->
-                                FlightCard(navController, flight, viewModel)
+                                FlightCard(navController, flight, viewModel, onFlightClick)
                             }
                         }
                     }
@@ -257,7 +260,8 @@ fun NoFlight(
 fun FlightCard(
     navController: NavController,
     flightData: FlightData,
-    viewModel: MainFlightViewModel
+    viewModel: MainFlightViewModel,
+    onFlightClick: (String) -> Unit
 ) {
     val timeFormat = viewModel.preferencesInterface.getValueTimeFormatComposable("24_time")
 
@@ -270,9 +274,7 @@ fun FlightCard(
             modifier = Modifier
                 .fillMaxWidth(),
             onClick = {
-                navController.navigate(
-                    "${Screen.FlightDetailsScreen.route}/${flightData.id}"
-                )
+                onFlightClick(flightData.id.toString())
             }
         ) {
             Column(
@@ -445,5 +447,6 @@ fun FlightCardPreview() {
             to = "BNE"
         ),
         viewModel = viewModel<MainFlightViewModel>(),
+        onFlightClick = {}
     )
 }
