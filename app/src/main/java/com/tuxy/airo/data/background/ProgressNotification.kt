@@ -26,7 +26,6 @@ object ProgressNotification {
         val builder = NotificationCompat.Builder(context, CHANNEL_ID)
             .setContentTitle(title)
             .setContentText(contentText)
-            .setSmallIcon(android.R.drawable.ic_dialog_info) // Replace with your app's icon
             .setPriority(NotificationCompat.PRIORITY_HIGH)
             .setOngoing(true)
             .setOnlyAlertOnce(true)
