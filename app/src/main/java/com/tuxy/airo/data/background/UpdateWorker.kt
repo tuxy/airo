@@ -21,7 +21,7 @@ import java.time.format.DateTimeFormatter
 class UpdateWorker(
     workerParameters: WorkerParameters,
     context: Context,
-): CoroutineWorker(context, workerParameters) {
+) : CoroutineWorker(context, workerParameters) {
     private val alarmController = AlarmController(context)
     private val preferencesInterface = PreferencesInterface(context)
     private val flightDataDao = FlightDataBase.getDatabase(context).flightDataDao()
@@ -51,10 +51,11 @@ class UpdateWorker(
 
             // Checks whether flight is within a week (refreshed every 2 days). If not, ignore to save api calls
             if (!(
-                i.departDate > LocalDateTime.now()
-                &&
-                i.departDate < (LocalDateTime.now().plusDays(7))
-            )) {
+                        i.departDate > LocalDateTime.now()
+                                &&
+                                i.departDate < (LocalDateTime.now().plusDays(7))
+                        )
+            ) {
                 break
             }
 
@@ -68,7 +69,7 @@ class UpdateWorker(
                     update = true
                 )
 
-                if (result.isSuccess) { flightData: FlightData ->
+                result.onSuccess { flightData: FlightData ->
                     alarmController.cancelAlarm(i)
                     scope.launch {
                         flightDataDao.deleteFlight(i)

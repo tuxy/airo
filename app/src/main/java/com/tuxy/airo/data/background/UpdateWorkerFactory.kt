@@ -17,6 +17,7 @@ class UpdateWorkerFactory : WorkerFactory() {
                     workerParameters, appContext,
                 )
             }
+
             else -> null
         }
     }

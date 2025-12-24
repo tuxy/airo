@@ -75,7 +75,8 @@ class MainFlightViewModel(context: Context) : ViewModel() {
                 flight.arriveDate.toEpochSecond(ZoneOffset.UTC)
             }.toSortedMap()
 
-            val nowInEpochSeconds = LocalDateTime.now().atZone(ZoneOffset.systemDefault()).toEpochSecond()
+            val nowInEpochSeconds =
+                LocalDateTime.now().atZone(ZoneOffset.systemDefault()).toEpochSecond()
 
 
             val flightsUpcoming = flights
@@ -117,7 +118,8 @@ class MainFlightViewModel(context: Context) : ViewModel() {
             val lastFlightInGroup = lastGroup?.lastOrNull()
 
             if (lastFlightInGroup != null) {
-                val timeDiff = Duration.between(lastFlightInGroup.departDate, flight.departDate).abs()
+                val timeDiff =
+                    Duration.between(lastFlightInGroup.departDate, flight.departDate).abs()
 
                 if (timeDiff <= Duration.ofHours(24)) {
                     val updatedLastGroup = lastGroup + flight

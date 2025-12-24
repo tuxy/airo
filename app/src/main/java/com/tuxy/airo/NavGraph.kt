@@ -1,15 +1,14 @@
 package com.tuxy.airo
 
+import androidx.compose.animation.EnterTransition
+import androidx.compose.animation.ExitTransition
 import androidx.compose.runtime.Composable
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import com.tuxy.airo.data.flightdata.FlightDataDao
-import com.tuxy.airo.motion.materialSharedAxisXIn
-import com.tuxy.airo.motion.materialSharedAxisXOut
 import com.tuxy.airo.screens.AircraftInformationView
 import com.tuxy.airo.screens.DatePickerView
-import com.tuxy.airo.screens.FlightDetailsView
 import com.tuxy.airo.screens.FoldableFlightScreen
 import com.tuxy.airo.screens.NewFlightView
 import com.tuxy.airo.screens.SettingsView
@@ -19,8 +18,6 @@ import com.tuxy.airo.screens.settings.BackupSettingsView
 import com.tuxy.airo.screens.settings.LocaleSettingsView
 import com.tuxy.airo.screens.settings.NotificationsSettingsView
 import de.raphaelebner.roomdatabasebackup.core.RoomBackup
-
-const val INITIAL_OFFSET_FACTOR = 0.10f
 
 @Composable
 fun SetupNavGraph(
@@ -32,10 +29,10 @@ fun SetupNavGraph(
     NavHost(
         navController = navController,
         startDestination = Screen.MainFlightsScreen.route,
-        enterTransition = { materialSharedAxisXIn(initialOffsetX = { (it * INITIAL_OFFSET_FACTOR).toInt() }) },
-        exitTransition = { materialSharedAxisXOut(targetOffsetX = { -(it * INITIAL_OFFSET_FACTOR).toInt() }) },
-        popEnterTransition = { materialSharedAxisXIn(initialOffsetX = { -(it * INITIAL_OFFSET_FACTOR).toInt() }) },
-        popExitTransition = { materialSharedAxisXOut(targetOffsetX = { (it * INITIAL_OFFSET_FACTOR).toInt() }) },
+        exitTransition = { ExitTransition.None },
+        enterTransition = { EnterTransition.None },
+        popEnterTransition = { EnterTransition.None },
+        popExitTransition = { ExitTransition.None },
     ) {
         composable(route = Screen.MainFlightsScreen.route) {
             FoldableFlightScreen(
@@ -45,14 +42,14 @@ fun SetupNavGraph(
         }
         composable(route = Screen.SettingsScreen.route) { SettingsView(navController) }
 
-        // Passing flight id into FlightDetails
-        composable(route = "${Screen.FlightDetailsScreen.route}/{id}") { backStackEntry ->
-            FlightDetailsView(
-                navController,
-                backStackEntry.arguments?.getString("id").toString(),
-                flightDataDao,
-            )
-        }
+//        // Passing flight id into FlightDetails
+//        composable(route = "${Screen.FlightDetailsScreen.route}/{id}") { backStackEntry ->
+//            FlightDetailsView(
+//                navController,
+//                backStackEntry.arguments?.getString("id").toString(),
+//                flightDataDao,
+//            )
+//        }
 
         composable(route = Screen.NewFlightScreen.route) { NewFlightView(navController) }
 

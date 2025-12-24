@@ -46,7 +46,8 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             val current = preferencesInterface.getValue("selected_api")
-            val interval = if (current != "0") preferencesInterface.getValueFloat("update_interval") else 48f // Try to enforce 48h on pre-provided api
+            val interval =
+                if (current != "0") preferencesInterface.getValueFloat("update_interval") else 48f // Try to enforce 48h on pre-provided api
 
             AeroTheme {
                 // Attempts to set up notification permissions
@@ -68,9 +69,10 @@ class MainActivity : ComponentActivity() {
                     .setRequiresCharging(false)
                     .build()
 
-                val periodicWorkRequest = PeriodicWorkRequestBuilder<UpdateWorker>(interval.toLong(), TimeUnit.SECONDS)
-                    .setConstraints(constraints)
-                    .build()
+                val periodicWorkRequest =
+                    PeriodicWorkRequestBuilder<UpdateWorker>(interval.toLong(), TimeUnit.SECONDS)
+                        .setConstraints(constraints)
+                        .build()
 
                 WorkManager.getInstance(LocalContext.current).enqueueUniquePeriodicWork(
                     "airo_update_work",

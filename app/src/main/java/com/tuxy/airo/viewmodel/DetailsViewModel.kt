@@ -4,8 +4,10 @@ import android.content.Context
 import android.util.Log
 import androidx.compose.material3.ColorScheme
 import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
@@ -15,7 +17,6 @@ import com.tuxy.airo.data.database.PreferencesInterface
 import com.tuxy.airo.data.flightdata.FlightData
 import com.tuxy.airo.data.flightdata.FlightDataDao
 import com.tuxy.airo.data.flightdata.getData
-import com.tuxy.airo.data.flightdata.singleIntoMut
 import com.tuxy.airo.screens.ApiSettings
 import com.tuxy.airo.screens.CustomMapMarker
 import kotlinx.coroutines.CoroutineScope
@@ -69,8 +70,6 @@ import kotlin.time.toKotlinDuration
 @Suppress("UNCHECKED_CAST")
 class DetailsViewModel(
     context: Context,
-    flightDataDao: FlightDataDao,
-    id: String,
     scheme: ColorScheme,
     scope: CoroutineScope =
         CoroutineScope(SupervisorJob() + Dispatchers.IO)
@@ -79,27 +78,17 @@ class DetailsViewModel(
     val preferencesInterface = PreferencesInterface(context)
     val viewModelScope = scope
 
-    var flightData = mutableStateOf(FlightData())
     var openDialog = mutableStateOf(false)
     var progress = mutableFloatStateOf(0.0F)
         private set
 
-    init {
-        when (id) {
-            "testId" -> {
-                flightData.value = FlightData()
-            }
+    var flightData by mutableStateOf(FlightData())
 
-            else -> {
-                singleIntoMut(
-                    flightData,
-                    flightDataDao,
-                    id
-                )
-            }
+    fun loadFlightById(id: String, dao: FlightDataDao) {
+        viewModelScope.launch {
+            val flight = dao.readSingle(id)
+            flightData = flight
         }
-        // On initialisation, pass db data into flightData
-        // Use empty FlightData if testId is used
     }
 
     /**
@@ -111,9 +100,9 @@ class DetailsViewModel(
         val currentInstant = Clock.System.now()
 
         val departZoneSeconds =
-            flightData.value.departTimeZone.rules.getOffset(currentInstant.toJavaInstant())
+            flightData.departTimeZone.rules.getOffset(currentInstant.toJavaInstant())
         val arriveZoneSeconds =
-            flightData.value.arriveTimeZone.rules.getOffset(currentInstant.toJavaInstant())
+            flightData.arriveTimeZone.rules.getOffset(currentInstant.toJavaInstant())
 
         val differenceInSeconds = arriveZoneSeconds.totalSeconds - departZoneSeconds.totalSeconds
 
@@ -142,10 +131,10 @@ class DetailsViewModel(
     fun getProgress(): Float {
         val now = LocalDateTime
             .now()
-            .atZone(flightData.value.departTimeZone)
+            .atZone(flightData.departTimeZone)
             .withZoneSameInstant(ZoneOffset.UTC)
 
-        val departTime = flightData.value.departDate
+        val departTime = flightData.departDate
             .atOffset(ZoneOffset.UTC)
             .withOffsetSameInstant(ZoneOffset.UTC)
 
@@ -157,7 +146,7 @@ class DetailsViewModel(
                 return@launch
             }
 
-            val duration = flightData.value.duration.toMillis()
+            val duration = flightData.duration.toMillis()
 
             val current = timeFromStart.toFloat() / duration.toFloat()
 
@@ -178,10 +167,10 @@ class DetailsViewModel(
     ) {
         val alarmController = AlarmController(context)
         viewModelScope.launch(Dispatchers.IO) {
-            flightDataDao.deleteFlight(flightData.value)
+            flightDataDao.deleteFlight(flightData)
             delay(200)
         }
-        alarmController.cancelAlarm(flightData.value)
+        alarmController.cancelAlarm(flightData)
         openDialog.value = false
     }
 
@@ -201,17 +190,17 @@ class DetailsViewModel(
         val alarmController = AlarmController(context)
         // Fixes refreshed & deleted flights to not remove alarms.
         // Solution: Delete current alarm, and create a new one.
-        alarmController.cancelAlarm(flightData.value)
+        alarmController.cancelAlarm(flightData)
 
         viewModelScope.launch(Dispatchers.IO) {
             isRefreshing.value = true
             val collectedFlightData = getData(
-                flightNumber = flightData.value.callSign.replace(
+                flightNumber = flightData.callSign.replace(
                     " ",
                     ""
                 ), // Whitespace removal
                 flightDataDao = flightDataDao,
-                date = flightData.value.departDate.format(
+                date = flightData.departDate.format(
                     DateTimeFormatter.ofPattern("yyyy-MM-dd")
                 ),
                 settings = settings,
@@ -221,18 +210,18 @@ class DetailsViewModel(
 
             collectedFlightData.onSuccess { newFlight ->
                 Log.d("FlightUpdate", newFlight.toString())
-                val deleted = flightData.value.copy()
-                flightData.value = newFlight
+                val deleted = flightData.copy()
+                flightData = newFlight
 
                 flightDataDao.deleteFlight(deleted)
                 flightDataDao.addFlight(
                     newFlight.copy(
-                        ticketData = flightData.value.ticketData,
+                        ticketData = flightData.ticketData,
                     ) // Retain ticket information
                 )
             }
             isRefreshing.value = false
-            alarmController.setAlarm(flightData.value)
+            alarmController.setAlarm(flightData)
         }
     }
 
@@ -244,9 +233,9 @@ class DetailsViewModel(
     fun getDuration(context: Context): String {
         val duration = Duration.between(
             LocalDateTime.now(),
-            flightData.value.departDate
+            flightData.departDate
                 .atOffset(ZoneOffset.UTC)
-                .atZoneSameInstant(flightData.value.departTimeZone)
+                .atZoneSameInstant(flightData.departTimeZone)
         )
 
         val offset =
@@ -312,9 +301,9 @@ class DetailsViewModel(
     fun getStatus(context: Context): String {
         val duration = Duration.between(
             LocalDateTime.now(),
-            flightData.value.departDate
+            flightData.departDate
                 .atOffset(ZoneOffset.UTC)
-                .atZoneSameInstant(flightData.value.departTimeZone)
+                .atZoneSameInstant(flightData.departTimeZone)
         )
         val seconds = duration.seconds
 
@@ -355,44 +344,45 @@ class DetailsViewModel(
         GlobalScope.launch {
             // Scroll map to show both origin and destination
             snapScrollTo(
-                x = avr(flightData.value.mapOriginX, flightData.value.mapDestinationX), // Center X
-                y = avr(flightData.value.mapOriginY, flightData.value.mapDestinationY), // Center Y
+                x = avr(flightData.mapOriginX, flightData.mapDestinationX), // Center X
+                y = avr(flightData.mapOriginY, flightData.mapDestinationY), // Center Y
             )
             scrollTo(
-                x = avr(flightData.value.mapOriginX, flightData.value.mapDestinationX), // Center X
-                y = avr(flightData.value.mapOriginY, flightData.value.mapDestinationY), // Center Y
+                x = avr(flightData.mapOriginX, flightData.mapDestinationX), // Center X
+                y = avr(flightData.mapOriginY, flightData.mapDestinationY), // Center Y
                 destScale = calculateScale( // Calculated scale to fit points
-                    flightData.value.mapOriginX,
-                    flightData.value.mapOriginY,
-                    flightData.value.mapDestinationX,
-                    flightData.value.mapDestinationY
+                    flightData.mapOriginX,
+                    flightData.mapOriginY,
+                    flightData.mapDestinationX,
+                    flightData.mapDestinationY
                 )
             )
             addPath("route", color = scheme.primary, width = 2.dp) {
                 // The y-offset of -0.0007 is likely a small visual adjustment for the path line
                 // relative to the marker's anchor point.
-                addPoint(x = flightData.value.mapOriginX, y = flightData.value.mapOriginY)
+                addPoint(x = flightData.mapOriginX, y = flightData.mapOriginY)
                 addPoint(
-                    x = flightData.value.mapDestinationX,
-                    y = flightData.value.mapDestinationY
+                    x = flightData.mapDestinationX,
+                    y = flightData.mapDestinationY
                 )
             }
             addMarker(
                 "origin",
-                x = flightData.value.mapOriginX,
-                y = flightData.value.mapOriginY,
+                x = flightData.mapOriginX,
+                y = flightData.mapOriginY,
             ) {
                 CustomMapMarker()
             }
             addMarker(
                 "destination",
-                x = flightData.value.mapDestinationX,
-                y = flightData.value.mapDestinationY,
+                x = flightData.mapDestinationX,
+                y = flightData.mapDestinationY,
             ) {
                 CustomMapMarker()
             }
         }
     }
+
     private fun mapSizeAtLevel(): Int {
         return 256 * 2.0.pow(5).toInt() // Hardcoded zoom level 5 for map size calculation
     }
@@ -422,12 +412,10 @@ class DetailsViewModel(
      */
     class Factory(
         private val context: Context,
-        private val flightDataDao: FlightDataDao,
-        private val id: String,
         private val scheme: ColorScheme
     ) : ViewModelProvider.NewInstanceFactory() {
         override fun <T : ViewModel> create(modelClass: Class<T>): T {
-            return DetailsViewModel(context, flightDataDao, id, scheme) as T
+            return DetailsViewModel(context, scheme) as T
         }
     }
 }

@@ -16,7 +16,7 @@ class NotificationViewModel(
     val alarmController = AlarmController(context)
 
     fun check(option: Boolean) {
-        if(option) {
+        if (option) {
             alarmController.cancelAll(flightDataDao)
         } else {
             alarmController.resetAll(flightDataDao)

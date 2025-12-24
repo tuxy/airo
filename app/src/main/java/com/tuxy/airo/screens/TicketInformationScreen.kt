@@ -97,7 +97,9 @@ fun TicketInformationView(
         permission = Manifest.permission.CAMERA,
         onPermissionResult = { result ->
             viewModel.hasCameraPermission = result
-            if (result) { viewModel.showCamera(barCodeLauncher, context) }
+            if (result) {
+                viewModel.showCamera(barCodeLauncher, context)
+            }
         }
     )
 

@@ -15,9 +15,10 @@ So you would like to contribute? Sure! (although it's not easy to understand...)
 This project never followed specific structure. Essentially:
 
 - `data`: for data related to the management of the database and the fetching of flight information.
-  - `background`: UpdateWorker for WorkManager to update flight data between specified interval.
-  - `flightdata`: Retrieval and format for accessing flight data (FlightDataSchema) and parsing ticket data (IataParserData).
-  - `database`: Room database, DAO for access, and user preferences.
+    - `background`: UpdateWorker for WorkManager to update flight data between specified interval.
+    - `flightdata`: Retrieval and format for accessing flight data (FlightDataSchema) and parsing
+      ticket data (IataParserData).
+    - `database`: Room database, DAO for access, and user preferences.
 - `motion`: animations, movement and app flow. This is quite small and doesn't really need improving
 - `screens`: main UI composables.
 - `viewmodel`: UI logic and data handling outside of composable functions. This is the main
@@ -36,4 +37,5 @@ This project never followed specific structure. Essentially:
 - (Done!) `viewmodel/FlightDetailsViewModel.kt`: Adding/Fixing refresh functionality (check
   refreshing-feature branch)
 - (Done!) `screens/MainFlightScreen.kt`: Up to spec, but could have more sophisticated grouping.
-- (Doing) Comments & documentation. A lot of the functions are "willy-nilly" and need some documentation.
+- (Doing) Comments & documentation. A lot of the functions are "willy-nilly" and need some
+  documentation.

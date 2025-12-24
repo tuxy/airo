@@ -85,11 +85,9 @@ import kotlin.math.absoluteValue
 fun MainFlightView(
     navController: NavController,
     flightDataDao: FlightDataDao,
+    viewModel: MainFlightViewModel,
     onFlightClick: (String) -> Unit = {}
 ) {
-    val viewModelFactory = MainFlightViewModel.Factory(LocalContext.current)
-    val viewModel: MainFlightViewModel = viewModel(factory = viewModelFactory)
-
     val pagerState = rememberPagerState(pageCount = { 2 })
     val selectedTabIndex = remember { derivedStateOf { pagerState.currentPage } }
     val scope = rememberCoroutineScope()
@@ -123,9 +121,11 @@ fun MainFlightView(
                 .fillMaxSize()
         ) {
             if (viewModel.flightData.isEmpty()) {
-                NoFlight(Modifier
-                    .fillMaxSize()
-                    .padding(96.dp))
+                NoFlight(
+                    Modifier
+                        .fillMaxSize()
+                        .padding(96.dp)
+                )
             } else {
                 TabRow(
                     selectedTabIndex.value,
@@ -201,9 +201,11 @@ fun FlightsList(
             when (page) {
                 0 -> {
                     if (viewModel.flightsUpcomingList.isEmpty()) {
-                        NoFlight(Modifier
-                            .fillMaxSize()
-                            .padding(128.dp))
+                        NoFlight(
+                            Modifier
+                                .fillMaxSize()
+                                .padding(128.dp)
+                        )
                     } else {
                         viewModel.flightsUpcomingList.forEach { flights ->
                             DateHeader(flights[0].departDate, flights.size)
@@ -213,11 +215,14 @@ fun FlightsList(
                         }
                     }
                 }
+
                 1 -> {
                     if (viewModel.flightsPastList.isEmpty()) {
-                        NoFlight(Modifier
-                            .fillMaxSize()
-                            .padding(128.dp))
+                        NoFlight(
+                            Modifier
+                                .fillMaxSize()
+                                .padding(128.dp)
+                        )
                     } else {
                         viewModel.flightsPastList.forEach { flights ->
                             DateHeader(flights[0].departDate, flights.size)

@@ -6,6 +6,8 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.LocalMinimumInteractiveComponentSize
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.VerticalDragHandle
 import androidx.compose.material3.adaptive.ExperimentalMaterial3AdaptiveApi
@@ -16,7 +18,7 @@ import androidx.compose.material3.adaptive.layout.rememberPaneExpansionState
 import androidx.compose.material3.adaptive.navigation.NavigableListDetailPaneScaffold
 import androidx.compose.material3.adaptive.navigation.rememberListDetailPaneScaffoldNavigator
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.key
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
@@ -40,63 +42,74 @@ fun FoldableFlightScreen(
 
     val scope = rememberCoroutineScope()
 
-    val navigator = rememberListDetailPaneScaffoldNavigator<String?>()
+    LaunchedEffect(Unit) {
+        viewModel.loadData(flightDataDao)
+    }
 
-    BackHandler(enabled = navigator.canNavigateBack()) {
+    val navigator = rememberListDetailPaneScaffoldNavigator<String>()
+
+    BackHandler(enabled = true) {
         scope.launch {
-            navigator.navigateBack()
+            navigator.navigateTo(ListDetailPaneScaffoldRole.List, null)
         }
     }
 
-    NavigableListDetailPaneScaffold(
-        navigator = navigator,
-        listPane = {
-            MainFlightView(
-                navController = navController,
-                flightDataDao = flightDataDao,
-                onFlightClick = { flightId ->
-                    // Simply update the state. The navigator will react to this change.
-                    scope.launch {
-                        navigator.navigateTo(ListDetailPaneScaffoldRole.Detail, flightId)
+    val currentId = navigator.currentDestination?.contentKey
+
+    Surface(
+        modifier = Modifier.fillMaxSize(),
+        color = MaterialTheme.colorScheme.background // Or your specific UI background
+    ) {
+        NavigableListDetailPaneScaffold(
+            navigator = navigator,
+            listPane = {
+                MainFlightView(
+                    navController = navController,
+                    flightDataDao = flightDataDao,
+                    viewModel = viewModel,
+                    onFlightClick = { id ->
+                        scope.launch {
+                            navigator.navigateTo(ListDetailPaneScaffoldRole.Detail, id)
+                        }
                     }
-                }
-            )
-        },
-        detailPane = {
-            AnimatedPane {
-                navigator.currentDestination?.contentKey?.let { index ->
-                    key(index) {
+                )
+            },
+            detailPane = {
+                AnimatedPane {
+                    if (currentId != null) {
                         FlightDetailsView(
                             navController = navController,
-                            id = index,
-                            flightDataDao = flightDataDao
+                            id = currentId,
+                            flightDataDao = flightDataDao,
                         )
+                    } else {
+                        EmptyFlight()
                     }
-                } ?: EmptyFlight()
-            }
-        },
-        paneExpansionState =
-            rememberPaneExpansionState(
-                keyProvider = navigator.scaffoldValue,
-                anchors = listOf(
-                    PaneExpansionAnchor.Proportion(0.45f),
-                    PaneExpansionAnchor.Proportion(0.5f),
-                    PaneExpansionAnchor.Proportion(0.55f),
+                }
+            },
+            paneExpansionState =
+                rememberPaneExpansionState(
+                    keyProvider = navigator.scaffoldValue,
+                    anchors = listOf(
+                        PaneExpansionAnchor.Proportion(0.45f),
+                        PaneExpansionAnchor.Proportion(0.5f),
+                        PaneExpansionAnchor.Proportion(0.55f),
+                    )
+                ),
+            paneExpansionDragHandle = { state ->
+                val interactionSource = remember { MutableInteractionSource() }
+                VerticalDragHandle(
+                    modifier =
+                        Modifier.paneExpansionDraggable(
+                            state,
+                            LocalMinimumInteractiveComponentSize.current,
+                            interactionSource
+                        ),
+                    interactionSource = interactionSource
                 )
-            ),
-        paneExpansionDragHandle = { state ->
-            val interactionSource = remember { MutableInteractionSource() }
-            VerticalDragHandle(
-                modifier =
-                    Modifier.paneExpansionDraggable(
-                        state,
-                        LocalMinimumInteractiveComponentSize.current,
-                        interactionSource
-                    ),
-                interactionSource = interactionSource
-            )
-        }
-    )
+            }
+        )
+    }
 }
 
 @Composable

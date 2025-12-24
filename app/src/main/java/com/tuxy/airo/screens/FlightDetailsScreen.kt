@@ -48,6 +48,7 @@ import androidx.compose.material3.lightColorScheme
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -97,11 +98,10 @@ fun FlightDetailsView(
 
     val viewModelFactory = DetailsViewModel.Factory(
         context,
-        flightDataDao,
-        id,
         lightColorScheme()
     )
     val viewModel: DetailsViewModel = viewModel(factory = viewModelFactory)
+
     val timeFormat = viewModel.preferencesInterface.getValueTimeFormatComposable("24_time")
 
     val settings = ApiSettings(
@@ -114,11 +114,15 @@ fun FlightDetailsView(
     val refreshState = rememberPullToRefreshState()
     val isRefreshing = remember { mutableStateOf(false) }
 
+    LaunchedEffect(id) {
+        viewModel.loadFlightById(id, flightDataDao)
+    }
+
     Scaffold(
         modifier = Modifier.fillMaxSize(),
         topBar = {
             SmallAppBarWithDelete(
-                "${viewModel.flightData.value.from} to ${viewModel.flightData.value.to}",
+                "${viewModel.flightData.from} to ${viewModel.flightData.to}",
                 navController,
                 viewModel.openDialog
             )
@@ -159,9 +163,13 @@ fun FlightDetailsView(
                             .verticalScroll(rememberScrollState())
                             .fillMaxHeight()
                     ) {
-                        RouteBar(viewModel.flightData.value)
+                        RouteBar(viewModel.flightData)
                         Text(
-                            text = viewModel.flightData.value.departDate.format(DateTimeFormatter.ofPattern("EEEE, MMM d, yyyy")),
+                            text = viewModel.flightData.departDate.format(
+                                DateTimeFormatter.ofPattern(
+                                    "EEEE, MMM d, yyyy"
+                                )
+                            ),
                             modifier = Modifier.padding(start = 16.dp),
                             color = Color.Gray
                         )
@@ -187,11 +195,11 @@ fun FlightDetailsView(
                             }
                         }
                         FlightStatusCard(viewModel, context)
-                        FlightInformationInteract(navController, viewModel.flightData.value)
+                        FlightInformationInteract(navController, viewModel.flightData)
                         Text(
                             modifier = Modifier.padding(16.dp),
                             text = "${stringResource(R.string.last_updated)} ${
-                                viewModel.flightData.value.lastUpdate.format(
+                                viewModel.flightData.lastUpdate.format(
                                     DateTimeFormatter.ISO_DATE_TIME
                                 )
                             }",
@@ -210,7 +218,7 @@ fun FlightDetailsView(
 fun FlightBoardCard(
     viewModel: DetailsViewModel,
     timeFormat: String,
-    flightData: FlightData = viewModel.flightData.value
+    flightData: FlightData = viewModel.flightData
 ) {
     Card(
         modifier = Modifier
@@ -444,10 +452,10 @@ fun FlightStatusCard(viewModel: DetailsViewModel, context: Context) {
                 progress = {
                     val now = LocalDateTime
                         .now()
-                        .atZone(viewModel.flightData.value.departTimeZone)
+                        .atZone(viewModel.flightData.departTimeZone)
                         .withZoneSameInstant(ZoneOffset.UTC)
 
-                    val departTime = viewModel.flightData.value.departDate
+                    val departTime = viewModel.flightData.departDate
                         .atOffset(ZoneOffset.UTC)
                         .withOffsetSameInstant(ZoneOffset.UTC)
 
@@ -460,7 +468,7 @@ fun FlightStatusCard(viewModel: DetailsViewModel, context: Context) {
                             return@launch
                         }
 
-                        val duration = viewModel.flightData.value.duration.toMillis()
+                        val duration = viewModel.flightData.duration.toMillis()
 
                         val current = timeFromStart.toFloat() / duration.toFloat()
 
@@ -615,7 +623,12 @@ fun CustomMapMarker() { // Only used in viewmodel
                 val roundedPolygonPath = roundedPolygon.toPath().asComposePath()
                 onDrawBehind {
                     drawPath(roundedPolygonPath, color = primary, alpha = 0.4f)
-                    drawPath(roundedPolygonPath, color = primary, alpha = 1f, style = Stroke(width = 4.0f))
+                    drawPath(
+                        roundedPolygonPath,
+                        color = primary,
+                        alpha = 1f,
+                        style = Stroke(width = 4.0f)
+                    )
                 }
             }
     )

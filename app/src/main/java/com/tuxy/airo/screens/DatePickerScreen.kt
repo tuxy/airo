@@ -106,11 +106,16 @@ fun DatePickerView(
                                         FlightDataError.ApiKeyMissing -> viewModel.toast(0).show()
                                         FlightDataError.NetworkError -> viewModel.toast(1).show()
                                         FlightDataError.ParsingError -> viewModel.toast(2).show()
-                                        FlightDataError.IncompleteDataError -> viewModel.toast(2).show()
-                                        FlightDataError.FlightAlreadyExists -> viewModel.toast(3).show()
+                                        FlightDataError.IncompleteDataError -> viewModel.toast(2)
+                                            .show()
+
+                                        FlightDataError.FlightAlreadyExists -> viewModel.toast(3)
+                                            .show()
+
                                         FlightDataError.UnknownError -> viewModel.toast(4).show()
                                         FlightDataError.UpdateError -> viewModel.toast(5).show()
-                                        FlightDataError.FlightNotFoundError -> viewModel.toast(6).show()
+                                        FlightDataError.FlightNotFoundError -> viewModel.toast(6)
+                                            .show()
                                     }
                                 } else {
                                     // Generic error for other unexpected exceptions. Same as viewModel.toast(5)

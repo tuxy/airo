@@ -42,7 +42,7 @@ data class Notification(
      *
      * @param context The context from which to access system services.
      */
-     fun showNotification(context: Context) {
+    fun showNotification(context: Context) {
         val manager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
         val channelId = "flight_alert_channel"
         val channelName = "Flight Alerts"
@@ -92,7 +92,11 @@ class AlarmController(val context: Context) {
 
             val flight = context.getString(R.string.flight_alert_title)
             val content =
-                "${context.getString(R.string.get_ready)} ${flightData.callSign} ${context.getString(R.string.to)} ${flightData.toName} ${
+                "${context.getString(R.string.get_ready)} ${flightData.callSign} ${
+                    context.getString(
+                        R.string.to
+                    )
+                } ${flightData.toName} ${
                     context.getString(R.string.at)
                 } $time"
 
@@ -140,7 +144,11 @@ class AlarmController(val context: Context) {
 
             val title = context.getString(R.string.flight_update)
             val content =
-                "${context.getString(R.string.flight)} ${previous.callSign} ${context.getString(R.string.has_updated)} $oldTime ${context.getString(R.string.to)} $newTime"
+                "${context.getString(R.string.flight)} ${previous.callSign} ${context.getString(R.string.has_updated)} $oldTime ${
+                    context.getString(
+                        R.string.to
+                    )
+                } $newTime"
 
             intent.putExtra("title", title)
             intent.putExtra("content", content)
