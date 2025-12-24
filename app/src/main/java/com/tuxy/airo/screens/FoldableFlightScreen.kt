@@ -19,8 +19,11 @@ import androidx.compose.material3.adaptive.navigation.NavigableListDetailPaneSca
 import androidx.compose.material3.adaptive.navigation.rememberListDetailPaneScaffoldNavigator
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -28,6 +31,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.tuxy.airo.data.flightdata.FlightDataDao
 import com.tuxy.airo.viewmodel.MainFlightViewModel
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3AdaptiveApi::class)
@@ -48,13 +52,23 @@ fun FoldableFlightScreen(
 
     val navigator = rememberListDetailPaneScaffoldNavigator<String>()
 
-    BackHandler(enabled = true) {
-        scope.launch {
-            navigator.navigateTo(ListDetailPaneScaffoldRole.List, null)
+    var displayedId by remember { mutableStateOf<String?>(null) }
+    val currentId = navigator.currentDestination?.contentKey
+
+    LaunchedEffect(currentId) {
+        if (currentId != null) {
+            displayedId = currentId
+        } else {
+            delay(300L) // Delay to prevent EmptyFlight() from taking over too early
+            displayedId = null
         }
     }
 
-    val currentId = navigator.currentDestination?.contentKey
+    BackHandler(navigator.canNavigateBack()) {
+        scope.launch {
+            navigator.navigateBack()
+        }
+    }
 
     Surface(
         modifier = Modifier.fillMaxSize(),
@@ -63,23 +77,25 @@ fun FoldableFlightScreen(
         NavigableListDetailPaneScaffold(
             navigator = navigator,
             listPane = {
-                MainFlightView(
-                    navController = navController,
-                    flightDataDao = flightDataDao,
-                    viewModel = viewModel,
-                    onFlightClick = { id ->
-                        scope.launch {
-                            navigator.navigateTo(ListDetailPaneScaffoldRole.Detail, id)
+                AnimatedPane {
+                    MainFlightView(
+                        navController = navController,
+                        flightDataDao = flightDataDao,
+                        viewModel = viewModel,
+                        onFlightClick = { id ->
+                            scope.launch {
+                                navigator.navigateTo(ListDetailPaneScaffoldRole.Detail, id)
+                            }
                         }
-                    }
-                )
+                    )
+                }
             },
             detailPane = {
                 AnimatedPane {
-                    if (currentId != null) {
+                    if (displayedId != null) {
                         FlightDetailsView(
                             navController = navController,
-                            id = currentId,
+                            id = displayedId!!,
                             flightDataDao = flightDataDao,
                         )
                     } else {

@@ -4,7 +4,7 @@
     <selectionStates>
       <SelectionState runConfigName="app">
         <option name="selectionMode" value="DROPDOWN" />
-        <DropdownSelection timestamp="2025-12-24T04:20:43.198315641Z">
+        <DropdownSelection timestamp="2025-12-24T13:03:24.603968205Z">
           <Target type="DEFAULT_BOOT">
             <handle>
               <DeviceId pluginId="LocalEmulator" identifier="path=/home/tuxy/.config/.android/avd/Pixel_9_Pro_Fold.avd" />

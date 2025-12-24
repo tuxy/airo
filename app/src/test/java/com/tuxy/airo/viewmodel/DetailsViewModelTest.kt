@@ -53,8 +53,6 @@ class DetailsViewModelTest {
 
         viewModel = DetailsViewModel(
             context = mockContext,
-            flightDataDao = flightDataDao,
-            id = "testId",
             scheme = lightColorScheme()
         )
     }
