@@ -68,13 +68,14 @@ class UpdateWorker(
                     update = true
                 )
 
-                if (result.isSuccess) { flightData: FlightData ->
+                result.onSuccess { flightData: FlightData ->
                     alarmController.cancelAlarm(i)
                     scope.launch {
                         flightDataDao.deleteFlight(i)
                         flightDataDao.addFlight(flightData)
                     }
                     alarmController.setAlarm(flightData)
+                    alarmController.setProgressAlarm(flightData)
                     alarmController.setAlarmOnChange(i, flightData)
                 }
             }

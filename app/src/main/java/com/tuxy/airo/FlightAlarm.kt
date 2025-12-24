@@ -10,6 +10,7 @@ import android.content.Context.ALARM_SERVICE
 import android.content.Intent
 import android.util.Log
 import androidx.core.app.NotificationCompat
+import com.tuxy.airo.data.background.ProgressNotification
 import com.tuxy.airo.data.database.PreferencesInterface
 import com.tuxy.airo.data.flightdata.FlightData
 import com.tuxy.airo.data.flightdata.FlightDataDao
@@ -85,7 +86,7 @@ class AlarmController(val context: Context) {
 
         if (depTime > (System.currentTimeMillis() + 21600000) / 1000) { // If the flight is within 6 hours, don't set alarm
             val alarmManager = context.getSystemService(ALARM_SERVICE) as AlarmManager
-            val intent = Intent(context, Alarm::class.java)
+            val intent = Intent(context, FlightAlarm::class.java)
 
             val time = flightData.departDate.atZone(ZoneId.systemDefault())
                 .format(DateTimeFormatter.ofPattern(timeFormatWait))
@@ -113,6 +114,49 @@ class AlarmController(val context: Context) {
     }
 
     @OptIn(DelicateCoroutinesApi::class)
+    fun setProgressAlarm(flightData: FlightData) {
+        val preferencesInterface = PreferencesInterface(context)
+        var timeFormatWait = ""
+
+        GlobalScope.launch {
+            val timeFormat = preferencesInterface.getValueTimeFormat("24_time")
+            timeFormatWait = timeFormat
+        }
+
+        val depTime =
+            flightData.departDate
+                .atOffset(ZoneOffset.UTC)
+                .atZoneSameInstant(flightData.departTimeZone).toEpochSecond()
+
+        val alarmManager = context.getSystemService(ALARM_SERVICE) as AlarmManager
+
+        val intent = Intent(context, ProgressAlarm::class.java)
+
+        val pendingIntent = PendingIntent.getBroadcast(
+            context,
+            flightData.id,
+            intent,
+            PendingIntent.FLAG_IMMUTABLE
+        )
+
+        val time = flightData.departDate.atZone(ZoneId.systemDefault())
+            .format(DateTimeFormatter.ofPattern(timeFormatWait))
+
+        val flight = "${context.getString(R.string.flight)} ${flightData.callSign}"
+        val content =
+            "${context.getString(R.string.landing)} ${context.getString(R.string.at)} $time"
+
+        intent.putExtra("title", flight)
+        intent.putExtra("content", content)
+
+        alarmManager.setExactAndAllowWhileIdle(
+            AlarmManager.RTC_WAKEUP,
+            (depTime) * 1000,
+            pendingIntent
+        )
+    }
+
+    @OptIn(DelicateCoroutinesApi::class)
     fun setAlarmOnChange(previous: FlightData, new: FlightData) {
         val preferencesInterface = PreferencesInterface(context)
         var timeFormatWait = ""
@@ -133,7 +177,7 @@ class AlarmController(val context: Context) {
 
         if (newDepTime != oldDepTime) {
             val alarmManager = context.getSystemService(ALARM_SERVICE) as AlarmManager
-            val intent = Intent(context, Alarm::class.java)
+            val intent = Intent(context, FlightAlarm::class.java)
 
             val oldTime = oldDepTime.format(DateTimeFormatter.ofPattern(timeFormatWait))
             val newTime = newDepTime.format(DateTimeFormatter.ofPattern(timeFormatWait))
@@ -160,7 +204,7 @@ class AlarmController(val context: Context) {
 
     fun cancelAlarm(flightData: FlightData) {
         val alarmManager = context.getSystemService(ALARM_SERVICE) as AlarmManager
-        val intent = Intent(context, Alarm::class.java)
+        val intent = Intent(context, FlightAlarm::class.java)
         val pendingIntent = PendingIntent.getBroadcast(
             context,
             flightData.id,
@@ -193,7 +237,7 @@ class AlarmController(val context: Context) {
  * data (flight and content) from the incoming [Intent] and displays a system
  * notification using the [Notification.showNotification] method.
  */
-class Alarm : BroadcastReceiver() {
+class FlightAlarm : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
         try {
             val notification = Notification(
@@ -202,7 +246,25 @@ class Alarm : BroadcastReceiver() {
             )
             notification.showNotification(context)
         } catch (ex: Exception) {
-            Log.d("Alarm", "onReceive: ${ex.printStackTrace()}")
+            Log.d("FlightAlarm", "onReceive: ${ex.printStackTrace()}")
+        }
+    }
+}
+
+class ProgressAlarm : BroadcastReceiver() {
+    override fun onReceive(context: Context, intent: Intent) {
+        try {
+            val title = intent.getStringExtra("title")!!
+            val content = intent.getStringExtra("content")!!
+            ProgressNotification.show(
+                context,
+                title,
+                content,
+                100,
+                0
+            )
+        } catch (ex: Exception) {
+            Log.d("ProgressAlarm", "onReceive: ${ex.printStackTrace()}")
         }
     }
 }

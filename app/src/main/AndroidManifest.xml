@@ -46,7 +46,7 @@
 
         <profileable android:shell="true" />
 
-        <receiver android:name=".Alarm" />
+        <receiver android:name=".FlightAlarm" />
     </application>
 
 </manifest>
