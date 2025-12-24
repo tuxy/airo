@@ -16,8 +16,6 @@ fun MainScreen(
 ) {
     val data = FlightDataBase.getDatabase(LocalContext.current).flightDataDao()
 
-    ProgressNotification.show(LocalContext.current, "Flight Number", "Landing in ...", 100, 75)
-
     Scaffold {
         val navController = rememberNavController()
         SetupNavGraph(navController, data, backup)
