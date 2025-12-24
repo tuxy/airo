@@ -20,7 +20,7 @@ import com.tuxy.airo.screens.settings.LocaleSettingsView
 import com.tuxy.airo.screens.settings.NotificationsSettingsView
 import de.raphaelebner.roomdatabasebackup.core.RoomBackup
 
-private const val INITIAL_OFFSET_FACTOR = 0.10f
+const val INITIAL_OFFSET_FACTOR = 0.10f
 
 @Composable
 fun SetupNavGraph(

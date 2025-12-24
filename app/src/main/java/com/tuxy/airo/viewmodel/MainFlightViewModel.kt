@@ -83,8 +83,6 @@ class MainFlightViewModel(context: Context) : ViewModel() {
                 .toSortedMap(compareBy { it })
             val flightsPast = flights
                 .filterKeys {
-                    println(nowInEpochSeconds)
-                    println(it)
                     it <= nowInEpochSeconds
                 }
                 .toSortedMap(compareBy { it })

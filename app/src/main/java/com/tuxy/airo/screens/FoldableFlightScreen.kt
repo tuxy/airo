@@ -1,21 +1,24 @@
 package com.tuxy.airo.screens
 
+import androidx.activity.compose.BackHandler
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material3.LocalMinimumInteractiveComponentSize
 import androidx.compose.material3.Text
+import androidx.compose.material3.VerticalDragHandle
 import androidx.compose.material3.adaptive.ExperimentalMaterial3AdaptiveApi
 import androidx.compose.material3.adaptive.layout.AnimatedPane
 import androidx.compose.material3.adaptive.layout.ListDetailPaneScaffoldRole
+import androidx.compose.material3.adaptive.layout.PaneExpansionAnchor
+import androidx.compose.material3.adaptive.layout.rememberPaneExpansionState
 import androidx.compose.material3.adaptive.navigation.NavigableListDetailPaneScaffold
 import androidx.compose.material3.adaptive.navigation.rememberListDetailPaneScaffoldNavigator
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.key
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -35,21 +38,15 @@ fun FoldableFlightScreen(
     val viewModel: MainFlightViewModel = viewModel(factory = viewModelFactory)
     viewModel.loadData(flightDataDao)
 
-    // A state to hold the currently selected flight ID for the detail view
-    var selectedFlightId by remember { mutableStateOf<Int?>(null) }
-
-    // Find the closest flight initially
-    val closestFlightId = viewModel.findClosestFlightId()
-
-    // Initialize selectedFlightId with the closest flight if it hasn't been set yet
-    LaunchedEffect(closestFlightId) {
-        if (selectedFlightId == null) {
-            selectedFlightId = closestFlightId
-        }
-    }
+    val scope = rememberCoroutineScope()
 
     val navigator = rememberListDetailPaneScaffoldNavigator<String?>()
-    val scope = rememberCoroutineScope()
+
+    BackHandler(enabled = navigator.canNavigateBack()) {
+        scope.launch {
+            navigator.navigateBack()
+        }
+    }
 
     NavigableListDetailPaneScaffold(
         navigator = navigator,
@@ -59,25 +56,45 @@ fun FoldableFlightScreen(
                 flightDataDao = flightDataDao,
                 onFlightClick = { flightId ->
                     // Simply update the state. The navigator will react to this change.
-                    selectedFlightId = flightId.toInt()
                     scope.launch {
-                        navigator.navigateTo(ListDetailPaneScaffoldRole.List, flightId)
+                        navigator.navigateTo(ListDetailPaneScaffoldRole.Detail, flightId)
                     }
                 }
             )
         },
         detailPane = {
             AnimatedPane {
-                if (selectedFlightId != null) {
-                    FlightDetailsView(
-                        navController = navController,
-                        id = selectedFlightId.toString(),
-                        flightDataDao = flightDataDao,
-                    )
-                } else {
-                    EmptyFlight()
-                }
+                navigator.currentDestination?.contentKey?.let { index ->
+                    key(index) {
+                        FlightDetailsView(
+                            navController = navController,
+                            id = index,
+                            flightDataDao = flightDataDao
+                        )
+                    }
+                } ?: EmptyFlight()
             }
+        },
+        paneExpansionState =
+            rememberPaneExpansionState(
+                keyProvider = navigator.scaffoldValue,
+                anchors = listOf(
+                    PaneExpansionAnchor.Proportion(0.45f),
+                    PaneExpansionAnchor.Proportion(0.5f),
+                    PaneExpansionAnchor.Proportion(0.55f),
+                )
+            ),
+        paneExpansionDragHandle = { state ->
+            val interactionSource = remember { MutableInteractionSource() }
+            VerticalDragHandle(
+                modifier =
+                    Modifier.paneExpansionDraggable(
+                        state,
+                        LocalMinimumInteractiveComponentSize.current,
+                        interactionSource
+                    ),
+                interactionSource = interactionSource
+            )
         }
     )
 }
