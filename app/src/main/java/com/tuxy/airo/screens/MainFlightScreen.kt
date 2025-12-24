@@ -39,6 +39,9 @@ import androidx.compose.material3.Tab
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.TopAppBarScrollBehavior
+import androidx.compose.material3.adaptive.ExperimentalMaterial3AdaptiveApi
+import androidx.compose.material3.adaptive.layout.ListDetailPaneScaffoldRole
+import androidx.compose.material3.adaptive.navigation.ThreePaneScaffoldNavigator
 import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -58,12 +61,10 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
-import androidx.navigation.compose.rememberNavController
 import coil3.compose.AsyncImage
 import com.tuxy.airo.R
 import com.tuxy.airo.Screen
@@ -79,15 +80,17 @@ import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
 import kotlin.math.absoluteValue
 
-@OptIn(ExperimentalFoundationApi::class, ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalFoundationApi::class, ExperimentalMaterial3Api::class,
+    ExperimentalMaterial3AdaptiveApi::class
+)
 @Composable
 fun MainFlightView(
     navController: NavController,
     flightDataDao: FlightDataDao,
+    viewModel: MainFlightViewModel,
+    paneNavigator: ThreePaneScaffoldNavigator<String>,
+    onFlightClick: (String) -> Unit
 ) {
-    val viewModelFactory = MainFlightViewModel.Factory(LocalContext.current)
-    val viewModel: MainFlightViewModel = viewModel(factory = viewModelFactory)
-
     val pagerState = rememberPagerState(pageCount = {2})
     val selectedTabIndex = remember { derivedStateOf { pagerState.currentPage } }
     val scope = rememberCoroutineScope()
@@ -104,14 +107,19 @@ fun MainFlightView(
         modifier = Modifier
             .fillMaxSize()
             .nestedScroll(scrollBehavior.nestedScrollConnection),
-        topBar = { MainTopBar(navController, scrollBehavior, viewModel) },
+        topBar = { MainTopBar(
+            navController,
+            scrollBehavior,
+            viewModel,
+            paneNavigator
+        ) },
         floatingActionButton = {
             ExtendedFloatingActionButton(
                 onClick = {
                     navController.navigate(Screen.NewFlightScreen.route)
                 },
                 icon = { Icon(Icons.Filled.Add, stringResource(R.string.add_flight)) },
-                text = { Text(stringResource(R.string.add_flight)) },
+                text = { Text(stringResource(R.string.add_flight), overflow = TextOverflow.Visible, maxLines = 1) },
             )
         },
     ) { innerPadding ->
@@ -131,10 +139,10 @@ fun MainFlightView(
                 FlightsList(
                     pagerState = pagerState,
                     viewModel = viewModel,
-                    navController = navController,
                     modifier = Modifier
                         .fillMaxSize()
                         .weight(1f),
+                    onFlightClick = onFlightClick
                 )
             }
         }
@@ -160,7 +168,7 @@ fun TabRow(
                 }
             },
             enabled = true,
-            text = { Text(stringResource(R.string.upcoming_flights)) },
+            text = { Text(stringResource(R.string.upcoming_flights), overflow = TextOverflow.Visible, maxLines = 1) },
         )
         Tab(
             selected = selectedTabIndex == 1,
@@ -170,7 +178,7 @@ fun TabRow(
                 }
             },
             enabled = true,
-            text = { Text(stringResource(R.string.past_flights)) },
+            text = { Text(stringResource(R.string.past_flights), overflow = TextOverflow.Visible, maxLines = 1) },
         )
     }
 }
@@ -179,8 +187,8 @@ fun TabRow(
 fun FlightsList(
     pagerState: PagerState,
     viewModel: MainFlightViewModel,
-    navController: NavController,
     modifier: Modifier = Modifier,
+    onFlightClick: (String) -> Unit
 ) {
     HorizontalPager(
         state = pagerState,
@@ -200,7 +208,7 @@ fun FlightsList(
                         viewModel.flightsUpcomingList.forEach { flights ->
                             DateHeader(flights[0].departDate, flights.size)
                             flights.groupBy { flight ->
-                                FlightCard(navController, flight, viewModel)
+                                FlightCard(flight, viewModel, onFlightClick)
                             }
                         }
                     }
@@ -212,7 +220,7 @@ fun FlightsList(
                         viewModel.flightsPastList.forEach { flights ->
                             DateHeader(flights[0].departDate, flights.size)
                             flights.groupBy { flight ->
-                                FlightCard(navController, flight, viewModel)
+                                FlightCard(flight, viewModel, onFlightClick)
                             }
                         }
                     }
@@ -246,7 +254,9 @@ fun NoFlight(
                 stringResource(R.string.no_flight_smile),
                 color = Color.Gray,
                 modifier = Modifier.padding(24.dp),
-                textAlign = TextAlign.Center
+                textAlign = TextAlign.Center,
+                overflow = TextOverflow.Visible,
+                maxLines = 1
             )
         }
     }
@@ -254,9 +264,9 @@ fun NoFlight(
 
 @Composable
 fun FlightCard(
-    navController: NavController,
     flightData: FlightData,
-    viewModel: MainFlightViewModel
+    viewModel: MainFlightViewModel,
+    onFlightClick: (String) -> Unit,
 ) {
     val timeFormat = viewModel.preferencesInterface.getValueTimeFormatComposable("24_time")
 
@@ -269,9 +279,7 @@ fun FlightCard(
             modifier = Modifier
                 .fillMaxWidth(),
             onClick = {
-                navController.navigate(
-                    "${Screen.FlightDetailsScreen.route}/${flightData.id}"
-                )
+                onFlightClick(flightData.id.toString())
             }
         ) {
             Column(
@@ -365,29 +373,35 @@ fun DateHeader(time: ZonedDateTime, count: Int) {
         Text(
             time.format(DateTimeFormatter.ofPattern("dd MMM")),
             fontSize = 24.sp,
-            fontWeight = FontWeight.W500
+            fontWeight = FontWeight.W500,
+            overflow = TextOverflow.Visible,
+            maxLines = 1
         )
         if (count > 1) {
             Text(
                 "$count ${stringResource(R.string.flights)}",
-                color = Color.Gray
+                color = Color.Gray,
+                overflow = TextOverflow.Visible,
+                maxLines = 1
             )
         }
     }
 }
 
 @SuppressLint("ShowToast")
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3AdaptiveApi::class)
 @Composable
 fun MainTopBar(
     navController: NavController,
     scrollBehavior: TopAppBarScrollBehavior,
     viewModel: MainFlightViewModel,
+    paneNavigator: ThreePaneScaffoldNavigator<String>
 ) {
     val toast = Toast.makeText(LocalContext.current, R.string.no_flight, Toast.LENGTH_SHORT)
+    val scope = rememberCoroutineScope()
 
     LargeTopAppBar(
-        title = { Text(stringResource(R.string.my_flights)) },
+        title = { Text(stringResource(R.string.my_flights), overflow = TextOverflow.Visible, maxLines = 1) },
         colors = TopAppBarDefaults.topAppBarColors(),
         actions = {
             IconButton(onClick = {
@@ -398,7 +412,9 @@ fun MainTopBar(
                     return@IconButton
                 } else closestFlight.let {
                     if (it > 0) {
-                        navController.navigate("${Screen.FlightDetailsScreen.route}/${closestFlight}")
+                        scope.launch {
+                            paneNavigator.navigateTo(ListDetailPaneScaffoldRole.Detail, closestFlight.toString())
+                        }
                     }
                 }
             }) {
@@ -417,20 +433,5 @@ fun MainTopBar(
             }
         },
         scrollBehavior = scrollBehavior,
-    )
-}
-
-@Composable
-@Preview
-fun FlightCardPreview() {
-    FlightCard(
-        navController = rememberNavController(),
-        flightData = FlightData(
-            fromName = "Tan Son Nhat",
-            toName = "Brisbane",
-            from = "SGN",
-            to = "BNE"
-        ),
-        viewModel = viewModel<MainFlightViewModel>(),
     )
 }

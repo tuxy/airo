@@ -96,4 +96,5 @@
     <string name="remove_background_optimisation_extra">Airo cần loại bỏ các tối ưu hóa nền để thông báo hoạt động.</string>
     <string name="ignore">Không chấp nhận</string>
     <string name="allow">Cho phép</string>
+    <string name="select_flight">Chọn chuyến bay để xem thêm chi tiết</string>
 </resources>

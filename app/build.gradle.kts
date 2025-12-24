@@ -62,6 +62,10 @@ dependencies {
     implementation(libs.kotlinx.datetime)
     implementation(libs.androidx.activity.ktx)
 
+    implementation(libs.androidx.compose.adaptive)
+    implementation(libs.androidx.compose.adaptive.layout)
+    implementation(libs.androidx.compose.adaptive.navigation)
+
     // more icons
     implementation(libs.androidx.material.icons.extended)
     implementation(libs.androidx.monitor)

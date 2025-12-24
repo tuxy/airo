@@ -14,7 +14,6 @@ import com.tuxy.airo.data.database.PreferencesInterface
 import com.tuxy.airo.data.flightdata.FlightData
 import com.tuxy.airo.data.flightdata.FlightDataDao
 import com.tuxy.airo.data.flightdata.getData
-import com.tuxy.airo.data.flightdata.singleIntoMut
 import com.tuxy.airo.screens.ApiSettings
 import com.tuxy.airo.screens.CustomMapMarker
 import kotlinx.coroutines.CoroutineScope
@@ -56,16 +55,12 @@ import kotlin.time.toKotlinDuration
  * @property openDialog A mutable state to control the visibility of the delete confirmation dialog.
  * @property progress The current progress of the flight.
  * @param context The application context.
- * @param flightDataDao The DAO for accessing flight data.
- * @param id The ID of the flight to display.
  * @param scheme The color scheme for the map.
  * @param scope The coroutine scope for this ViewModel.
  */
 @Suppress("UNCHECKED_CAST")
 class DetailsViewModel(
     context: Context,
-    flightDataDao: FlightDataDao,
-    id: String,
     scheme: ColorScheme,
     scope: CoroutineScope =
         CoroutineScope(SupervisorJob() + Dispatchers.IO)
@@ -79,24 +74,12 @@ class DetailsViewModel(
     var progress = mutableFloatStateOf(0.0F)
         private set
 
-    init {
-        when (id) {
-            "testId" -> {
-                flightData.value = FlightData()
-            }
-
-            else -> {
-                singleIntoMut(
-                    flightData,
-                    flightDataDao,
-                    id
-                )
-            }
+    fun loadFlightById(id: String, dao: FlightDataDao) {
+        viewModelScope.launch(Dispatchers.IO) {
+            val flight = dao.readSingle(id)
+            flightData.value = flight
         }
-        // On initialisation, pass db data into flightData
-        // Use empty FlightData if testId is used
     }
-
     /**
      * Calculates the time difference between the departure and arrival timezones.
      * @return A string representing the time difference, e.g., "+02:00".
@@ -158,11 +141,9 @@ class DetailsViewModel(
      */
     fun deleteFlight(
         flightDataDao: FlightDataDao,
-        context: Context,
     ) {
         viewModelScope.launch(Dispatchers.IO) {
             flightDataDao.deleteFlight(flightData.value)
-            delay(200)
         }
         openDialog.value = false
     }
@@ -395,12 +376,11 @@ class DetailsViewModel(
      */
     class Factory(
         private val context: Context,
-        private val flightDataDao: FlightDataDao,
-        private val id: String,
-        private val scheme: ColorScheme
+        private val scheme: ColorScheme,
+        private val scope: CoroutineScope
     ) : ViewModelProvider.NewInstanceFactory() {
         override fun <T : ViewModel> create(modelClass: Class<T>): T {
-            return DetailsViewModel(context, flightDataDao, id, scheme) as T
+            return DetailsViewModel(context, scheme, scope) as T
         }
     }
 }

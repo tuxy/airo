@@ -10,8 +10,7 @@ import com.tuxy.airo.motion.materialSharedAxisXIn
 import com.tuxy.airo.motion.materialSharedAxisXOut
 import com.tuxy.airo.screens.AircraftInformationView
 import com.tuxy.airo.screens.DatePickerView
-import com.tuxy.airo.screens.FlightDetailsView
-import com.tuxy.airo.screens.MainFlightView
+import com.tuxy.airo.screens.FoldableFlightScreen
 import com.tuxy.airo.screens.NewFlightView
 import com.tuxy.airo.screens.SettingsView
 import com.tuxy.airo.screens.TicketInformationView
@@ -40,21 +39,21 @@ fun SetupNavGraph(
         popExitTransition = { materialSharedAxisXOut(targetOffsetX = { (it * INITIAL_OFFSET_FACTOR).toInt() }) },
     ) {
         composable(route = Screen.MainFlightsScreen.route) {
-            MainFlightView(
+            FoldableFlightScreen(
                 navController,
                 flightDataDao,
             )
         }
         composable(route = Screen.SettingsScreen.route) { SettingsView(navController, powerManager) }
 
-        // Passing flight id into FlightDetails
-        composable(route = "${Screen.FlightDetailsScreen.route}/{id}") { backStackEntry ->
-            FlightDetailsView(
-                navController,
-                backStackEntry.arguments?.getString("id").toString(),
-                flightDataDao,
-            )
-        }
+//        // Passing flight id into FlightDetails
+//        composable(route = "${Screen.FlightDetailsScreen.route}/{id}") { backStackEntry ->
+//            FlightDetailsView(
+//                navController,
+//                backStackEntry.arguments?.getString("id").toString(),
+//                flightDataDao,
+//            )
+//        }
 
         composable(route = Screen.NewFlightScreen.route) { NewFlightView(navController) }
 

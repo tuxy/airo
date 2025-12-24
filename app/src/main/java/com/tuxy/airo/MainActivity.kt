@@ -8,6 +8,7 @@ import android.os.Build
 import android.os.Bundle
 import android.os.PowerManager
 import androidx.activity.ComponentActivity
+import androidx.activity.SystemBarStyle
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.material3.MaterialTheme
@@ -42,10 +43,20 @@ class MainActivity : ComponentActivity() {
         val backup = RoomBackup(this)
         data = FlightDataBase.getDatabase(this).flightDataDao()
 
-        enableEdgeToEdge()
         setContent {
-            val current = preferencesInterface.getValue("selected_api")
-            val interval = if (current != "0") preferencesInterface.getValueFloat("update_interval") else 48f // Try to enforce 48h on pre-provided api
+            enableEdgeToEdge(
+                statusBarStyle = SystemBarStyle.auto(
+                    android.graphics.Color.TRANSPARENT,
+                    android.graphics.Color.TRANSPARENT
+                ),
+                navigationBarStyle = SystemBarStyle.auto(
+                    android.graphics.Color.TRANSPARENT,
+                    android.graphics.Color.TRANSPARENT
+                )
+            )
+
+            // val current = preferencesInterface.getValue("selected_api")
+            // val interval = if (current != "0") preferencesInterface.getValueFloat("update_interval") else 48f // Try to enforce 48h on pre-provided api
 
             AeroTheme {
                 // Attempts to set up notification permissions
