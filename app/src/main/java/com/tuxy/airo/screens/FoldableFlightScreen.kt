@@ -3,14 +3,11 @@ package com.tuxy.airo.screens
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.material3.LocalMinimumInteractiveComponentSize
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.VerticalDragHandle
 import androidx.compose.material3.adaptive.ExperimentalMaterial3AdaptiveApi
@@ -23,16 +20,13 @@ import androidx.compose.material3.adaptive.navigation.rememberListDetailPaneScaf
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.tuxy.airo.data.flightdata.FlightDataDao
@@ -76,44 +70,29 @@ fun FoldableFlightScreen(
         }
     }
 
-    val paneExpansionState = rememberPaneExpansionState(
-        keyProvider = navigator.scaffoldValue,
-        anchors = listOf(
-            PaneExpansionAnchor.Proportion(0f),
-            PaneExpansionAnchor.Proportion(0.3f),
-            PaneExpansionAnchor.Proportion(0.45f),
-            PaneExpansionAnchor.Proportion(0.5f),
-        )
-    )
-
-    Box(modifier = Modifier.fillMaxSize()) {
+    Surface(
+        modifier = Modifier.fillMaxSize(),
+        color = MaterialTheme.colorScheme.background // Or your specific UI background
+    ) {
         NavigableListDetailPaneScaffold(
             navigator = navigator,
             listPane = {
-                AnimatedPane(Modifier.clipToBounds()) {
-                    key(viewModel.flightData) {
-                        Row(
-                            Modifier
-                                .fillMaxWidth()
-                                .wrapContentWidth(unbounded = true)
-                        ) {
-                            MainFlightView(
-                                navController = navController,
-                                flightDataDao = flightDataDao,
-                                viewModel = viewModel,
-                                paneNavigator = navigator,
-                                onFlightClick = { id ->
-                                    scope.launch {
-                                        navigator.navigateTo(ListDetailPaneScaffoldRole.Detail, id)
-                                    }
-                                },
-                            )
+                AnimatedPane {
+                    MainFlightView(
+                        navController = navController,
+                        flightDataDao = flightDataDao,
+                        viewModel = viewModel,
+                        paneNavigator = navigator,
+                        onFlightClick = { id ->
+                            scope.launch {
+                                navigator.navigateTo(ListDetailPaneScaffoldRole.Detail, id)
+                            }
                         }
-                    }
+                    )
                 }
             },
             detailPane = {
-                AnimatedPane(Modifier.clipToBounds()) {
+                AnimatedPane {
                     if (displayedId != null) {
                         FlightDetailsView(
                             navController = navController,
@@ -126,19 +105,24 @@ fun FoldableFlightScreen(
                     }
                 }
             },
-            paneExpansionState = paneExpansionState,
+            paneExpansionState =
+                rememberPaneExpansionState(
+                    keyProvider = navigator.scaffoldValue,
+                    anchors = listOf(
+                        PaneExpansionAnchor.Proportion(0.45f),
+                        PaneExpansionAnchor.Proportion(0.5f),
+                        PaneExpansionAnchor.Proportion(0.55f),
+                    )
+                ),
             paneExpansionDragHandle = { state ->
                 val interactionSource = remember { MutableInteractionSource() }
                 VerticalDragHandle(
                     modifier =
-                    Modifier
-                        .paneExpansionDraggable(
+                        Modifier.paneExpansionDraggable(
                             state,
                             LocalMinimumInteractiveComponentSize.current,
                             interactionSource
-
-                        )
-                        .width(2.dp),
+                        ),
                     interactionSource = interactionSource
                 )
             }
@@ -149,9 +133,7 @@ fun FoldableFlightScreen(
 @Composable
 fun EmptyFlight() {
     Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .wrapContentWidth(unbounded = true),
+        modifier = Modifier.fillMaxSize(),
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
