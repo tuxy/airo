@@ -1,12 +1,12 @@
 package com.tuxy.airo
 
-import androidx.compose.animation.EnterTransition
-import androidx.compose.animation.ExitTransition
 import androidx.compose.runtime.Composable
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import com.tuxy.airo.data.flightdata.FlightDataDao
+import com.tuxy.airo.motion.materialSharedAxisXIn
+import com.tuxy.airo.motion.materialSharedAxisXOut
 import com.tuxy.airo.screens.AircraftInformationView
 import com.tuxy.airo.screens.DatePickerView
 import com.tuxy.airo.screens.FoldableFlightScreen
@@ -19,6 +19,8 @@ import com.tuxy.airo.screens.settings.LocaleSettingsView
 import com.tuxy.airo.screens.settings.NotificationsSettingsView
 import de.raphaelebner.roomdatabasebackup.core.RoomBackup
 
+
+private const val INITIAL_OFFSET_FACTOR = 0.10f
 @Composable
 fun SetupNavGraph(
     // Transitions taken from Read You's repository
@@ -29,10 +31,10 @@ fun SetupNavGraph(
     NavHost(
         navController = navController,
         startDestination = Screen.MainFlightsScreen.route,
-        exitTransition = { ExitTransition.None },
-        enterTransition = { EnterTransition.None },
-        popEnterTransition = { EnterTransition.None },
-        popExitTransition = { ExitTransition.None },
+        enterTransition = { materialSharedAxisXIn(initialOffsetX = { (it * INITIAL_OFFSET_FACTOR).toInt() }) },
+        exitTransition = { materialSharedAxisXOut(targetOffsetX = { -(it * INITIAL_OFFSET_FACTOR).toInt() }) },
+        popEnterTransition = { materialSharedAxisXIn(initialOffsetX = { -(it * INITIAL_OFFSET_FACTOR).toInt() }) },
+        popExitTransition = { materialSharedAxisXOut(targetOffsetX = { (it * INITIAL_OFFSET_FACTOR).toInt() }) },
     ) {
         composable(route = Screen.MainFlightsScreen.route) {
             FoldableFlightScreen(
