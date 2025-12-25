@@ -1,3 +1,5 @@
+@file:OptIn(ExperimentalMaterial3AdaptiveApi::class)
+
 package com.tuxy.airo.screens
 
 import android.annotation.SuppressLint
@@ -39,6 +41,9 @@ import androidx.compose.material3.Tab
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.TopAppBarScrollBehavior
+import androidx.compose.material3.adaptive.ExperimentalMaterial3AdaptiveApi
+import androidx.compose.material3.adaptive.layout.ListDetailPaneScaffoldRole
+import androidx.compose.material3.adaptive.navigation.ThreePaneScaffoldNavigator
 import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -63,7 +68,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
-import androidx.navigation.compose.rememberNavController
 import coil3.compose.AsyncImage
 import com.tuxy.airo.R
 import com.tuxy.airo.Screen
@@ -86,6 +90,7 @@ fun MainFlightView(
     navController: NavController,
     flightDataDao: FlightDataDao,
     viewModel: MainFlightViewModel,
+    paneNavigator: ThreePaneScaffoldNavigator<String>,
     onFlightClick: (String) -> Unit = {}
 ) {
     val pagerState = rememberPagerState(pageCount = { 2 })
@@ -102,9 +107,14 @@ fun MainFlightView(
 
     Scaffold(
         modifier = Modifier
-            .fillMaxSize()
+            .width(380.dp)
             .nestedScroll(scrollBehavior.nestedScrollConnection),
-        topBar = { MainTopBar(navController, scrollBehavior, viewModel) },
+        topBar = { MainTopBar(
+            navController,
+            scrollBehavior,
+            viewModel,
+            paneNavigator
+        ) },
         floatingActionButton = {
             ExtendedFloatingActionButton(
                 onClick = {
@@ -135,7 +145,6 @@ fun MainFlightView(
                 FlightsList(
                     pagerState = pagerState,
                     viewModel = viewModel,
-                    navController = navController,
                     modifier = Modifier
                         .fillMaxSize()
                         .weight(1f),
@@ -184,7 +193,6 @@ fun TabRow(
 fun FlightsList(
     pagerState: PagerState,
     viewModel: MainFlightViewModel,
-    navController: NavController,
     modifier: Modifier = Modifier,
     onFlightClick: (String) -> Unit
 ) {
@@ -210,7 +218,7 @@ fun FlightsList(
                         viewModel.flightsUpcomingList.forEach { flights ->
                             DateHeader(flights[0].departDate, flights.size)
                             flights.groupBy { flight ->
-                                FlightCard(navController, flight, viewModel, onFlightClick)
+                                FlightCard(flight, viewModel, onFlightClick)
                             }
                         }
                     }
@@ -227,7 +235,7 @@ fun FlightsList(
                         viewModel.flightsPastList.forEach { flights ->
                             DateHeader(flights[0].departDate, flights.size)
                             flights.groupBy { flight ->
-                                FlightCard(navController, flight, viewModel, onFlightClick)
+                                FlightCard(flight, viewModel, onFlightClick)
                             }
                         }
                     }
@@ -269,7 +277,6 @@ fun NoFlight(
 
 @Composable
 fun FlightCard(
-    navController: NavController,
     flightData: FlightData,
     viewModel: MainFlightViewModel,
     onFlightClick: (String) -> Unit
@@ -409,8 +416,10 @@ fun MainTopBar(
     navController: NavController,
     scrollBehavior: TopAppBarScrollBehavior,
     viewModel: MainFlightViewModel,
+    paneNavigator: ThreePaneScaffoldNavigator<String>
 ) {
     val toast = Toast.makeText(LocalContext.current, R.string.no_flight, Toast.LENGTH_SHORT)
+    val scope = rememberCoroutineScope()
 
     LargeTopAppBar(
         title = { Text(stringResource(R.string.my_flights)) },
@@ -424,7 +433,9 @@ fun MainTopBar(
                     return@IconButton
                 } else closestFlight.let {
                     if (it > 0) {
-                        navController.navigate("${Screen.FlightDetailsScreen.route}/${closestFlight}")
+                        scope.launch {
+                            paneNavigator.navigateTo(ListDetailPaneScaffoldRole.Detail, closestFlight.toString())
+                        }
                     }
                 }
             }) {
@@ -450,7 +461,6 @@ fun MainTopBar(
 @Preview
 fun FlightCardPreview() {
     FlightCard(
-        navController = rememberNavController(),
         flightData = FlightData(
             fromName = "Tan Son Nhat",
             toName = "Brisbane",

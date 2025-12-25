@@ -6,6 +6,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
@@ -44,6 +45,8 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.adaptive.ExperimentalMaterial3AdaptiveApi
+import androidx.compose.material3.adaptive.navigation.ThreePaneScaffoldNavigator
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
@@ -52,6 +55,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawWithCache
@@ -87,12 +91,15 @@ import java.time.format.DateTimeFormatter
 import kotlin.math.absoluteValue
 import kotlin.time.toKotlinDuration
 
-@OptIn(DelicateCoroutinesApi::class, ExperimentalMaterial3Api::class)
+@OptIn(DelicateCoroutinesApi::class, ExperimentalMaterial3Api::class,
+    ExperimentalMaterial3AdaptiveApi::class
+)
 @Composable
 fun FlightDetailsView(
     navController: NavController,
     id: String,
     flightDataDao: FlightDataDao,
+    paneNavigator: ThreePaneScaffoldNavigator<String>
 ) {
     val context = LocalContext.current
 
@@ -123,20 +130,19 @@ fun FlightDetailsView(
         topBar = {
             SmallAppBarWithDelete(
                 "${viewModel.flightData.from} to ${viewModel.flightData.to}",
-                navController,
-                viewModel.openDialog
+                viewModel.openDialog,
+                paneNavigator
             )
         }
     ) { innerPadding ->
         Column(
             modifier = Modifier
                 .padding(innerPadding)
-
         ) {
             Column {
                 if (viewModel.openDialog.value) {
                     DeleteDialog(
-                        navController,
+                        paneNavigator,
                         flightDataDao,
                         viewModel,
                         context
@@ -303,7 +309,7 @@ fun FlightBoard(
         horizontalArrangement = Arrangement.SpaceBetween,
         modifier = Modifier.fillMaxWidth()
     ) {
-        Column {
+        Column(modifier = Modifier.weight(1f)) {
             Text(
                 code,
                 fontWeight = FontWeight.Normal,
@@ -314,7 +320,7 @@ fun FlightBoard(
                 fontWeight = FontWeight.W500,
                 fontSize = 16.sp
             )
-            Row {
+            FlowRow {
                 SmallCard(
                     Icons.Filled.FlightTakeoff,
                     stringResource(R.string.terminal),
@@ -484,18 +490,20 @@ fun FlightStatusCard(viewModel: DetailsViewModel, context: Context) {
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3AdaptiveApi::class)
 @Composable
 fun SmallAppBarWithDelete(
     text: String,
-    navController: NavController,
     openDialog: MutableState<Boolean>,
+    paneNavigator: ThreePaneScaffoldNavigator<String>
 ) {
+    val scope = rememberCoroutineScope()
+
     TopAppBar(
         title = { Text(text) },
         navigationIcon = {
             IconButton(onClick = {
-                navController.popBackStack()
+                scope.launch { paneNavigator.navigateBack() }
             }) {
                 Icon(
                     imageVector = Icons.AutoMirrored.Filled.ArrowBack,
@@ -551,14 +559,18 @@ fun FlightInformationInteract(navController: NavController, flightData: FlightDa
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class, DelicateCoroutinesApi::class)
+@OptIn(ExperimentalMaterial3Api::class, DelicateCoroutinesApi::class,
+    ExperimentalMaterial3AdaptiveApi::class
+)
 @Composable
 fun DeleteDialog(
-    navController: NavController,
+    paneNavigator: ThreePaneScaffoldNavigator<String>,
     flightDataDao: FlightDataDao,
     viewModel: DetailsViewModel,
     context: Context
 ) {
+    val scope = rememberCoroutineScope()
+
     BasicAlertDialog(
         onDismissRequest = {
             viewModel.openDialog.value = false
@@ -591,7 +603,7 @@ fun DeleteDialog(
                     TextButton(
                         onClick = {
                             viewModel.deleteFlight(flightDataDao, context)
-                            navController.navigateUp()
+                            scope.launch { paneNavigator.navigateBack() }
                         },
                     ) {
                         Text(stringResource(R.string.delete))
