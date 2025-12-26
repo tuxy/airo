@@ -107,7 +107,7 @@ fun MainFlightView(
 
     Scaffold(
         modifier = Modifier
-            .width(380.dp)
+            .fillMaxSize()
             .nestedScroll(scrollBehavior.nestedScrollConnection),
         topBar = { MainTopBar(
             navController,

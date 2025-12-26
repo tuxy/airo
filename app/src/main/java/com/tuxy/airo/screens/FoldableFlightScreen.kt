@@ -6,11 +6,17 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.wrapContentWidth
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Airlines
+import androidx.compose.material3.Icon
 import androidx.compose.material3.LocalMinimumInteractiveComponentSize
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.VerticalDragHandle
 import androidx.compose.material3.adaptive.ExperimentalMaterial3AdaptiveApi
@@ -93,9 +99,7 @@ fun FoldableFlightScreen(
                 AnimatedPane(Modifier.clipToBounds()) {
                     key(viewModel.flightData) {
                         Row(
-                            Modifier
-                                .fillMaxWidth()
-                                .wrapContentWidth(unbounded = true)
+                            Modifier.fillMaxWidth()
                         ) {
                             MainFlightView(
                                 navController = navController,
@@ -119,7 +123,12 @@ fun FoldableFlightScreen(
                             navController = navController,
                             id = displayedId!!,
                             flightDataDao = flightDataDao,
-                            paneNavigator = navigator
+                            paneNavigator = navigator,
+                            onFlightDelete = {
+                                scope.launch {
+                                    navigator.navigateBack()
+                                }
+                            }
                         )
                     } else {
                         EmptyFlight()
@@ -130,7 +139,7 @@ fun FoldableFlightScreen(
             paneExpansionDragHandle = { state ->
                 val interactionSource = remember { MutableInteractionSource() }
                 VerticalDragHandle(
-                    modifier =
+                    modifier = 
                     Modifier
                         .paneExpansionDraggable(
                             state,
@@ -150,11 +159,21 @@ fun FoldableFlightScreen(
 fun EmptyFlight() {
     Column(
         modifier = Modifier
-            .fillMaxSize()
-            .wrapContentWidth(unbounded = true),
+            .fillMaxSize(),
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Text(text = "Select a flight to see details")
+        Icon(
+            imageVector = Icons.Outlined.Airlines,
+            contentDescription = null,
+            modifier = Modifier.size(64.dp),
+            tint = MaterialTheme.colorScheme.outline
+        )
+        Spacer(modifier = Modifier.height(16.dp))
+        Text(
+            text = "Select a flight to see details",
+            style = MaterialTheme.typography.bodyLarge,
+            color = MaterialTheme.colorScheme.outline
+        )
     }
 }

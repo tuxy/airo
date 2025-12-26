@@ -44,15 +44,6 @@ fun SetupNavGraph(
         }
         composable(route = Screen.SettingsScreen.route) { SettingsView(navController) }
 
-//        // Passing flight id into FlightDetails
-//        composable(route = "${Screen.FlightDetailsScreen.route}/{id}") { backStackEntry ->
-//            FlightDetailsView(
-//                navController,
-//                backStackEntry.arguments?.getString("id").toString(),
-//                flightDataDao,
-//            )
-//        }
-
         composable(route = Screen.NewFlightScreen.route) { NewFlightView(navController) }
 
         // DatePickerView with flight_number passed into

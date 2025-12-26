@@ -99,7 +99,8 @@ fun FlightDetailsView(
     navController: NavController,
     id: String,
     flightDataDao: FlightDataDao,
-    paneNavigator: ThreePaneScaffoldNavigator<String>
+    paneNavigator: ThreePaneScaffoldNavigator<String>,
+    onFlightDelete: () -> Unit
 ) {
     val context = LocalContext.current
 
@@ -142,10 +143,10 @@ fun FlightDetailsView(
             Column {
                 if (viewModel.openDialog.value) {
                     DeleteDialog(
-                        paneNavigator,
                         flightDataDao,
                         viewModel,
-                        context
+                        context,
+                        onFlightDelete
                     )
                 }
                 LinearProgressIndicator(
@@ -564,13 +565,11 @@ fun FlightInformationInteract(navController: NavController, flightData: FlightDa
 )
 @Composable
 fun DeleteDialog(
-    paneNavigator: ThreePaneScaffoldNavigator<String>,
     flightDataDao: FlightDataDao,
     viewModel: DetailsViewModel,
-    context: Context
+    context: Context,
+    onFlightDelete: () -> Unit
 ) {
-    val scope = rememberCoroutineScope()
-
     BasicAlertDialog(
         onDismissRequest = {
             viewModel.openDialog.value = false
@@ -603,7 +602,7 @@ fun DeleteDialog(
                     TextButton(
                         onClick = {
                             viewModel.deleteFlight(flightDataDao, context)
-                            scope.launch { paneNavigator.navigateBack() }
+                            onFlightDelete()
                         },
                     ) {
                         Text(stringResource(R.string.delete))
