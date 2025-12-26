@@ -2,6 +2,7 @@ package com.tuxy.airo.screens
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsDraggedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -20,9 +21,11 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.VerticalDragHandle
 import androidx.compose.material3.adaptive.ExperimentalMaterial3AdaptiveApi
+import androidx.compose.material3.adaptive.currentWindowAdaptiveInfo
 import androidx.compose.material3.adaptive.layout.AnimatedPane
 import androidx.compose.material3.adaptive.layout.ListDetailPaneScaffoldRole
 import androidx.compose.material3.adaptive.layout.PaneExpansionAnchor
+import androidx.compose.material3.adaptive.layout.calculatePaneScaffoldDirective
 import androidx.compose.material3.adaptive.layout.rememberPaneExpansionState
 import androidx.compose.material3.adaptive.navigation.NavigableListDetailPaneScaffold
 import androidx.compose.material3.adaptive.navigation.rememberListDetailPaneScaffoldNavigator
@@ -38,6 +41,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
@@ -54,16 +58,21 @@ fun FoldableFlightScreen(
 ) {
     val viewModelFactory = MainFlightViewModel.Factory(LocalContext.current)
     val viewModel: MainFlightViewModel = viewModel(factory = viewModelFactory)
-    viewModel.loadData(flightDataDao)
-
     val scope = rememberCoroutineScope()
+    val interactionSource = remember { MutableInteractionSource() }
+    val isDragged by interactionSource.collectIsDraggedAsState() // Future reference
 
     LaunchedEffect(Unit) {
         viewModel.loadData(flightDataDao)
     }
 
-    val navigator = rememberListDetailPaneScaffoldNavigator<String>()
-
+    val containerWidth = LocalWindowInfo.current.containerSize.width
+    println(containerWidth)
+    val navigator = rememberListDetailPaneScaffoldNavigator<String>(
+        calculatePaneScaffoldDirective(currentWindowAdaptiveInfo()).copy(
+            maxHorizontalPartitions = if (containerWidth > 1200) 2 else 1
+        )
+    )
     var displayedId by remember { mutableStateOf<String?>(null) }
     val currentId = navigator.currentDestination?.contentKey
 
@@ -86,8 +95,7 @@ fun FoldableFlightScreen(
         keyProvider = navigator.scaffoldValue,
         anchors = listOf(
             PaneExpansionAnchor.Proportion(0f),
-            PaneExpansionAnchor.Proportion(0.3f),
-            PaneExpansionAnchor.Proportion(0.45f),
+            PaneExpansionAnchor.Proportion(if (containerWidth > 2200) 0.3f else 0.45f), // For tablets
             PaneExpansionAnchor.Proportion(0.5f),
         )
     )
@@ -137,7 +145,6 @@ fun FoldableFlightScreen(
             },
             paneExpansionState = paneExpansionState,
             paneExpansionDragHandle = { state ->
-                val interactionSource = remember { MutableInteractionSource() }
                 VerticalDragHandle(
                     modifier = 
                     Modifier
