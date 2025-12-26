@@ -17,18 +17,11 @@ import androidx.core.content.ContextCompat
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.preferencesDataStore
-import androidx.work.Constraints
-import androidx.work.ExistingPeriodicWorkPolicy
-import androidx.work.NetworkType
-import androidx.work.PeriodicWorkRequestBuilder
-import androidx.work.WorkManager
-import com.tuxy.airo.data.background.UpdateWorker
 import com.tuxy.airo.data.database.PreferencesInterface
 import com.tuxy.airo.data.flightdata.FlightDataBase
 import com.tuxy.airo.data.flightdata.FlightDataDao
 import com.tuxy.airo.ui.theme.AeroTheme
 import de.raphaelebner.roomdatabasebackup.core.RoomBackup
-import java.util.concurrent.TimeUnit
 
 val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "settings")
 
@@ -62,21 +55,6 @@ class MainActivity : ComponentActivity() {
                         )
                     } // If the user denies notifications, we ignore forever
                 }
-
-                val constraints = Constraints.Builder()
-                    .setRequiredNetworkType(NetworkType.CONNECTED)
-                    .setRequiresCharging(false)
-                    .build()
-
-                val periodicWorkRequest = PeriodicWorkRequestBuilder<UpdateWorker>(interval.toLong(), TimeUnit.SECONDS)
-                    .setConstraints(constraints)
-                    .build()
-
-                WorkManager.getInstance(LocalContext.current).enqueueUniquePeriodicWork(
-                    "airo_update_work",
-                    ExistingPeriodicWorkPolicy.UPDATE,
-                    periodicWorkRequest
-                )
 
                 Surface(color = MaterialTheme.colorScheme.background) {
                     MainScreen(backup)

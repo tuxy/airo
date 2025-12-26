@@ -3,7 +3,6 @@ package com.tuxy.airo.data.flightdata
 import android.content.Context
 import android.util.Log
 import com.beust.klaxon.KlaxonException
-import com.tuxy.airo.AlarmController
 import com.tuxy.airo.screens.ApiSettings
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -133,7 +132,6 @@ suspend fun getData(
     update: Boolean
 ): Result<FlightData> { // Changed return type
     return withContext(Dispatchers.IO) {
-        val alarmController = AlarmController(context)
 
         val request = buildFlightApiRequest(flightNumber, date, settings)
             ?: return@withContext Result.failure(FlightDataFetchException(FlightDataError.ApiKeyMissing))
@@ -175,7 +173,6 @@ suspend fun getData(
                             )
                         }
                         flightDataDao.addFlight(flightData) // Not sure why this entire thing would both add a flight and then return it, but sure...
-                        alarmController.setAlarm(flightData)
                     }
 
                     return@withContext Result.success(flightData)

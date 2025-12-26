@@ -5,7 +5,6 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.compose.rememberNavController
-import com.tuxy.airo.data.background.ProgressNotification
 import com.tuxy.airo.data.flightdata.FlightDataBase
 import de.raphaelebner.roomdatabasebackup.core.RoomBackup
 

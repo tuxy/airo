@@ -6,7 +6,6 @@ import android.content.Context
 import androidx.core.app.NotificationCompat
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
-import com.tuxy.airo.data.background.Notification
 import com.tuxy.airo.R
 
 /**

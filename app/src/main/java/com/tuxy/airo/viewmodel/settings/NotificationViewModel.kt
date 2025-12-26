@@ -3,7 +3,6 @@ package com.tuxy.airo.viewmodel.settings
 import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
-import com.tuxy.airo.AlarmController
 import com.tuxy.airo.data.database.PreferencesInterface
 import com.tuxy.airo.data.flightdata.FlightDataDao
 
@@ -13,14 +12,9 @@ class NotificationViewModel(
     val flightDataDao: FlightDataDao
 ) : ViewModel() {
     val preferencesInterface = PreferencesInterface(context)
-    val alarmController = AlarmController(context)
 
     fun check(option: Boolean) {
-        if(option) {
-            alarmController.cancelAll(flightDataDao)
-        } else {
-            alarmController.resetAll(flightDataDao)
-        }
+
     }
 
     class Factory(

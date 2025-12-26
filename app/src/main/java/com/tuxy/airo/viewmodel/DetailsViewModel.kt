@@ -9,7 +9,6 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
-import com.tuxy.airo.AlarmController
 import com.tuxy.airo.R
 import com.tuxy.airo.data.database.PreferencesInterface
 import com.tuxy.airo.data.flightdata.FlightData
@@ -176,12 +175,10 @@ class DetailsViewModel(
         flightDataDao: FlightDataDao,
         context: Context,
     ) {
-        val alarmController = AlarmController(context)
         viewModelScope.launch(Dispatchers.IO) {
             flightDataDao.deleteFlight(flightData.value)
             delay(200)
         }
-        alarmController.cancelAlarm(flightData.value)
         openDialog.value = false
     }
 
@@ -198,11 +195,6 @@ class DetailsViewModel(
         settings: ApiSettings,
         isRefreshing: MutableState<Boolean>
     ) {
-        val alarmController = AlarmController(context)
-        // Fixes refreshed & deleted flights to not remove alarms.
-        // Solution: Delete current alarm, and create a new one.
-        alarmController.cancelAlarm(flightData.value)
-
         viewModelScope.launch(Dispatchers.IO) {
             isRefreshing.value = true
             val collectedFlightData = getData(
@@ -232,7 +224,6 @@ class DetailsViewModel(
                 )
             }
             isRefreshing.value = false
-            alarmController.setAlarm(flightData.value)
         }
     }
 

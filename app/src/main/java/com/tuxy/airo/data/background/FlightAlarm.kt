@@ -109,7 +109,7 @@ class WorkerController(val context: Context) {
                 .setInputData(data)
                 .build()
 
-            WorkManager.Companion.getInstance(context).enqueueUniqueWork(
+            WorkManager.getInstance(context).enqueueUniqueWork(
                 "${flightData.callSign}-alarm",
                 ExistingWorkPolicy.REPLACE,
                 workRequest
@@ -162,7 +162,7 @@ class WorkerController(val context: Context) {
             .setInputData(data)
             .build()
 
-        WorkManager.Companion.getInstance(context).enqueueUniqueWork(
+        WorkManager.getInstance(context).enqueueUniqueWork(
             "${flightData.callSign}-progress",
             ExistingWorkPolicy.REPLACE,
             workRequest
@@ -212,7 +212,7 @@ class WorkerController(val context: Context) {
                 .setInputData(data)
                 .build()
 
-            WorkManager.Companion.getInstance(context).enqueueUniqueWork(
+            WorkManager.getInstance(context).enqueueUniqueWork(
                 "${previous.callSign}-change",
                 ExistingWorkPolicy.REPLACE,
                 workRequest
@@ -227,7 +227,7 @@ class WorkerController(val context: Context) {
      * active work requests managed by `WorkManager` for this app.
      */
     fun cancelAll() {
-        WorkManager.Companion.getInstance(context).cancelAllWork()
+        WorkManager.getInstance(context).cancelAllWork()
     }
 
     /**
