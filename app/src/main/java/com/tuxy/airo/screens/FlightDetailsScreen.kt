@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.sizeIn
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.layout.wrapContentWidth
@@ -195,6 +196,12 @@ fun FlightDetailsView(
                                     .fillMaxWidth()
                                     .background(Color.Gray)
                                     .aspectRatio(1280f / 847f)
+                                    .sizeIn(
+                                        minWidth = 1.dp,
+                                        maxWidth = 1.dp,
+                                        minHeight = 1.dp,
+                                        maxHeight = 1.dp
+                                    ) // Fix MapUI causing crashes when stretched or pushed too small or large
                             ) {
                                 MapUI(
                                     state = viewModel.mapState

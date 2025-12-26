@@ -62,8 +62,6 @@ import kotlin.time.toKotlinDuration
  * @property openDialog A mutable state to control the visibility of the delete confirmation dialog.
  * @property progress The current progress of the flight.
  * @param context The application context.
- * @param flightDataDao The DAO for accessing flight data.
- * @param id The ID of the flight to display.
  * @param scheme The color scheme for the map.
  * @param scope The coroutine scope for this ViewModel.
  */
@@ -342,6 +340,7 @@ class DetailsViewModel(
         disableScrolling()
         addLayer(tileStreamProvider)
         GlobalScope.launch {
+            delay(200)
             // Scroll map to show both origin and destination
             snapScrollTo(
                 x = avr(flightData.mapOriginX, flightData.mapDestinationX), // Center X
