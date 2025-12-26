@@ -134,6 +134,7 @@ fun FoldableFlightScreen(
                             paneNavigator = navigator,
                             onFlightDelete = {
                                 scope.launch {
+                                    viewModel.loadData(flightDataDao) // Reload data
                                     navigator.navigateBack()
                                 }
                             }

@@ -10,7 +10,6 @@ import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -92,7 +91,8 @@ import java.time.format.DateTimeFormatter
 import kotlin.math.absoluteValue
 import kotlin.time.toKotlinDuration
 
-@OptIn(DelicateCoroutinesApi::class, ExperimentalMaterial3Api::class,
+@OptIn(
+    DelicateCoroutinesApi::class, ExperimentalMaterial3Api::class,
     ExperimentalMaterial3AdaptiveApi::class
 )
 @Composable
@@ -155,6 +155,7 @@ fun FlightDetailsView(
                     progress = { viewModel.getProgress() }
                 )
                 PullToRefreshBox(
+                    modifier = Modifier.fillMaxSize(),
                     isRefreshing = isRefreshing.value,
                     state = refreshState,
                     onRefresh = {
@@ -169,7 +170,6 @@ fun FlightDetailsView(
                     Column(
                         Modifier
                             .verticalScroll(rememberScrollState())
-                            .fillMaxHeight()
                     ) {
                         RouteBar(viewModel.flightData)
                         Text(
@@ -567,7 +567,8 @@ fun FlightInformationInteract(navController: NavController, flightData: FlightDa
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class, DelicateCoroutinesApi::class,
+@OptIn(
+    ExperimentalMaterial3Api::class, DelicateCoroutinesApi::class,
     ExperimentalMaterial3AdaptiveApi::class
 )
 @Composable
