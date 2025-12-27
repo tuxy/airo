@@ -8,15 +8,21 @@ import androidx.work.NetworkType
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
+import com.tuxy.airo.data.background.FlightAlarmScheduler
 import com.tuxy.airo.data.background.FlightSchedulerWorker
+import kotlinx.coroutines.DelicateCoroutinesApi
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.launch
 import java.util.concurrent.TimeUnit
 
 class MainApplication : Application(), Configuration.Provider {
 
     override fun onCreate() {
         super.onCreate()
-        setupStartupWork()
-        setupRecurringWork()
+        val startupJob = setupStartupWork()
+        setupRecurringWork(startupJob)
     }
 
     override val workManagerConfiguration: Configuration
@@ -24,29 +30,40 @@ class MainApplication : Application(), Configuration.Provider {
             .setMinimumLoggingLevel(android.util.Log.INFO)
             .build()
 
-    private fun setupRecurringWork() {
+    @OptIn(DelicateCoroutinesApi::class)
+    private fun setupRecurringWork(startupJob: Job) {
         // TODO read from PreferencesInterface for interval -> read MainActivity.kt
 
-        val constraints = Constraints.Builder()
-            .setRequiredNetworkType(NetworkType.CONNECTED)
-            .build()
+        GlobalScope.launch(Dispatchers.IO) {
+            startupJob.join()
 
-        val repeatingRequest = PeriodicWorkRequestBuilder<FlightSchedulerWorker>(
-            24,
-            TimeUnit.HOURS
-        )
-            .setConstraints(constraints)
-            .build()
+            val constraints = Constraints.Builder()
+                .setRequiredNetworkType(NetworkType.CONNECTED)
+                .build()
 
-        WorkManager.getInstance(applicationContext).enqueueUniquePeriodicWork(
-            "flight-scheduler-worker",
-            ExistingPeriodicWorkPolicy.KEEP,
-            repeatingRequest
-        )
+            val repeatingRequest = PeriodicWorkRequestBuilder<FlightSchedulerWorker>(
+                12,
+                TimeUnit.HOURS
+            )
+                .setConstraints(constraints)
+                .build()
+
+            WorkManager.getInstance(applicationContext).enqueueUniquePeriodicWork(
+                "flight-scheduler-worker",
+                ExistingPeriodicWorkPolicy.KEEP,
+                repeatingRequest
+            )
+        }
     }
 
-    private fun setupStartupWork() {
-        val work = OneTimeWorkRequestBuilder<FlightSchedulerWorker>().build() // Force a recheck of all flights - basically a check for when the user is actively on the app
-        WorkManager.getInstance(applicationContext).enqueue(work)
+    @OptIn(DelicateCoroutinesApi::class)
+    private fun setupStartupWork(): Job {
+        val flightChangeWork = OneTimeWorkRequestBuilder<FlightSchedulerWorker>().build() // Force a recheck of all flights - basically a check for when the user is actively on the app
+        val flightAlarmScheduler = FlightAlarmScheduler(applicationContext)
+        WorkManager.getInstance(applicationContext).enqueue(flightChangeWork)
+
+        return GlobalScope.launch(Dispatchers.IO) {
+            flightAlarmScheduler.cancelAll()
+        }
     }
 }

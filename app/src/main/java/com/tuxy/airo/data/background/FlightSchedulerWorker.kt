@@ -22,11 +22,10 @@ class FlightSchedulerWorker(
     appContext: Context,
     workerParams: WorkerParameters
 ) : CoroutineWorker(appContext, workerParams) {
-
     override suspend fun doWork(): Result {
         val flightDataDao = FlightDataBase.getDatabase(applicationContext).flightDataDao()
         val preferencesInterface = PreferencesInterface(applicationContext)
-        val workerController = WorkerController(applicationContext)
+        val flightAlarmScheduler = FlightAlarmScheduler(applicationContext)
 
         // Get API settings from preferences
         val apiSettings = ApiSettings(
@@ -61,10 +60,10 @@ class FlightSchedulerWorker(
             )
 
             result.onSuccess { newFlightData ->
-                // Notify the user if the flight time has changed
+                // Notify the user if the flight time has changed. NOTE: this is the only change that occurs
                 if (oldFlight.departDate != newFlightData.departDate) {
                     Log.d("FlightSchedulerWorker", "Flight time changed: ${oldFlight.callSign}")
-                    workerController.setAlarmOnChange(oldFlight, newFlightData)
+                    flightAlarmScheduler.setAlarmOnChange(oldFlight, newFlightData)
                     // Update the database
                     flightDataDao.deleteFlight(oldFlight)
                     flightDataDao.addFlight(newFlightData)
@@ -77,7 +76,7 @@ class FlightSchedulerWorker(
 
         // After updating all flights, reset and schedule all alarms
         Log.d("FlightSchedulerWorker", "All flights updated. Resetting alarms.")
-        workerController.resetAll(flightDataDao)
+        flightAlarmScheduler.resetAll(flightDataDao)
 
         return Result.success()
     }

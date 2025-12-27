@@ -15,7 +15,7 @@ import com.tuxy.airo.R
  * create and display a standard notification. This is used for general flight alerts,
  * such as departure reminders and updates.
  */
-class FlightDataWorker(
+class NotificationWorker(
     appContext: Context,
     workerParams: WorkerParameters
 ) : CoroutineWorker(appContext, workerParams) {
@@ -51,8 +51,8 @@ class ProgressWorker(
 ) : CoroutineWorker(appContext, workerParams) {
 
     override suspend fun doWork(): Result {
-        val title = inputData.getString(FlightDataWorker.KEY_TITLE)
-        val content = inputData.getString(FlightDataWorker.KEY_CONTENT)
+        val title = inputData.getString(NotificationWorker.KEY_TITLE)
+        val content = inputData.getString(NotificationWorker.KEY_CONTENT)
 
         if (title.isNullOrEmpty() || content.isNullOrEmpty()) {
             return Result.failure()
