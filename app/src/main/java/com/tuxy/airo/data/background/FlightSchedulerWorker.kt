@@ -9,7 +9,7 @@ import com.tuxy.airo.data.flightdata.FlightDataBase
 import com.tuxy.airo.data.flightdata.getData
 import com.tuxy.airo.screens.ApiSettings
 import kotlinx.coroutines.flow.first
-import java.time.LocalDateTime
+import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
 
 /**
@@ -40,18 +40,19 @@ class FlightSchedulerWorker(
         val originalFlights = flightDataDao.readAll()
         for (oldFlight in originalFlights) {
             // Ignore flight if depart date has already passed
-            if (oldFlight.departDate < LocalDateTime.now()) {
+            if (oldFlight.departDate < ZonedDateTime.now()) {
+                Log.d("FlightSchedulerWorker", "Updated flight: ${oldFlight.callSign} (Past)")
                 continue
             }
 
             // Ignore flight if it's more than a week away to save API calls
-            if (oldFlight.departDate > LocalDateTime.now().plusDays(7)) {
+            if (oldFlight.departDate > ZonedDateTime.now().plusDays(7)) {
                 continue
             }
 
             // Get updated flight data
             val result = getData(
-                flightNumber = oldFlight.callSign,
+                flightNumber = formatFlightNumber(oldFlight.callSign),
                 flightDataDao = flightDataDao,
                 date = oldFlight.departDate.format(DateTimeFormatter.ofPattern("yyyy-MM-dd")),
                 settings = apiSettings,
@@ -80,4 +81,18 @@ class FlightSchedulerWorker(
 
         return Result.success()
     }
+}
+
+/**
+ * Formats a flight number string by removing any spaces or hyphens.
+ * @param string The flight number string to be formatted.
+ * @return The formatted flight number.
+ */
+fun formatFlightNumber(string: String): String {
+    // Using " " or "-" as a space in between the carrier and flight number will be split either way
+    val splitString = string.split("[- ]".toRegex())
+    if (splitString.size == 2) {
+        return "${splitString[0]}${splitString[1]}"
+    }
+    return string
 }

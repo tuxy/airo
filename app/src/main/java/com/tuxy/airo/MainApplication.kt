@@ -1,6 +1,7 @@
 package com.tuxy.airo
 
 import android.app.Application
+import android.util.Log
 import androidx.work.Configuration
 import androidx.work.Constraints
 import androidx.work.ExistingPeriodicWorkPolicy
@@ -30,6 +31,8 @@ class MainApplication : Application(), Configuration.Provider {
                 if (enabled) {
                     runBlocking { setupStartupWork() }
                     setupRecurringWork()
+                } else {
+                    Log.d("FlightSchedulerWorker", "NOTE: Alerts have been disabled")
                 }
             }
         }
@@ -37,7 +40,7 @@ class MainApplication : Application(), Configuration.Provider {
 
     override val workManagerConfiguration: Configuration
         get() = Configuration.Builder()
-            .setMinimumLoggingLevel(android.util.Log.INFO)
+            .setMinimumLoggingLevel(Log.INFO)
             .build()
 
     @OptIn(DelicateCoroutinesApi::class)

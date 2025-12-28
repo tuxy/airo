@@ -15,8 +15,7 @@ import okhttp3.HttpUrl.Companion.toHttpUrl
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import java.time.Duration
-import java.time.LocalDateTime
-import java.time.ZoneId
+import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
 import kotlin.math.abs
 import kotlin.math.ln
@@ -247,11 +246,6 @@ fun parseData(jsonRoot: Root): FlightData {
     val arrivalScheduledTime = arrivalFlight.scheduledTime
         ?: throw MissingCriticalDataException("Arrival scheduled time data is missing")
 
-    val departureTimeZone = departureAirport.timeZone
-        ?: throw MissingCriticalDataException("Departure timezone is missing")
-    val arrivalTimeZone = arrivalAirport.timeZone
-        ?: throw MissingCriticalDataException("Arrival time zone is missing")
-
     val departureLocation = departureAirport.location
         ?: throw MissingCriticalDataException("Departure airport location data is missing")
     val arrivalLocation = arrivalAirport.location
@@ -266,8 +260,8 @@ fun parseData(jsonRoot: Root): FlightData {
     val arrivalLon = arrivalLocation.lon
         ?: throw MissingCriticalDataException("Arrival airport longitude is missing")
 
-    val departureTime = parseDateTime(departureScheduledTime.utc)
-    val arrivalTime = parseDateTime(arrivalScheduledTime.utc)
+    val departureTime = parseDateTime(departureScheduledTime.local)
+    val arrivalTime = parseDateTime(arrivalScheduledTime.local)
 
     // Normalised coordinates for origin airport
     val (projectedXOrigin, projectedYOrigin) = MapProjectionUtils.doProjection(
@@ -323,7 +317,7 @@ fun parseData(jsonRoot: Root): FlightData {
 
     return FlightData(
         id = 0, // Auto-assigned id
-        lastUpdate = LocalDateTime.now(),
+        lastUpdate = ZonedDateTime.now().toLocalDateTime(),
         callSign = callSign,
         airline = airlineName,
         airlineIcao = airlineIcao,
@@ -336,8 +330,6 @@ fun parseData(jsonRoot: Root): FlightData {
         toCountryCode = toCountryCode,
         departDate = departureTime,
         arriveDate = arrivalTime,
-        departTimeZone = ZoneId.of(departureTimeZone),
-        arriveTimeZone = ZoneId.of(arrivalTimeZone),
         duration = Duration.between(
             departureTime,
             arrivalTime
@@ -406,9 +398,9 @@ internal object MapProjectionUtils {
     }
 }
 
-fun parseDateTime(time: String): LocalDateTime {
+fun parseDateTime(time: String): ZonedDateTime {
     val pattern = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mmXXXXX")
-    return LocalDateTime.parse(time, pattern)
+    return ZonedDateTime.parse(time, pattern)
 }
 
 

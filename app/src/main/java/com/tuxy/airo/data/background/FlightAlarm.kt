@@ -15,7 +15,6 @@ import com.tuxy.airo.data.flightdata.FlightData
 import com.tuxy.airo.data.flightdata.FlightDataDao
 import java.time.Duration
 import java.time.Instant
-import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
 
 /**
@@ -83,19 +82,13 @@ class FlightAlarmScheduler(val context: Context) {
         val preferencesInterface = PreferencesInterface(context)
         val timeFormatWait = preferencesInterface.getValueTimeFormat("24_time")
 
-        val depTime =
-            flightData.departDate
-                .atOffset(ZoneOffset.UTC)
-                .atZoneSameInstant(flightData.departTimeZone)
+        val depTime = flightData.departDate
         val targetTime = depTime.toEpochSecond() - 21600 // 6 hours before
 
         val delay = targetTime - Instant.now().epochSecond
 
         if (delay > 0) { // If the flight is in the past, don't schedule an alarm
-            val time = flightData.departDate
-                .atOffset(ZoneOffset.UTC)
-                .atZoneSameInstant(flightData.departTimeZone)
-                .format(DateTimeFormatter.ofPattern(timeFormatWait))
+            val time = flightData.departDate.format(DateTimeFormatter.ofPattern(timeFormatWait))
 
             val flight = context.getString(R.string.flight_alert_title)
             val content =
@@ -146,17 +139,11 @@ class FlightAlarmScheduler(val context: Context) {
         val preferencesInterface = PreferencesInterface(context)
         val timeFormatWait = preferencesInterface.getValueTimeFormat("24_time")
 
-        val depTime =
-            flightData.departDate
-                .atOffset(ZoneOffset.UTC)
-                .atZoneSameInstant(flightData.departTimeZone).toEpochSecond()
+        val depTime = flightData.departDate.toEpochSecond()
 
         val delay = depTime - Instant.now().epochSecond
         if (delay > 0) {
-            val time = flightData.departDate
-                .atOffset(ZoneOffset.UTC)
-                .atZoneSameInstant(flightData.departTimeZone)
-                .format(DateTimeFormatter.ofPattern(timeFormatWait))
+            val time = flightData.departDate.format(DateTimeFormatter.ofPattern(timeFormatWait))
 
             val flight = "${context.getString(R.string.flight)} ${flightData.callSign}"
             val content =
@@ -198,14 +185,8 @@ class FlightAlarmScheduler(val context: Context) {
         val preferencesInterface = PreferencesInterface(context)
         val timeFormatWait = preferencesInterface.getValueTimeFormat("24_time")
 
-        val oldDepTime =
-            previous.departDate
-                .atZone(previous.departTimeZone)
-
-        val newDepTime =
-            new.departDate
-                .atOffset(ZoneOffset.UTC)
-                .atZoneSameInstant(new.departTimeZone)
+        val oldDepTime = previous.departDate
+        val newDepTime = new.departDate
 
         if (newDepTime != oldDepTime) {
             val oldTime = oldDepTime.format(DateTimeFormatter.ofPattern(timeFormatWait))
