@@ -6,6 +6,7 @@ import android.content.Context
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
+import android.os.PowerManager
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -29,6 +30,11 @@ class MainActivity : ComponentActivity() {
 
     lateinit var data: FlightDataDao
     val preferencesInterface = PreferencesInterface(this)
+
+    // Get Power Manager service
+    private val powerManager: PowerManager by lazy {
+        getSystemService(POWER_SERVICE) as PowerManager
+    }
 
     @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -57,7 +63,7 @@ class MainActivity : ComponentActivity() {
                 }
 
                 Surface(color = MaterialTheme.colorScheme.background) {
-                    MainScreen(backup)
+                    MainScreen(backup, powerManager)
                 }
             }
         }

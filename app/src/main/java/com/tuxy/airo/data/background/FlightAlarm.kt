@@ -109,7 +109,7 @@ class FlightAlarmScheduler(val context: Context) {
                 .putString(NotificationWorker.KEY_CONTENT, content)
                 .build()
 
-            val workRequest = OneTimeWorkRequestBuilder<NotificationWorker>()
+            val notificationWork = OneTimeWorkRequestBuilder<NotificationWorker>()
                 .setInitialDelay(Duration.ofSeconds(delay)) // Sets delay for notification
                 .setInputData(data)
                 .build()
@@ -117,64 +117,70 @@ class FlightAlarmScheduler(val context: Context) {
             WorkManager.getInstance(context).enqueueUniqueWork(
                 "${flightData.callSign}-alarm",
                 ExistingWorkPolicy.REPLACE,
-                workRequest
-            )
+                notificationWork
+            ) // Starts work for 6-hour alarm
 
             Log.d("FlightAlarmScheduler", "Scheduled alarm for flight: ${flightData.callSign} at ${flightData.departDate}")
 
             // Also schedule the progress worker
-            // setProgressAlarm(flightData)
+            setProgressAlarm(flightData)
+        } else if (delay + flightData.duration.seconds > 0) {
+            setProgressAlarm(flightData)
         }
     }
 
-//    /**
-//     * Schedules a progress notification for the exact departure time of a flight.
-//     *
-//     * A `ProgressWorker` is scheduled to display a notification with an indeterminate progress
-//     * bar when the flight is scheduled to depart. If the departure time is in the past,
-//     * no worker is scheduled.
-//     *
-//     * This uses `enqueueUniqueWork` with `ExistingWorkPolicy.REPLACE` to ensure that
-//     * only one progress worker exists for each flight, using the flight's call sign
-//     * to create a unique name.
-//     *
-//     * @param flightData The flight for which to schedule the progress notification.
-//     */
-//    private suspend fun setProgressAlarm(flightData: FlightData) {
-//        val preferencesInterface = PreferencesInterface(context)
-//        val timeFormatWait = preferencesInterface.getValueTimeFormat("24_time")
-//
-//        val depTime =
-//            flightData.departDate
-//                .atOffset(ZoneOffset.UTC)
-//                .atZoneSameInstant(flightData.departTimeZone).toEpochSecond()
-//
-//        val delay = depTime - Instant.now().epochSecond
-//        if (delay <= 0) return
-//
-//        val time = flightData.departDate.atZone(ZoneId.systemDefault())
-//            .format(DateTimeFormatter.ofPattern(timeFormatWait))
-//
-//        val flight = "${context.getString(R.string.flight)} ${flightData.callSign}"
-//        val content =
-//            "${context.getString(R.string.landing)} ${context.getString(R.string.at)} $time"
-//
-//        val data = Data.Builder()
-//            .putString(FlightDataWorker.KEY_TITLE, flight)
-//            .putString(FlightDataWorker.KEY_CONTENT, content)
-//            .build()
-//
-//        val workRequest = OneTimeWorkRequestBuilder<ProgressWorker>()
-//            .setInitialDelay(Duration.ofSeconds(delay))
-//            .setInputData(data)
-//            .build()
-//
-//        WorkManager.getInstance(context).enqueueUniqueWork(
-//            "${flightData.callSign}-progress",
-//            ExistingWorkPolicy.REPLACE,
-//            workRequest
-//        )
-//    }
+    /**
+     * Schedules a progress notification for the exact departure time of a flight.
+     *
+     * A `ProgressWorker` is scheduled to display a notification with an indeterminate progress
+     * bar when the flight is scheduled to depart. If the departure time is in the past,
+     * no worker is scheduled.
+     *
+     * This uses `enqueueUniqueWork` with `ExistingWorkPolicy.REPLACE` to ensure that
+     * only one progress worker exists for each flight, using the flight's call sign
+     * to create a unique name.
+     *
+     * @param flightData The flight for which to schedule the progress notification.
+     */
+    private suspend fun setProgressAlarm(flightData: FlightData) {
+        val preferencesInterface = PreferencesInterface(context)
+        val timeFormatWait = preferencesInterface.getValueTimeFormat("24_time")
+
+        val depTime =
+            flightData.departDate
+                .atOffset(ZoneOffset.UTC)
+                .atZoneSameInstant(flightData.departTimeZone).toEpochSecond()
+
+        val delay = depTime - Instant.now().epochSecond
+        if (delay > 0) {
+            val time = flightData.departDate
+                .atOffset(ZoneOffset.UTC)
+                .atZoneSameInstant(flightData.departTimeZone)
+                .format(DateTimeFormatter.ofPattern(timeFormatWait))
+
+            val flight = "${context.getString(R.string.flight)} ${flightData.callSign}"
+            val content =
+                "${context.getString(R.string.landing)} ${context.getString(R.string.at)} $time"
+
+            val data = Data.Builder()
+                .putString(NotificationWorker.KEY_TITLE, flight)
+                .putString(NotificationWorker.KEY_CONTENT, content)
+                .build()
+
+            val workRequest = OneTimeWorkRequestBuilder<ProgressWorker>()
+                .setInitialDelay(Duration.ofSeconds(delay))
+                .setInputData(data)
+                .build()
+
+            WorkManager.getInstance(context).enqueueUniqueWork(
+                "${flightData.callSign}-progress",
+                ExistingWorkPolicy.REPLACE,
+                workRequest
+            )
+
+            Log.d("FlightAlarmScheduler", "Scheduled progress notification for flight: ${flightData.callSign}")
+        }
+    }
 
     /**
      * Schedules an immediate notification if a flight's departure time has changed.
