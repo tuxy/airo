@@ -487,7 +487,7 @@ fun SmallAppBarWithDelete(
         title = { Text(text) },
         navigationIcon = {
             IconButton(onClick = {
-                navController.popBackStack()
+                navController.navigateUp()
             }) {
                 Icon(
                     imageVector = Icons.AutoMirrored.Filled.ArrowBack,

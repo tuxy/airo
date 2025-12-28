@@ -3,6 +3,7 @@ package com.tuxy.airo.screens
 import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.Context
+import android.content.Intent
 import android.os.PowerManager
 import android.widget.Toast
 import androidx.activity.compose.LocalActivity
@@ -47,6 +48,7 @@ import com.tuxy.airo.dataStore
 import com.tuxy.airo.screens.settings.SettingSub
 import com.tuxy.airo.screens.settings.prefs.ButtonPref
 
+@SuppressLint("BatteryLife")
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsView(
@@ -61,8 +63,14 @@ fun SettingsView(
     val webpageString = stringResource(R.string.source_code)
     val isIgnoringBatteryOptimizations = powerManager.isIgnoringBatteryOptimizations(context.packageName)
 
-    // val ignored = preferencesInterface.getValueBool("is_ignoring_optimisation")
-    val ignored = false
+    val ignored = preferencesInterface.getValueBool("is_ignoring_optimisation")
+
+    val intent = Intent()
+    intent.setAction(android.provider.Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS)
+    intent.setData(("package:" + context.packageName).toUri())
+
+    println(isIgnoringBatteryOptimizations)
+    println(ignored)
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),
@@ -71,11 +79,12 @@ fun SettingsView(
         Column(
             modifier = Modifier.padding(innerPadding)
         ) {
-            key(ignored) {
+            key(ignored, isIgnoringBatteryOptimizations) {
                 if (!(isIgnoringBatteryOptimizations || ignored)) {
                     PowerMessage(
-                        context,
-                        activity
+                        activity,
+                        navController,
+                        intent
                     )
                 }
             }
@@ -127,8 +136,9 @@ fun SettingsView(
 @SuppressLint("BatteryLife")
 @Composable
 fun PowerMessage(
-    context: Context,
-    activity: Activity
+    activity: Activity,
+    navController: NavController,
+    intent: Intent
 ) {
     ElevatedCard(
         modifier = Modifier
@@ -156,7 +166,8 @@ fun PowerMessage(
                 modifier = Modifier.padding(end = 8.dp)
             )
             Button(onClick = {
-                // TODO Implement battery permission request
+                activity.startActivity(intent)
+                navController.navigateUp()
             }) {
                 Text("Disable")
             }
