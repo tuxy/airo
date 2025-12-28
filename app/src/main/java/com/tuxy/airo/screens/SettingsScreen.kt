@@ -69,9 +69,6 @@ fun SettingsView(
     intent.setAction(android.provider.Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS)
     intent.setData(("package:" + context.packageName).toUri())
 
-    println(isIgnoringBatteryOptimizations)
-    println(ignored)
-
     Scaffold(
         modifier = Modifier.fillMaxSize(),
         topBar = { LargeAppBar(stringResource(R.string.settings), navController) },
