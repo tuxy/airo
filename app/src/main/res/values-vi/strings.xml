@@ -61,7 +61,7 @@
     <string name="past_flights">Quá khứ</string>
     <string name="delete_dialog_ticket">Xóa bỏ vé bay? Hành động này không thể hủy bỏ</string>
     <string name="booking_reference">Số đặt vé</string>
-    <string name="flight_alert_title">Chuẩn bị cho chuyến bay trong 6 tiếng</string>
+    <string name="flight_alert_title">Chuẩn bị cho chuyến bay trong %1$s tiếng</string>
     <string name="get_ready">Hãy chuẩn bị cho chuyến</string>
     <string name="at">lúc</string>
     <string name="invalid_api_url">API Không hợp lệ</string>
@@ -92,4 +92,8 @@
     <string name="flights">chuyến bay</string>
     <string name="restore_warning">Lưu ý: Khôi phục sẽ tẩy thông tin hiện tại</string>
     <string name="last_updated">Cập nhật cuối:</string>
+    <string name="remove_background_optimisation">Loại bỏ tối ưu hóa nền</string>
+    <string name="remove_background_optimisation_extra">Airo cần loại bỏ các tối ưu hóa nền để thông báo hoạt động.</string>
+    <string name="ignore">Không chấp nhận</string>
+    <string name="allow">Cho phép</string>
 </resources>

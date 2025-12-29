@@ -62,7 +62,7 @@
     <string name="past_flights">Past</string>
     <string name="delete_dialog_ticket">Delete ticket? This cannot be undone.</string>
     <string name="booking_reference">Booking reference</string>
-    <string name="flight_alert_title">Prepare for flight in 6 hours</string>
+    <string name="flight_alert_title">Prepare for flight in %1$s hours</string>
     <string name="get_ready">Get ready for flight</string>
     <string name="at">at</string>
     <string name="invalid_api_url">Invalid API URL</string>
@@ -95,4 +95,8 @@
     <string name="flights">flights</string>
     <string name="restore_warning">Warning: Restore will wipe all existing data!</string>
     <string name="last_updated">Last updated:</string>
+    <string name="remove_background_optimisation">Remove background optimisation</string>
+    <string name="remove_background_optimisation_extra">Airo needs to remove background optimisations for its notifications to work properly.</string>
+    <string name="ignore">Ignore</string>
+    <string name="allow">Allow</string>
 </resources>

@@ -144,9 +144,9 @@ fun PowerMessage(
     ) {
         ListItem(
             modifier = Modifier.padding(start = 8.dp, end = 16.dp, top = 16.dp),
-            headlineContent = { Text("Remove background optimisation") },
-            supportingContent = { Text("Airo needs to remove background optimisations for its notifications to work properly.") },
-            leadingContent = { Icon(imageVector = Icons.Outlined.Info, contentDescription = "test") },
+            headlineContent = { Text(stringResource(R.string.remove_background_optimisation)) },
+            supportingContent = { Text(stringResource(R.string.remove_background_optimisation_extra)) },
+            leadingContent = { Icon(imageVector = Icons.Outlined.Info, contentDescription = stringResource(R.string.info)) },
             colors = ListItemDefaults.colors(
                 containerColor = Color.Transparent
             )
@@ -159,14 +159,14 @@ fun PowerMessage(
         ) {
             ButtonPref(
                 key = "is_ignoring_optimisation",
-                title = "Ignore",
+                title = stringResource(R.string.ignore),
                 modifier = Modifier.padding(end = 8.dp)
             )
             Button(onClick = {
                 activity.startActivity(intent)
                 navController.navigateUp()
             }) {
-                Text("Disable")
+                Text(stringResource(R.string.allow))
             }
         }
     }

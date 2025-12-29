@@ -41,7 +41,7 @@ class FlightSchedulerWorker(
         for (oldFlight in originalFlights) {
             // Ignore flight if depart date has already passed
             if (oldFlight.departDate < ZonedDateTime.now()) {
-                Log.d("FlightSchedulerWorker", "Updated flight: ${oldFlight.callSign} (Past)")
+                Log.d("FlightSchedulerWorker", "Ignored flight: ${oldFlight.callSign} (Past)")
                 continue
             }
 

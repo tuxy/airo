@@ -90,7 +90,7 @@ class FlightAlarmScheduler(val context: Context) {
         if (delay > 0) { // If the flight is in the past, don't schedule an alarm
             val time = flightData.departDate.format(DateTimeFormatter.ofPattern(timeFormatWait))
 
-            val flight = context.getString(R.string.flight_alert_title)
+            val flight = context.getString(R.string.flight_alert_title, "6")
             val content =
                 "${context.getString(R.string.get_ready)} ${flightData.callSign} ${context.getString(
                     R.string.to)} ${flightData.toName} ${
@@ -143,11 +143,13 @@ class FlightAlarmScheduler(val context: Context) {
 
         val delay = depTime - Instant.now().epochSecond
         if (delay > 0) {
-            val time = flightData.departDate.format(DateTimeFormatter.ofPattern(timeFormatWait))
+            val format = DateTimeFormatter.ofPattern(timeFormatWait)
+            val arriveTime = flightData.arriveDate.format(format)
+
 
             val flight = "${context.getString(R.string.flight)} ${flightData.callSign}"
             val content =
-                "${context.getString(R.string.landing)} ${context.getString(R.string.at)} $time"
+                "${context.getString(R.string.landing)} ${context.getString(R.string.at)} $arriveTime"
 
             val data = Data.Builder()
                 .putString(NotificationWorker.KEY_TITLE, flight)
