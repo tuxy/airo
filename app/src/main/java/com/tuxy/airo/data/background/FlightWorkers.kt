@@ -1,13 +1,10 @@
 package com.tuxy.airo.data.background
 
-import android.app.NotificationChannel
-import android.app.NotificationManager
 import android.content.Context
+import android.content.Intent
 import android.util.Log
-import androidx.core.app.NotificationCompat
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
-import com.tuxy.airo.R
 
 /**
  * A [CoroutineWorker] that displays a simple notification with a title and content.
@@ -43,7 +40,7 @@ class NotificationWorker(
  * A [CoroutineWorker] that displays a progress notification.
  *
  * This worker is triggered at the scheduled departure time of a flight to show a
- * notification with an indeterminate progress bar. This indicates to the user that
+ * notification with an indeterminate progress bar through FlightProgressService. This indicates to the user that
  * the flight is in progress.
  */
 class ProgressWorker(
@@ -58,56 +55,17 @@ class ProgressWorker(
             return Result.failure()
         }
 
-        val notificationManager =
-            applicationContext.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        val serviceIntent = Intent(applicationContext, FlightProgressService::class.java).apply {
+            action = FlightProgressService.ACTION_START
+            putExtra(FlightProgressService.EXTRA_TITLE, title)
+            putExtra(FlightProgressService.EXTRA_CONTENT, content)
+            putExtra(FlightProgressService.EXTRA_FLIGHT_ID, "flight_id") // TODO add actual flight id for multiple flights
+        }
 
-        val channel = NotificationChannel(CHANNEL_ID, CHANNEL_NAME, NotificationManager.IMPORTANCE_HIGH)
-        notificationManager.createNotificationChannel(channel)
+        applicationContext.startForegroundService(serviceIntent)
 
-        val builder = NotificationCompat.Builder(applicationContext, CHANNEL_ID)
-            .setContentTitle(title)
-            .setContentText(content)
-            .setSmallIcon(R.drawable.ic_launcher_foreground)
-            .setPriority(NotificationCompat.PRIORITY_HIGH)
-            .setOngoing(true)
-            .setOnlyAlertOnce(true)
-            .setProgress(100, 0, true) // Indeterminate progress
-            .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
-
-        notificationManager.notify(PROGRESS_NOTIFICATION_ID, builder.build()) // Use a different ID
-        Log.d("ProgressWorker", "Progress notification displayed.")
+        Log.d("ProgressWorker", "Started FlightProgressService")
 
         return Result.success()
-        // TODO work on foreground service here to maintain progress
-    }
-
-    /**
-     * Updates the progress notification.
-     *
-     * @param context The application context.
-     * @param title The new title for the notification.
-     * @param content The new content for the notification.
-     */
-    fun updateProgressNotification(context: Context, title: String, content: String) {
-        val notificationManager =
-            context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-
-        val builder = NotificationCompat.Builder(context, CHANNEL_ID)
-            .setContentTitle(title)
-            .setContentText(content)
-            .setSmallIcon(R.drawable.ic_launcher_foreground)
-            .setPriority(NotificationCompat.PRIORITY_HIGH)
-            .setOngoing(false) // No longer ongoing
-            .setOnlyAlertOnce(true)
-            .setProgress(0, 0, false) // Remove progress bar
-            .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
-
-        notificationManager.notify(PROGRESS_NOTIFICATION_ID, builder.build())
-    }
-
-    companion object {
-        const val PROGRESS_NOTIFICATION_ID = 2
-        const val CHANNEL_ID = "progress_notification_channel"
-        const val CHANNEL_NAME = "Progress Notifications"
     }
 }

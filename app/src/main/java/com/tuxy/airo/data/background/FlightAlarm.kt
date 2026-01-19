@@ -92,8 +92,11 @@ class FlightAlarmScheduler(val context: Context) {
 
             val flight = context.getString(R.string.flight_alert_title, "6")
             val content =
-                "${context.getString(R.string.get_ready)} ${flightData.callSign} ${context.getString(
-                    R.string.to)} ${flightData.toName} ${
+                "${context.getString(R.string.get_ready)} ${flightData.callSign} ${
+                    context.getString(
+                        R.string.to
+                    )
+                } ${flightData.toName} ${
                     context.getString(R.string.at)
                 } $time"
 
@@ -113,12 +116,10 @@ class FlightAlarmScheduler(val context: Context) {
                 notificationWork
             ) // Starts work for 6-hour alarm
 
-            Log.d("FlightAlarmScheduler", "Scheduled alarm for flight: ${flightData.callSign} at ${flightData.departDate}")
-
-            // Also schedule the progress worker
-            setProgressAlarm(flightData)
-        } else if (delay + flightData.duration.seconds > 0) {
-            setProgressAlarm(flightData)
+            Log.d(
+                "FlightAlarmScheduler",
+                "Scheduled alarm for flight: ${flightData.callSign} at ${flightData.departDate}"
+            )
         }
     }
 
@@ -133,21 +134,21 @@ class FlightAlarmScheduler(val context: Context) {
      * only one progress worker exists for each flight, using the flight's call sign
      * to create a unique name.
      *
-     * @param flightData The flight for which to schedule the progress notification.
+     * @param newFlightData The flight for which to schedule the progress notification.
      */
-    private suspend fun setProgressAlarm(flightData: FlightData) {
+     suspend fun setProgressAlarm(oldFlightData: FlightData, newFlightData: FlightData) {
         val preferencesInterface = PreferencesInterface(context)
         val timeFormatWait = preferencesInterface.getValueTimeFormat("24_time")
 
-        val depTime = flightData.departDate.toEpochSecond()
+        val depTime = newFlightData.departDate.toEpochSecond()
 
         val delay = depTime - Instant.now().epochSecond
         if (delay > 0) {
             val format = DateTimeFormatter.ofPattern(timeFormatWait)
-            val arriveTime = flightData.arriveDate.format(format)
+            val arriveTime = newFlightData.arriveDate.format(format)
 
 
-            val flight = "${context.getString(R.string.flight)} ${flightData.callSign}"
+            val flight = "${context.getString(R.string.flight)} ${newFlightData.callSign}"
             val content =
                 "${context.getString(R.string.landing)} ${context.getString(R.string.at)} $arriveTime"
 
@@ -162,12 +163,12 @@ class FlightAlarmScheduler(val context: Context) {
                 .build()
 
             WorkManager.getInstance(context).enqueueUniqueWork(
-                "${flightData.callSign}-progress",
+                "${oldFlightData.callSign}-progress", // In case there is an old one
                 ExistingWorkPolicy.REPLACE,
                 workRequest
             )
 
-            Log.d("FlightAlarmScheduler", "Scheduled progress notification for flight: ${flightData.callSign}")
+            Log.d("FlightAlarmScheduler", "Scheduled progress notification for flight: ${newFlightData.callSign}")
         }
     }
 

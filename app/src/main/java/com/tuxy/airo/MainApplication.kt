@@ -27,14 +27,15 @@ class MainApplication : Application(), Configuration.Provider {
 
         super.onCreate()
         GlobalScope.launch(Dispatchers.IO) {
-            preferencesInterface.getValueFlowBool("enable_alerts").collect { enabled ->
-                if (enabled) {
-                    runBlocking { setupStartupWork() }
-                    setupRecurringWork()
-                } else {
-                    Log.d("FlightSchedulerWorker", "NOTE: Alerts have been disabled")
-                }
-            }
+            runBlocking { setupStartupWork() }
+            setupRecurringWork()
+//            preferencesInterface.getValueFlowBool("enable_alerts").collect { enabled ->
+//                if (enabled) {
+//
+//                } else {
+//                    Log.d("FlightSchedulerWorker", "NOTE: Alerts have been disabled")
+//                }
+//            }
         }
     }
 
