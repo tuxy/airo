@@ -69,7 +69,6 @@ class FlightSchedulerWorker(
                     flightDataDao.deleteFlight(oldFlight)
                     flightDataDao.addFlight(newFlightData)
                 }
-                flightAlarmScheduler.setProgressAlarm(oldFlight, newFlightData)
                 Log.d("FlightSchedulerWorker", "Updated flight: ${newFlightData.callSign}")
             }.onFailure {
                 Log.e("FlightSchedulerWorker", "Failed to update flight: ${oldFlight.callSign}", it)
