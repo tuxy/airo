@@ -66,6 +66,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.graphics.shapes.RoundedPolygon
@@ -179,7 +180,9 @@ fun FlightDetailsView(
                                 )
                             ),
                             modifier = Modifier.padding(start = 16.dp),
-                            color = Color.Gray
+                            color = Color.Gray,
+                            overflow = TextOverflow.Visible,
+                            maxLines = 1
                         )
                         FlightBoardCard(viewModel, timeFormat)
                         Card(
@@ -218,7 +221,9 @@ fun FlightDetailsView(
                                 )
                             }",
                             color = Color.Gray,
-                            fontSize = 12.sp
+                            fontSize = 12.sp,
+                            overflow = TextOverflow.Visible,
+                            maxLines = 1
                         )
 
                     }
@@ -274,7 +279,9 @@ fun FlightBoardCard(
                         }
                     },
                     color = Color.Gray,
-                    fontSize = 12.sp
+                    fontSize = 12.sp,
+                    overflow = TextOverflow.Visible,
+                    maxLines = 1
                 )
                 Spacer(Modifier.padding(4.dp))
                 HorizontalDivider(
@@ -321,12 +328,16 @@ fun FlightBoard(
             Text(
                 code,
                 fontWeight = FontWeight.Normal,
-                fontSize = 12.sp
+                fontSize = 12.sp,
+                overflow = TextOverflow.Visible,
+                maxLines = 1
             )
             Text(
                 name,
                 fontWeight = FontWeight.W500,
-                fontSize = 16.sp
+                fontSize = 16.sp,
+                overflow = TextOverflow.Visible,
+                maxLines = 1
             )
             FlowRow {
                 SmallCard(
@@ -365,13 +376,17 @@ fun FlightBoard(
                 fontWeight = FontWeight.W500,
                 fontSize = 24.sp,
                 color = MaterialTheme.colorScheme.primary,
-                modifier = Modifier.padding(bottom = 4.dp)
+                modifier = Modifier.padding(bottom = 4.dp),
+                overflow = TextOverflow.Visible,
+                maxLines = 1
             )
             if (to) { // Time zone difference
                 Text(
                     difference,
                     color = Color.Gray,
-                    fontSize = 12.sp
+                    fontSize = 12.sp,
+                    overflow = TextOverflow.Visible,
+                    maxLines = 1
                 )
             }
         }
@@ -409,7 +424,9 @@ fun SmallCard(
             Spacer(Modifier.padding(4.dp))
             Text(
                 text,
-                color = Color.Black
+                color = Color.Black,
+                overflow = TextOverflow.Visible,
+                maxLines = 1
             )
             Spacer(Modifier.padding(2.dp))
         }
@@ -437,12 +454,16 @@ fun FlightStatusCard(viewModel: DetailsViewModel, context: Context) {
                 Text(
                     stringResource(R.string.now),
                     fontWeight = FontWeight.Normal,
-                    fontSize = 12.sp
+                    fontSize = 12.sp,
+                    overflow = TextOverflow.Visible,
+                    maxLines = 1
                 )
                 Text(
                     viewModel.getEndTime(context),
                     fontWeight = FontWeight.Normal,
-                    fontSize = 12.sp
+                    fontSize = 12.sp,
+                    overflow = TextOverflow.Visible,
+                    maxLines = 1
                 )
             }
             Row(
@@ -454,12 +475,16 @@ fun FlightStatusCard(viewModel: DetailsViewModel, context: Context) {
                 Text(
                     viewModel.getStatus(context),
                     fontWeight = FontWeight.W500,
-                    fontSize = 16.sp
+                    fontSize = 16.sp,
+                    overflow = TextOverflow.Visible,
+                    maxLines = 1
                 )
                 Text(
                     viewModel.getDuration(context),
                     fontWeight = FontWeight.W500,
-                    fontSize = 16.sp
+                    fontSize = 16.sp,
+                    overflow = TextOverflow.Visible,
+                    maxLines = 1
                 )
             }
             LinearProgressIndicator(
@@ -508,7 +533,7 @@ fun SmallAppBarWithDelete(
     val scope = rememberCoroutineScope()
 
     TopAppBar(
-        title = { Text(text) },
+        title = { Text(text, overflow = TextOverflow.Visible, maxLines = 1) },
         navigationIcon = {
             IconButton(onClick = {
                 scope.launch { paneNavigator.navigateBack() }
@@ -542,16 +567,16 @@ fun FlightInformationInteract(navController: NavController, flightData: FlightDa
         Column {
             ListItem(
                 modifier = Modifier.clickable(onClick = { navController.navigate("${Screen.TicketInformationScreen.route}/${flightData.id}") }),
-                headlineContent = { Text(stringResource(R.string.ticket)) },
-                supportingContent = { Text(flightData.callSign) },
+                headlineContent = { Text(stringResource(R.string.ticket), overflow = TextOverflow.Visible, maxLines = 1) },
+                supportingContent = { Text(flightData.callSign, overflow = TextOverflow.Visible, maxLines = 1) },
                 colors = ListItemDefaults.colors(
                     containerColor = Color.Transparent
                 )
             )
             ListItem(
                 modifier = Modifier.clickable(onClick = { navController.navigate("${Screen.AircraftInformationScreen.route}/${flightData.id}") }),
-                headlineContent = { Text(stringResource(R.string.aircraft)) },
-                supportingContent = { Text(flightData.aircraftName) },
+                headlineContent = { Text(stringResource(R.string.aircraft), overflow = TextOverflow.Visible, maxLines = 1) },
+                supportingContent = { Text(flightData.aircraftName, overflow = TextOverflow.Visible, maxLines = 1) },
                 colors = ListItemDefaults.colors(
                     containerColor = Color.Transparent
                 )
@@ -597,6 +622,8 @@ fun DeleteDialog(
                 Text(
                     modifier = Modifier.padding(8.dp),
                     text = stringResource(R.string.delete_dialog),
+                    overflow = TextOverflow.Visible,
+                    maxLines = 1
                 )
                 Spacer(modifier = Modifier.height(24.dp))
                 Row {
@@ -605,7 +632,7 @@ fun DeleteDialog(
                             viewModel.openDialog.value = false
                         },
                     ) {
-                        Text(stringResource(R.string.cancel))
+                        Text(stringResource(R.string.cancel), overflow = TextOverflow.Visible, maxLines = 1)
                     }
                     TextButton(
                         onClick = {
@@ -613,7 +640,7 @@ fun DeleteDialog(
                             onFlightDelete()
                         },
                     ) {
-                        Text(stringResource(R.string.delete))
+                        Text(stringResource(R.string.delete), overflow = TextOverflow.Visible, maxLines = 1)
                     }
                 }
             }

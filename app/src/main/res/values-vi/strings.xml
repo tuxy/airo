@@ -92,4 +92,5 @@
     <string name="flights">chuyến bay</string>
     <string name="restore_warning">Lưu ý: Khôi phục sẽ tẩy thông tin hiện tại</string>
     <string name="last_updated">Cập nhật cuối:</string>
+    <string name="select_flight">Chọn chuyến bay để xem chi tiết</string>
 </resources>

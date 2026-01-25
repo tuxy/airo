@@ -95,4 +95,5 @@
     <string name="flights">flights</string>
     <string name="restore_warning">Warning: Restore will wipe all existing data!</string>
     <string name="last_updated">Last updated:</string>
+    <string name="select_flight">Select a flight to see details</string>
 </resources>

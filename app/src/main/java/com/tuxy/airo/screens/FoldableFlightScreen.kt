@@ -42,9 +42,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalWindowInfo
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import com.tuxy.airo.R
 import com.tuxy.airo.data.flightdata.FlightDataDao
 import com.tuxy.airo.viewmodel.MainFlightViewModel
 import kotlinx.coroutines.delay
@@ -179,7 +182,9 @@ fun EmptyFlight() {
         )
         Spacer(modifier = Modifier.height(16.dp))
         Text(
-            text = "Select a flight to see details",
+            text = stringResource(R.string.select_flight),
+            overflow = TextOverflow.Visible,
+            maxLines = 1,
             style = MaterialTheme.typography.bodyLarge,
             color = MaterialTheme.colorScheme.outline
         )

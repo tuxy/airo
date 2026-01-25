@@ -63,6 +63,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -121,7 +122,7 @@ fun MainFlightView(
                     navController.navigate(Screen.NewFlightScreen.route)
                 },
                 icon = { Icon(Icons.Filled.Add, stringResource(R.string.add_flight)) },
-                text = { Text(stringResource(R.string.add_flight)) },
+                text = { Text(stringResource(R.string.add_flight), overflow = TextOverflow.Visible, maxLines = 1) },
             )
         },
     ) { innerPadding ->
@@ -174,7 +175,7 @@ fun TabRow(
                 }
             },
             enabled = true,
-            text = { Text(stringResource(R.string.upcoming_flights)) },
+            text = { Text(stringResource(R.string.upcoming_flights), overflow = TextOverflow.Visible, maxLines = 1) },
         )
         Tab(
             selected = selectedTabIndex == 1,
@@ -184,7 +185,7 @@ fun TabRow(
                 }
             },
             enabled = true,
-            text = { Text(stringResource(R.string.past_flights)) },
+            text = { Text(stringResource(R.string.past_flights), overflow = TextOverflow.Visible, maxLines = 1) },
         )
     }
 }
@@ -269,7 +270,9 @@ fun NoFlight(
                 stringResource(R.string.no_flight_smile),
                 color = Color.Gray,
                 modifier = Modifier.padding(24.dp),
-                textAlign = TextAlign.Center
+                textAlign = TextAlign.Center,
+                overflow = TextOverflow.Visible,
+                maxLines = 1
             )
         }
     }
@@ -398,12 +401,16 @@ fun DateHeader(time: LocalDateTime, count: Int) {
         Text(
             time.format(DateTimeFormatter.ofPattern("dd MMM")),
             fontSize = 24.sp,
-            fontWeight = FontWeight.W500
+            fontWeight = FontWeight.W500,
+            overflow = TextOverflow.Visible,
+            maxLines = 1
         )
         if (count > 1) {
             Text(
                 "$count ${stringResource(R.string.flights)}",
-                color = Color.Gray
+                color = Color.Gray,
+                overflow = TextOverflow.Visible,
+                maxLines = 1
             )
         }
     }
@@ -422,7 +429,7 @@ fun MainTopBar(
     val scope = rememberCoroutineScope()
 
     LargeTopAppBar(
-        title = { Text(stringResource(R.string.my_flights)) },
+        title = { Text(stringResource(R.string.my_flights), overflow = TextOverflow.Visible, maxLines = 1) },
         colors = TopAppBarDefaults.topAppBarColors(),
         actions = {
             IconButton(onClick = {
