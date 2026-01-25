@@ -61,12 +61,11 @@ import kotlin.time.toKotlinDuration
 @Suppress("UNCHECKED_CAST")
 class DetailsViewModel(
     context: Context,
+    val preferencesInterface: PreferencesInterface,
     scheme: ColorScheme,
-    scope: CoroutineScope =
-        CoroutineScope(SupervisorJob() + Dispatchers.IO)
+    scope: CoroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 ) : ViewModel() {
-    // Initialise preferences interface
-    val preferencesInterface = PreferencesInterface(context)
+    private val contextForAssets = context
     val viewModelScope = scope
 
     var flightData = mutableStateOf(FlightData())
@@ -137,7 +136,6 @@ class DetailsViewModel(
     /**
      * Deletes the current flight from the database.
      * @param flightDataDao The DAO for accessing flight data.
-     * @param context The application context.
      */
     fun deleteFlight(
         flightDataDao: FlightDataDao,
@@ -291,7 +289,7 @@ class DetailsViewModel(
 
     private val tileStreamProvider =
         TileStreamProvider { row, col, zoomLvl -> // Local map tiles for full offline usage
-            context.assets.open("tiles/${zoomLvl}/${col}/${row}.png")
+            contextForAssets.assets.open("tiles/${zoomLvl}/${col}/${row}.png")
         }
     private val mapSize = mapSizeAtLevel()
 
@@ -380,7 +378,7 @@ class DetailsViewModel(
         private val scope: CoroutineScope
     ) : ViewModelProvider.NewInstanceFactory() {
         override fun <T : ViewModel> create(modelClass: Class<T>): T {
-            return DetailsViewModel(context, scheme, scope) as T
+            return DetailsViewModel(context, PreferencesInterface(context), scheme, scope) as T
         }
     }
 }

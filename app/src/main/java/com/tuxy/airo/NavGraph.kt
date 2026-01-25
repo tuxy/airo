@@ -46,14 +46,13 @@ fun SetupNavGraph(
         }
         composable(route = Screen.SettingsScreen.route) { SettingsView(navController, powerManager) }
 
-//        // Passing flight id into FlightDetails
-//        composable(route = "${Screen.FlightDetailsScreen.route}/{id}") { backStackEntry ->
-//            FlightDetailsView(
-//                navController,
-//                backStackEntry.arguments?.getString("id").toString(),
-//                flightDataDao,
-//            )
-//        }
+        // Passing flight id into FlightDetails
+        composable(route = "${Screen.FlightDetailsScreen.route}/{id}") {
+            FoldableFlightScreen(
+                navController,
+                flightDataDao,
+            )
+        }
 
         composable(route = Screen.NewFlightScreen.route) { NewFlightView(navController) }
 
@@ -102,4 +101,3 @@ fun SetupNavGraph(
         }
     }
 }
-
