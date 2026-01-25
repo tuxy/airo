@@ -14,7 +14,7 @@ import com.tuxy.airo.data.database.PreferencesInterface
 import com.tuxy.airo.data.flightdata.FlightData
 import com.tuxy.airo.data.flightdata.FlightDataDao
 import java.time.Duration
-import java.time.Instant
+import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
 
 /**
@@ -82,11 +82,12 @@ class FlightAlarmScheduler(val context: Context) {
         val timeFormatWait = preferencesInterface.getValueTimeFormat("24_time")
 
         val depTime = flightData.departDate
-        val targetTime = depTime.toEpochSecond() - 21600 // 6 hours before
+        val now = ZonedDateTime.now()
 
-        val delay = targetTime - Instant.now().epochSecond
+        val sixHoursBefore = depTime.minus(Duration.ofHours(6))
+        val delayInSeconds = Duration.between(now, sixHoursBefore).seconds // Normal 6 hour delay
 
-        if (delay > 0) { // If the flight is in the past, don't schedule an alarm
+        if (delayInSeconds > 0) { // If the flight is in the past, don't schedule an alarm
             val time = flightData.departDate.format(DateTimeFormatter.ofPattern(timeFormatWait))
 
             val flight = context.getString(R.string.flight_alert_title, "6")
@@ -105,7 +106,7 @@ class FlightAlarmScheduler(val context: Context) {
                 .build()
 
             val notificationWork = OneTimeWorkRequestBuilder<NotificationWorker>()
-                .setInitialDelay(Duration.ofSeconds(delay)) // Sets delay for notification
+                .setInitialDelay(Duration.ofSeconds(delayInSeconds)) // Sets delay for notification
                 .setInputData(data)
                 .build()
 

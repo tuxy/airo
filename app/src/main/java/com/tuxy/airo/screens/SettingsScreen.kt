@@ -18,8 +18,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material.icons.outlined.Link
-import androidx.compose.material.icons.outlined.LocationOn
-import androidx.compose.material.icons.outlined.Notifications
 import androidx.compose.material.icons.outlined.Save
 import androidx.compose.material3.Button
 import androidx.compose.material3.ElevatedCard
@@ -92,20 +90,20 @@ fun SettingsView(
                 Screen.ApiSettingsScreen.route,
                 navController
             )
-            SettingSub(
-                stringResource(R.string.notifications),
-                Icons.Outlined.Notifications,
-                stringResource(R.string.notifications_desc),
-                Screen.NotificationsSettingsScreen.route,
-                navController
-            )
-            SettingSub(
-                stringResource(R.string.locale_settings),
-                Icons.Outlined.LocationOn,
-                stringResource(R.string.locale_settings_desc),
-                Screen.LocaleSettingsScreen.route,
-                navController
-            )
+//            SettingSub( // Currently unused & not ready
+//                stringResource(R.string.notifications),
+//                Icons.Outlined.Notifications,
+//                stringResource(R.string.notifications_desc),
+//                Screen.NotificationsSettingsScreen.route,
+//                navController
+//            )
+//            SettingSub( // Currently unused & not ready, only 24hr time utilised
+//                stringResource(R.string.locale_settings),
+//                Icons.Outlined.LocationOn,
+//                stringResource(R.string.locale_settings_desc),
+//                Screen.LocaleSettingsScreen.route,
+//                navController
+//            )
             SettingSub(
                 stringResource(R.string.backup_and_restore),
                 Icons.Outlined.Save,
