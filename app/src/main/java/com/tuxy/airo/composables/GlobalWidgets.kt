@@ -39,7 +39,7 @@ fun SmallAppBar(text: String, navController: NavController) {
         title = { Text(text) },
         navigationIcon = {
             IconButton(onClick = {
-                navController.popBackStack()
+                navController.navigateUp()
             }) {
                 Icon(
                     imageVector = Icons.AutoMirrored.Filled.ArrowBack,
@@ -58,7 +58,7 @@ fun LargeAppBar(text: String, navController: NavController) {
         title = { Text(text) },
         navigationIcon = {
             IconButton(onClick = {
-                navController.popBackStack()
+                navController.navigateUp()
             }) {
                 Icon(Icons.AutoMirrored.Filled.ArrowBack, stringResource(R.string.back))
             }

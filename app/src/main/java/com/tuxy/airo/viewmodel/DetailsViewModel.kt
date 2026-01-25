@@ -9,7 +9,6 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
-import com.tuxy.airo.AlarmController
 import com.tuxy.airo.R
 import com.tuxy.airo.data.database.PreferencesInterface
 import com.tuxy.airo.data.flightdata.FlightData
@@ -37,16 +36,12 @@ import ovh.plrapps.mapcompose.api.snapScrollTo
 import ovh.plrapps.mapcompose.core.TileStreamProvider
 import ovh.plrapps.mapcompose.ui.state.MapState
 import java.time.Duration
-import java.time.LocalDateTime
-import java.time.ZoneOffset
+import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
 import kotlin.math.absoluteValue
 import kotlin.math.floor
 import kotlin.math.pow
 import kotlin.math.sqrt
-import kotlin.time.Clock
-import kotlin.time.ExperimentalTime
-import kotlin.time.toJavaInstant
 import kotlin.time.toKotlinDuration
 
 /**
@@ -106,14 +101,9 @@ class DetailsViewModel(
      * Calculates the time difference between the departure and arrival timezones.
      * @return A string representing the time difference, e.g., "+02:00".
      */
-    @OptIn(ExperimentalTime::class)
     fun getZoneDifference(): String {
-        val currentInstant = Clock.System.now()
-
-        val departZoneSeconds =
-            flightData.value.departTimeZone.rules.getOffset(currentInstant.toJavaInstant())
-        val arriveZoneSeconds =
-            flightData.value.arriveTimeZone.rules.getOffset(currentInstant.toJavaInstant())
+        val departZoneSeconds = flightData.value.departDate.offset
+        val arriveZoneSeconds = flightData.value.arriveDate.offset
 
         val differenceInSeconds = arriveZoneSeconds.totalSeconds - departZoneSeconds.totalSeconds
 
@@ -140,19 +130,13 @@ class DetailsViewModel(
      * @return The flight's progress.
      */
     fun getProgress(): Float {
-        val now = LocalDateTime
-            .now()
-            .atZone(flightData.value.departTimeZone)
-            .withZoneSameInstant(ZoneOffset.UTC)
-
+        val now = ZonedDateTime.now()
         val departTime = flightData.value.departDate
-            .atOffset(ZoneOffset.UTC)
-            .withOffsetSameInstant(ZoneOffset.UTC)
 
         viewModelScope.launch {
             val timeFromStart = Duration.between(now, departTime).toMillis()
 
-            if (now < departTime.toZonedDateTime()) {
+            if (now < departTime) {
                 progress.floatValue = 0.0F
                 return@launch
             }
@@ -176,12 +160,10 @@ class DetailsViewModel(
         flightDataDao: FlightDataDao,
         context: Context,
     ) {
-        val alarmController = AlarmController(context)
         viewModelScope.launch(Dispatchers.IO) {
             flightDataDao.deleteFlight(flightData.value)
             delay(200)
         }
-        alarmController.cancelAlarm(flightData.value)
         openDialog.value = false
     }
 
@@ -198,11 +180,6 @@ class DetailsViewModel(
         settings: ApiSettings,
         isRefreshing: MutableState<Boolean>
     ) {
-        val alarmController = AlarmController(context)
-        // Fixes refreshed & deleted flights to not remove alarms.
-        // Solution: Delete current alarm, and create a new one.
-        alarmController.cancelAlarm(flightData.value)
-
         viewModelScope.launch(Dispatchers.IO) {
             isRefreshing.value = true
             val collectedFlightData = getData(
@@ -232,7 +209,6 @@ class DetailsViewModel(
                 )
             }
             isRefreshing.value = false
-            alarmController.setAlarm(flightData.value)
         }
     }
 
@@ -243,10 +219,8 @@ class DetailsViewModel(
      */
     fun getDuration(context: Context): String {
         val duration = Duration.between(
-            LocalDateTime.now(),
+            ZonedDateTime.now(),
             flightData.value.departDate
-                .atOffset(ZoneOffset.UTC)
-                .atZoneSameInstant(flightData.value.departTimeZone)
         )
 
         val offset =
@@ -311,10 +285,8 @@ class DetailsViewModel(
      */
     fun getStatus(context: Context): String {
         val duration = Duration.between(
-            LocalDateTime.now(),
+            ZonedDateTime.now(),
             flightData.value.departDate
-                .atOffset(ZoneOffset.UTC)
-                .atZoneSameInstant(flightData.value.departTimeZone)
         )
         val seconds = duration.seconds
 
@@ -393,6 +365,7 @@ class DetailsViewModel(
             }
         }
     }
+
     private fun mapSizeAtLevel(): Int {
         return 256 * 2.0.pow(5).toInt() // Hardcoded zoom level 5 for map size calculation
     }

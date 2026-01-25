@@ -1,5 +1,6 @@
 package com.tuxy.airo
 
+import android.os.PowerManager
 import androidx.compose.runtime.Composable
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
@@ -27,7 +28,8 @@ fun SetupNavGraph(
     // Transitions taken from Read You's repository
     navController: NavHostController,
     flightDataDao: FlightDataDao,
-    backup: RoomBackup
+    backup: RoomBackup,
+    powerManager: PowerManager
 ) {
     NavHost(
         navController = navController,
@@ -43,7 +45,7 @@ fun SetupNavGraph(
                 flightDataDao,
             )
         }
-        composable(route = Screen.SettingsScreen.route) { SettingsView(navController) }
+        composable(route = Screen.SettingsScreen.route) { SettingsView(navController, powerManager) }
 
         // Passing flight id into FlightDetails
         composable(route = "${Screen.FlightDetailsScreen.route}/{id}") { backStackEntry ->

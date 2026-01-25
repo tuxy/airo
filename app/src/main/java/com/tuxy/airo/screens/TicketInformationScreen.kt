@@ -72,7 +72,6 @@ import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
-import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalPermissionsApi::class)
@@ -233,10 +232,7 @@ fun MainTicketView(
                 flightData.from,
                 flightData.fromCountryCode,
                 flightData.fromName,
-                flightData.departDate
-                    .atOffset(ZoneOffset.UTC)
-                    .atZoneSameInstant(flightData.departTimeZone)
-                    .format(DateTimeFormatter.ofPattern(timeFormat)),
+                flightData.departDate.format(DateTimeFormatter.ofPattern(timeFormat)),
                 Alignment.Start
             )
             Icon(
@@ -247,10 +243,7 @@ fun MainTicketView(
                 flightData.to,
                 flightData.toCountryCode,
                 flightData.fromName,
-                flightData.arriveDate
-                    .atOffset(ZoneOffset.UTC)
-                    .atZoneSameInstant(flightData.departTimeZone)
-                    .format(DateTimeFormatter.ofPattern(timeFormat)),
+                flightData.arriveDate.format(DateTimeFormatter.ofPattern(timeFormat)),
                 Alignment.End
             )
         }

@@ -4,6 +4,7 @@ import androidx.room.TypeConverter
 import java.time.Duration
 import java.time.LocalDateTime
 import java.time.ZoneId
+import java.time.ZonedDateTime
 
 class Converters {
     @TypeConverter
@@ -14,6 +15,16 @@ class Converters {
     @TypeConverter
     fun convertStringToDate(date: String): LocalDateTime {
         return LocalDateTime.parse(date)
+    }
+
+    @TypeConverter
+    fun convertZonedDateToString(date: ZonedDateTime): String {
+        return date.toString()
+    }
+
+    @TypeConverter
+    fun convertZonedStringToDate(date: String): ZonedDateTime {
+        return ZonedDateTime.parse(date)
     }
 
     @TypeConverter

@@ -79,9 +79,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import ovh.plrapps.mapcompose.ui.MapUI
 import java.time.Duration
-import java.time.LocalDateTime
-import java.time.ZoneId
-import java.time.ZoneOffset
+import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
 import kotlin.math.absoluteValue
 import kotlin.time.toKotlinDuration
@@ -231,8 +229,7 @@ fun FlightBoardCard(
                 baggageClaim = "",
                 checkIn = flightData.checkInDesk,
                 timeFormat = timeFormat,
-                date = flightData.departDate,
-                timeZone = flightData.departTimeZone
+                date = flightData.departDate
             )
             Row(
                 verticalAlignment = Alignment.CenterVertically,
@@ -269,7 +266,6 @@ fun FlightBoardCard(
                 checkIn = "",
                 timeFormat = timeFormat,
                 date = flightData.arriveDate,
-                timeZone = flightData.arriveTimeZone,
                 to = true,
                 difference = viewModel.getZoneDifference()
             )
@@ -286,8 +282,7 @@ fun FlightBoard(
     baggageClaim: String,
     checkIn: String,
     timeFormat: String,
-    date: LocalDateTime,
-    timeZone: ZoneId,
+    date: ZonedDateTime,
     to: Boolean = false,
     difference: String = ""
 ) {
@@ -336,10 +331,7 @@ fun FlightBoard(
             horizontalAlignment = Alignment.End
         ) {
             Text(
-                date
-                    .atOffset(ZoneOffset.UTC)
-                    .atZoneSameInstant(timeZone)
-                    .format(DateTimeFormatter.ofPattern(timeFormat)),
+                date.format(DateTimeFormatter.ofPattern(timeFormat)),
                 fontWeight = FontWeight.W500,
                 fontSize = 24.sp,
                 color = MaterialTheme.colorScheme.primary,
@@ -442,20 +434,14 @@ fun FlightStatusCard(viewModel: DetailsViewModel, context: Context) {
             }
             LinearProgressIndicator(
                 progress = {
-                    val now = LocalDateTime
-                        .now()
-                        .atZone(viewModel.flightData.value.departTimeZone)
-                        .withZoneSameInstant(ZoneOffset.UTC)
-
+                    val now = ZonedDateTime.now()
                     val departTime = viewModel.flightData.value.departDate
-                        .atOffset(ZoneOffset.UTC)
-                        .withOffsetSameInstant(ZoneOffset.UTC)
 
                     GlobalScope.launch {
 
                         val timeFromStart = Duration.between(now, departTime).toMillis()
 
-                        if (now < departTime.toZonedDateTime()) {
+                        if (now < departTime) {
                             viewModel.progress.floatValue = 0.0F
                             return@launch
                         }
@@ -487,7 +473,7 @@ fun SmallAppBarWithDelete(
         title = { Text(text) },
         navigationIcon = {
             IconButton(onClick = {
-                navController.popBackStack()
+                navController.navigateUp()
             }) {
                 Icon(
                     imageVector = Icons.AutoMirrored.Filled.ArrowBack,

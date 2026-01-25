@@ -75,8 +75,7 @@ import com.tuxy.airo.viewmodel.MainFlightViewModel
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import java.time.Duration
-import java.time.LocalDateTime
-import java.time.ZoneOffset
+import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
 import kotlin.math.absoluteValue
 
@@ -289,10 +288,7 @@ fun FlightCard(
                         flightData.from,
                         flightData.fromCountryCode,
                         flightData.fromName,
-                        flightData.departDate
-                            .atOffset(ZoneOffset.UTC)
-                            .atZoneSameInstant(flightData.departTimeZone)
-                            .format(DateTimeFormatter.ofPattern(timeFormat)),
+                        flightData.departDate.format(DateTimeFormatter.ofPattern(timeFormat)),
                         Alignment.Start
                     )
                     Icon(
@@ -303,26 +299,17 @@ fun FlightCard(
                         flightData.to,
                         flightData.toCountryCode,
                         flightData.toName,
-                        flightData.arriveDate
-                            .atOffset(ZoneOffset.UTC)
-                            .atZoneSameInstant(flightData.arriveTimeZone)
-                            .format(DateTimeFormatter.ofPattern(timeFormat)),
+                        flightData.arriveDate.format(DateTimeFormatter.ofPattern(timeFormat)),
                         Alignment.End
                     )
                 }
                 TicketInformationCard(flightData)
                 LinearProgressIndicator(
                     progress = {
-                        val now = LocalDateTime
-                            .now()
-                            .atZone(flightData.departTimeZone)
-                            .withZoneSameInstant(ZoneOffset.UTC)
-
+                        val now = ZonedDateTime.now()
                         val departTime = flightData.departDate
-                            .atOffset(ZoneOffset.UTC)
-                            .withOffsetSameInstant(ZoneOffset.UTC)
 
-                        if (now < departTime.toZonedDateTime()) {
+                        if (now < departTime) {
                             0.0F
                         } else {
                             val timeFromStart = Duration.between(now, departTime).toMillis()
@@ -367,7 +354,7 @@ fun TicketInformationCard(flight: FlightData) {
 }
 
 @Composable
-fun DateHeader(time: LocalDateTime, count: Int) {
+fun DateHeader(time: ZonedDateTime, count: Int) {
     Row(
         modifier = Modifier
             .padding(horizontal = 20.dp, vertical = 16.dp)

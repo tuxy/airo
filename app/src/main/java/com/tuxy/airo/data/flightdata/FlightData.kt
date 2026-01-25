@@ -21,8 +21,8 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import java.time.Duration
 import java.time.LocalDateTime
-import java.time.ZoneId
 import java.time.ZoneOffset
+import java.time.ZonedDateTime
 
 @Entity(tableName = "flight_table")
 data class FlightData(
@@ -38,16 +38,14 @@ data class FlightData(
     val fromCountryCode: String = "---",
     val toCountryCode: String = "---",
     val fromName: String = "---",
-    val departDate: LocalDateTime = LocalDateTime.now(),
-    val arriveDate: LocalDateTime = LocalDateTime.now(),
-    val departTimeZone: ZoneId = ZoneOffset.UTC,
-    val arriveTimeZone: ZoneId = ZoneOffset.UTC,
+    val departDate: ZonedDateTime = ZonedDateTime.now(ZoneOffset.UTC),
+    val arriveDate: ZonedDateTime = ZonedDateTime.now(ZoneOffset.UTC),
     val duration: Duration = Duration.ofSeconds(1), // Prevents current = NaN
     val toName: String = "---",
     var ticketData: String = "",
     val gate: String = "---",
     val toGate: String = "---",
-    val terminal: String = "---",
+val terminal: String = "---",
     val toTerminal: String = "---",
     val toBaggageClaim: String = "---",
     val checkInDesk: String = "---",
@@ -87,14 +85,14 @@ interface FlightDataDao {
      * @return The number of flights matching the criteria (0 or 1, as duplicates are ignored on insert).
      */
     @Query("SELECT COUNT() FROM flight_table WHERE departDate=:departDate AND callSign=:callSign")
-    fun queryExisting(departDate: LocalDateTime, callSign: String): Int
+    fun queryExisting(departDate: ZonedDateTime, callSign: String): Int
 
 //    @Query("DELETE FROM flight_table") // ONLY FOR DEVELOPMENT
 //    fun nukeTable()
 }
 
 
-@Database(entities = [FlightData::class], version = 1, exportSchema = false)
+@Database(entities = [FlightData::class], version = 2, exportSchema = false)
 @TypeConverters(Converters::class)
 abstract class FlightDataBase : RoomDatabase() {
     abstract fun flightDataDao(): FlightDataDao
@@ -106,7 +104,7 @@ abstract class FlightDataBase : RoomDatabase() {
         fun getDatabase(context: Context): FlightDataBase { // Gets database, creates if doesn't exist
             return Instance ?: synchronized(this) {
                 Room.databaseBuilder(context, FlightDataBase::class.java, "flight_database")
-                    .fallbackToDestructiveMigration(false)
+                    .fallbackToDestructiveMigration()
                     .build()
                     .also { Instance = it }
             }
