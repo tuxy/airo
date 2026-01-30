@@ -40,6 +40,8 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.adaptive.ExperimentalMaterial3AdaptiveApi
+import androidx.compose.material3.adaptive.navigation.ThreePaneScaffoldNavigator
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.rememberCoroutineScope
@@ -74,16 +76,23 @@ import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import java.time.format.DateTimeFormatter
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalPermissionsApi::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalPermissionsApi::class,
+    ExperimentalMaterial3AdaptiveApi::class
+)
 @Composable
 fun TicketInformationView(
-    navController: NavController,
+    paneNavigator: ThreePaneScaffoldNavigator<String>,
     id: String,
     flightDataDao: FlightDataDao
 ) {
     val viewModelFactory = TicketViewModel.Factory(flightDataDao, id, LocalContext.current)
-    val viewModel: TicketViewModel = viewModel(factory = viewModelFactory)
+    val viewModel: TicketViewModel = viewModel(
+        factory = viewModelFactory,
+        key = id
+    )
     val context = LocalContext.current
+
+    val scope = rememberCoroutineScope()
 
     val barCodeLauncher = rememberLauncherForActivityResult(ScanContract()) { result ->
         if (result.contents != null) {
@@ -106,7 +115,9 @@ fun TicketInformationView(
             TopAppBar(
                 title = { Text(viewModel.flightData.value.callSign) },
                 navigationIcon = {
-                    IconButton(onClick = { navController.navigateUp() }) {
+                    IconButton(onClick = {
+                        scope.launch { paneNavigator.navigateBack() }
+                    }) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = stringResource(R.string.back)
@@ -150,7 +161,7 @@ fun TicketInformationView(
                 if (viewModel.openDialog.value) {
                     DeleteTicketDialog(
                         viewModel.openDialog,
-                        navController,
+                        paneNavigator,
                         viewModel,
                         flightDataDao
                     )
@@ -347,11 +358,13 @@ fun MainTicketView(
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class, DelicateCoroutinesApi::class)
+@OptIn(ExperimentalMaterial3Api::class, DelicateCoroutinesApi::class,
+    ExperimentalMaterial3AdaptiveApi::class
+)
 @Composable
 fun DeleteTicketDialog(
     openDialog: MutableState<Boolean>,
-    navController: NavController,
+    paneNavigator: ThreePaneScaffoldNavigator<String>,
     viewModel: TicketViewModel,
     flightDataDao: FlightDataDao
 ) {
@@ -390,9 +403,9 @@ fun DeleteTicketDialog(
                         onClick = {
                             GlobalScope.launch(Dispatchers.IO) {
                                 viewModel.deleteData(flightDataDao, context)
+                                paneNavigator.navigateBack()
                             }
                             openDialog.value = false
-                            navController.navigateUp()
                         },
                     ) {
                         Text(stringResource(R.string.delete))

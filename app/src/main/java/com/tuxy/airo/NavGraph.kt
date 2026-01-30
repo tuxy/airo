@@ -65,23 +65,23 @@ fun SetupNavGraph(
             )
         }
 
-        // Aircraft Information
-        composable(route = "${Screen.AircraftInformationScreen.route}/{id}") { backStackEntry ->
-            AircraftInformationView(
-                navController,
-                backStackEntry.arguments?.getString("id").toString(),
-                flightDataDao
-            )
-        }
-
-        // Ticket information
-        composable(route = "${Screen.TicketInformationScreen.route}/{id}") { backStackEntry ->
-            TicketInformationView(
-                navController,
-                backStackEntry.arguments?.getString("id").toString(),
-                flightDataDao,
-            )
-        }
+//        // Aircraft Information
+//        composable(route = "${Screen.AircraftInformationScreen.route}/{id}") { backStackEntry ->
+//            AircraftInformationView(
+//                navController,
+//                backStackEntry.arguments?.getString("id").toString(),
+//                flightDataDao
+//            )
+//        }
+//
+//        // Ticket information
+//        composable(route = "${Screen.TicketInformationScreen.route}/{id}") { backStackEntry ->
+//            TicketInformationView(
+//                navController,
+//                backStackEntry.arguments?.getString("id").toString(),
+//                flightDataDao,
+//            )
+//        }
 
         // Settings Sub-Screens
         composable(route = Screen.ApiSettingsScreen.route) {

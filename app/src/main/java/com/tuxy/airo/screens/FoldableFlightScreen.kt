@@ -52,6 +52,12 @@ import com.tuxy.airo.viewmodel.MainFlightViewModel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
+enum class ExtraPaneTypes {
+    Undefined,
+    TicketInformation,
+    AircraftInformation
+}
+
 @OptIn(ExperimentalMaterial3AdaptiveApi::class)
 @Composable
 fun FoldableFlightScreen(
@@ -63,6 +69,8 @@ fun FoldableFlightScreen(
     val scope = rememberCoroutineScope()
     val interactionSource = remember { MutableInteractionSource() }
     // val isDragged by interactionSource.collectIsDraggedAsState() // Future reference
+
+    var currentExtraPaneType by remember { mutableStateOf(ExtraPaneTypes.Undefined) }
 
     LaunchedEffect(Unit) {
         viewModel.loadData(flightDataDao)
@@ -130,7 +138,6 @@ fun FoldableFlightScreen(
                 AnimatedPane(Modifier.clipToBounds()) {
                     if (displayedId != null) {
                         FlightDetailsView(
-                            navController = navController,
                             id = displayedId!!,
                             flightDataDao = flightDataDao,
                             paneNavigator = navigator,
@@ -139,10 +146,35 @@ fun FoldableFlightScreen(
                                     viewModel.loadData(flightDataDao) // Reload data
                                     navigator.navigateBack()
                                 }
+                            },
+                            onShowTicket = {
+                                currentExtraPaneType = ExtraPaneTypes.TicketInformation
+                                scope.launch { navigator.navigateTo(ListDetailPaneScaffoldRole.Extra, displayedId!!) }
+                            },
+                            onShowAircraft = {
+                                currentExtraPaneType = ExtraPaneTypes.AircraftInformation
+                                scope.launch { navigator.navigateTo(ListDetailPaneScaffoldRole.Extra, displayedId!!) }
                             }
                         )
                     } else {
                         EmptyFlight()
+                    }
+                }
+            },
+            extraPane = {
+                AnimatedPane {
+                    when(currentExtraPaneType) {
+                        ExtraPaneTypes.TicketInformation -> TicketInformationView(
+                            paneNavigator = navigator,
+                            id = currentId!!,
+                            flightDataDao = flightDataDao,
+                        )
+                        ExtraPaneTypes.AircraftInformation -> AircraftInformationView(
+                            paneNavigator = navigator,
+                            id = currentId!!,
+                            flightDataDao = flightDataDao
+                        )
+                        else -> EmptyFlight()
                     }
                 }
             },

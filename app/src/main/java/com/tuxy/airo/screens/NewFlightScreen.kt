@@ -28,6 +28,7 @@ import androidx.navigation.NavController
 import com.tuxy.airo.R
 import com.tuxy.airo.Screen
 import com.tuxy.airo.composables.SmallAppBar
+import com.tuxy.airo.composables.SmallAppBarLegacy
 
 @Composable
 fun NewFlightView(navController: NavController) {
@@ -38,7 +39,7 @@ fun NewFlightView(navController: NavController) {
             modifier = Modifier
                 .padding(innerPadding)
         ) {
-            SmallAppBar("", navController)
+            SmallAppBarLegacy("", navController)
             Column(
                 modifier = Modifier
                     .padding(16.dp)

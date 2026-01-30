@@ -18,7 +18,10 @@ import androidx.compose.material3.LargeTopAppBar
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.adaptive.ExperimentalMaterial3AdaptiveApi
+import androidx.compose.material3.adaptive.navigation.ThreePaneScaffoldNavigator
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
@@ -30,11 +33,32 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.tuxy.airo.R
 import com.tuxy.airo.data.flightdata.FlightData
+import kotlinx.coroutines.launch
 
 // Used in Airport, Aircraft, Ticket and Flight information screens
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3AdaptiveApi::class)
+@Composable
+fun SmallAppBar(text: String, paneNavigator: ThreePaneScaffoldNavigator<String>) {
+    val scope = rememberCoroutineScope()
+
+    TopAppBar(
+        title = { Text(text) },
+        navigationIcon = {
+            IconButton(onClick = {
+                scope.launch { paneNavigator.navigateBack() }
+            }) {
+                Icon(
+                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                    contentDescription = stringResource(R.string.back)
+                )
+            }
+        }
+    )
+}
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SmallAppBar(text: String, navController: NavController) {
+fun SmallAppBarLegacy(text: String, navController: NavController) {
     TopAppBar(
         title = { Text(text) },
         navigationIcon = {

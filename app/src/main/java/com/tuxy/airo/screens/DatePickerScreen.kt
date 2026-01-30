@@ -27,6 +27,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.tuxy.airo.R
 import com.tuxy.airo.composables.SmallAppBar
+import com.tuxy.airo.composables.SmallAppBarLegacy
 import com.tuxy.airo.data.flightdata.FlightDataDao
 import com.tuxy.airo.data.flightdata.FlightDataError
 import com.tuxy.airo.data.flightdata.FlightDataFetchException
@@ -70,7 +71,7 @@ fun DatePickerView(
     )
 
     Scaffold(
-        topBar = { SmallAppBar("", navController) },
+        topBar = { SmallAppBarLegacy("", navController) },
         floatingActionButton = {
             ExtendedFloatingActionButton(
                 modifier = Modifier.testTag("add_flight"),

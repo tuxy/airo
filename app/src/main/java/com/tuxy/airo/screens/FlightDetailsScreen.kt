@@ -94,11 +94,12 @@ import kotlin.time.toKotlinDuration
 )
 @Composable
 fun FlightDetailsView(
-    navController: NavController,
     id: String,
     flightDataDao: FlightDataDao,
     paneNavigator: ThreePaneScaffoldNavigator<String>,
-    onFlightDelete: () -> Unit
+    onFlightDelete: () -> Unit,
+    onShowTicket: () -> Unit,
+    onShowAircraft: () -> Unit
 ) {
     val context = LocalContext.current
 
@@ -108,7 +109,10 @@ fun FlightDetailsView(
         rememberCoroutineScope()
     )
 
-    val viewModel: DetailsViewModel = viewModel(factory = viewModelFactory)
+    val viewModel: DetailsViewModel = viewModel(
+        factory = viewModelFactory,
+        key = id
+    )
 
     val timeFormat = viewModel.preferencesInterface.getValueTimeFormatComposable("24_time")
 
@@ -200,7 +204,11 @@ fun FlightDetailsView(
                             }
                         }
                         FlightStatusCard(viewModel, context)
-                        FlightInformationInteract(navController, viewModel.flightData.value)
+                        FlightInformationInteract(
+                            viewModel.flightData.value,
+                            onShowTicket,
+                            onShowAircraft,
+                        )
                         Text(
                             modifier = Modifier.padding(16.dp),
                             text = "${stringResource(R.string.last_updated)} ${
@@ -534,7 +542,11 @@ fun SmallAppBarWithDelete(
 }
 
 @Composable
-fun FlightInformationInteract(navController: NavController, flightData: FlightData) {
+fun FlightInformationInteract(
+    flightData: FlightData,
+    onShowTicket: () -> Unit,
+    onShowAircraft: () -> Unit
+) {
     Card(
         modifier = Modifier
             .padding(horizontal = 16.dp)
@@ -542,7 +554,7 @@ fun FlightInformationInteract(navController: NavController, flightData: FlightDa
     ) {
         Column {
             ListItem(
-                modifier = Modifier.clickable(onClick = { navController.navigate("${Screen.TicketInformationScreen.route}/${flightData.id}") }),
+                modifier = Modifier.clickable(onClick = { onShowTicket() }),
                 headlineContent = { Text(stringResource(R.string.ticket), overflow = TextOverflow.Visible, maxLines = 1) },
                 supportingContent = { Text(flightData.callSign, overflow = TextOverflow.Visible, maxLines = 1) },
                 colors = ListItemDefaults.colors(
@@ -550,7 +562,7 @@ fun FlightInformationInteract(navController: NavController, flightData: FlightDa
                 )
             )
             ListItem(
-                modifier = Modifier.clickable(onClick = { navController.navigate("${Screen.AircraftInformationScreen.route}/${flightData.id}") }),
+                modifier = Modifier.clickable(onClick = { onShowAircraft() }),
                 headlineContent = { Text(stringResource(R.string.aircraft), overflow = TextOverflow.Visible, maxLines = 1) },
                 supportingContent = { Text(flightData.aircraftName, overflow = TextOverflow.Visible, maxLines = 1) },
                 colors = ListItemDefaults.colors(

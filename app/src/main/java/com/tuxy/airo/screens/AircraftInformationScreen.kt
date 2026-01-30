@@ -16,6 +16,8 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.adaptive.ExperimentalMaterial3AdaptiveApi
+import androidx.compose.material3.adaptive.navigation.ThreePaneScaffoldNavigator
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -35,19 +37,23 @@ import com.tuxy.airo.composables.SmallAppBar
 import com.tuxy.airo.data.flightdata.FlightDataDao
 import com.tuxy.airo.viewmodel.StandardDataViewModel
 
+@OptIn(ExperimentalMaterial3AdaptiveApi::class)
 @Composable
 fun AircraftInformationView(
-    navController: NavController,
+    paneNavigator: ThreePaneScaffoldNavigator<String>,
     id: String,
     flightDataDao: FlightDataDao
 ) {
     val context = LocalContext.current
     val viewModelFactory = StandardDataViewModel.Factory(flightDataDao, id)
-    val viewModel: StandardDataViewModel = viewModel(factory = viewModelFactory)
+    val viewModel: StandardDataViewModel = viewModel(
+        factory = viewModelFactory,
+        key = id
+    )
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),
-        topBar = { SmallAppBar(stringResource(R.string.aircraft_information), navController) }
+        topBar = { SmallAppBar(stringResource(R.string.aircraft_information), paneNavigator) }
     ) { innerPadding ->
         Column(modifier = Modifier.padding(innerPadding)) {
             ListItem(
