@@ -57,7 +57,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import androidx.navigation.NavController
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.rememberPermissionState
 import com.journeyapps.barcodescanner.ScanContract
@@ -115,13 +114,15 @@ fun TicketInformationView(
             TopAppBar(
                 title = { Text(viewModel.flightData.value.callSign) },
                 navigationIcon = {
-                    IconButton(onClick = {
-                        scope.launch { paneNavigator.navigateBack() }
-                    }) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = stringResource(R.string.back)
-                        )
+                    if (paneNavigator.scaffoldDirective.maxHorizontalPartitions == 1) {
+                        IconButton(onClick = {
+                            scope.launch { paneNavigator.navigateBack() }
+                        }) {
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                                contentDescription = stringResource(R.string.back)
+                            )
+                        }
                     }
                 },
                 actions = {

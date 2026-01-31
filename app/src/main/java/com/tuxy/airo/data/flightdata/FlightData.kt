@@ -75,7 +75,7 @@ interface FlightDataDao {
     fun readAll(): List<FlightData>
 
     @Query("SELECT * FROM flight_table WHERE id=:id ")
-    fun readSingle(id: String): FlightData
+    fun readSingle(id: String): FlightData?
 
     /**
      * Checks if a flight with the given departure date and call sign already exists in the database.
@@ -104,7 +104,7 @@ abstract class FlightDataBase : RoomDatabase() {
         fun getDatabase(context: Context): FlightDataBase { // Gets database, creates if doesn't exist
             return Instance ?: synchronized(this) {
                 Room.databaseBuilder(context, FlightDataBase::class.java, "flight_database")
-                    .fallbackToDestructiveMigration()
+                    .setJournalMode(JournalMode.TRUNCATE)
                     .build()
                     .also { Instance = it }
             }
@@ -130,7 +130,7 @@ fun singleIntoMut(
     id: String
 ): Job {
     val job = GlobalScope.launch {
-        flightData.value = flightDataDao.readSingle(id)
+        flightData.value = flightDataDao.readSingle(id) ?: FlightData()
     }
     return job
 }

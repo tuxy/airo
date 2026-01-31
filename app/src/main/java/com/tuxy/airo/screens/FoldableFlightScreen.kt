@@ -38,7 +38,6 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.res.stringResource
@@ -49,7 +48,6 @@ import androidx.navigation.NavController
 import com.tuxy.airo.R
 import com.tuxy.airo.data.flightdata.FlightDataDao
 import com.tuxy.airo.viewmodel.MainFlightViewModel
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 enum class ExtraPaneTypes {
@@ -83,17 +81,6 @@ fun FoldableFlightScreen(
             maxHorizontalPartitions = if (containerWidth > 1200) 2 else 1
         )
     )
-    var displayedId by remember { mutableStateOf<String?>(null) }
-    val currentId = navigator.currentDestination?.contentKey
-
-    LaunchedEffect(currentId) {
-        if (currentId != null) {
-            displayedId = currentId
-        } else {
-            delay(300L) // Delay to prevent EmptyFlight() from taking over too early
-            displayedId = null
-        }
-    }
 
     BackHandler(navigator.canNavigateBack()) {
         scope.launch {
@@ -109,13 +96,15 @@ fun FoldableFlightScreen(
             PaneExpansionAnchor.Proportion(0.5f),
         )
     )
+    if (containerWidth > 2200) paneExpansionState.setFirstPaneProportion(0.3f) else paneExpansionState.setFirstPaneProportion(0.5f)
 
     Box(modifier = Modifier.fillMaxSize()) {
         NavigableListDetailPaneScaffold(
             navigator = navigator,
             listPane = {
-                AnimatedPane(Modifier.clipToBounds()) {
-                    key(viewModel.flightData) {
+                val listId = navigator.currentDestination?.contentKey
+                AnimatedPane {
+                    key(listId) {
                         Row(
                             Modifier.fillMaxWidth()
                         ) {
@@ -135,43 +124,47 @@ fun FoldableFlightScreen(
                 }
             },
             detailPane = {
-                AnimatedPane(Modifier.clipToBounds()) {
-                    if (displayedId != null) {
-                        FlightDetailsView(
-                            id = displayedId!!,
-                            flightDataDao = flightDataDao,
-                            paneNavigator = navigator,
-                            onFlightDelete = {
-                                scope.launch {
-                                    viewModel.loadData(flightDataDao) // Reload data
-                                    navigator.navigateBack()
+                AnimatedPane {
+                    key(viewModel.flightData) {
+                        val detailId = navigator.currentDestination?.contentKey
+                        if (detailId != null) {
+                            FlightDetailsView(
+                                id = detailId,
+                                flightDataDao = flightDataDao,
+                                paneNavigator = navigator,
+                                onFlightDelete = {
+                                    scope.launch {
+                                        viewModel.loadData(flightDataDao) // Reload data
+                                        navigator.navigateBack()
+                                    }
+                                },
+                                onShowTicket = {
+                                    currentExtraPaneType = ExtraPaneTypes.TicketInformation
+                                    scope.launch { navigator.navigateTo(ListDetailPaneScaffoldRole.Extra, detailId) }
+                                },
+                                onShowAircraft = {
+                                    currentExtraPaneType = ExtraPaneTypes.AircraftInformation
+                                    scope.launch { navigator.navigateTo(ListDetailPaneScaffoldRole.Extra, detailId) }
                                 }
-                            },
-                            onShowTicket = {
-                                currentExtraPaneType = ExtraPaneTypes.TicketInformation
-                                scope.launch { navigator.navigateTo(ListDetailPaneScaffoldRole.Extra, displayedId!!) }
-                            },
-                            onShowAircraft = {
-                                currentExtraPaneType = ExtraPaneTypes.AircraftInformation
-                                scope.launch { navigator.navigateTo(ListDetailPaneScaffoldRole.Extra, displayedId!!) }
-                            }
-                        )
-                    } else {
-                        EmptyFlight()
+                            )
+                        } else {
+                            EmptyFlight()
+                        }
                     }
                 }
             },
             extraPane = {
                 AnimatedPane {
+                    val extraId = navigator.currentDestination?.contentKey
                     when(currentExtraPaneType) {
                         ExtraPaneTypes.TicketInformation -> TicketInformationView(
                             paneNavigator = navigator,
-                            id = currentId!!,
+                            id = extraId ?: "0",
                             flightDataDao = flightDataDao,
                         )
                         ExtraPaneTypes.AircraftInformation -> AircraftInformationView(
                             paneNavigator = navigator,
-                            id = currentId!!,
+                            id = extraId ?: "0",
                             flightDataDao = flightDataDao
                         )
                         else -> EmptyFlight()

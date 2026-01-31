@@ -6,6 +6,7 @@ import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -256,7 +257,7 @@ fun NoFlight(
                 modifier = Modifier.padding(24.dp),
                 textAlign = TextAlign.Center,
                 overflow = TextOverflow.Visible,
-                maxLines = 1
+                maxLines = 2
             )
         }
     }
@@ -285,12 +286,13 @@ fun FlightCard(
             Column(
                 modifier = Modifier.padding(4.dp)
             ) {
-                Row(
+                FlowRow(
                     modifier = Modifier
                         .padding(16.dp)
                         .fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
+                    itemVerticalAlignment = Alignment.CenterVertically,
+                    maxLines = 1
                 ) {
                     BoldDepartureAndDestinationText(
                         flightData.from,

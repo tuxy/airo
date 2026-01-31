@@ -27,7 +27,6 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.tuxy.airo.R
 import com.tuxy.airo.Screen
-import com.tuxy.airo.composables.SmallAppBar
 import com.tuxy.airo.composables.SmallAppBarLegacy
 
 @Composable

@@ -8,12 +8,10 @@ import androidx.navigation.compose.composable
 import com.tuxy.airo.data.flightdata.FlightDataDao
 import com.tuxy.airo.motion.materialSharedAxisXIn
 import com.tuxy.airo.motion.materialSharedAxisXOut
-import com.tuxy.airo.screens.AircraftInformationView
 import com.tuxy.airo.screens.DatePickerView
 import com.tuxy.airo.screens.FoldableFlightScreen
 import com.tuxy.airo.screens.NewFlightView
 import com.tuxy.airo.screens.SettingsView
-import com.tuxy.airo.screens.TicketInformationView
 import com.tuxy.airo.screens.settings.ApiSettingsView
 import com.tuxy.airo.screens.settings.BackupSettingsView
 import com.tuxy.airo.screens.settings.LocaleSettingsView

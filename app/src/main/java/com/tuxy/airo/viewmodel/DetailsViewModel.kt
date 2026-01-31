@@ -75,8 +75,7 @@ class DetailsViewModel(
 
     fun loadFlightById(id: String, dao: FlightDataDao) {
         viewModelScope.launch(Dispatchers.IO) {
-            val flight = dao.readSingle(id)
-            flightData.value = flight
+            flightData.value = dao.readSingle(id) ?: FlightData()
         }
     }
     /**

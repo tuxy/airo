@@ -71,9 +71,7 @@ import androidx.compose.ui.unit.sp
 import androidx.graphics.shapes.RoundedPolygon
 import androidx.graphics.shapes.toPath
 import androidx.lifecycle.viewmodel.compose.viewModel
-import androidx.navigation.NavController
 import com.tuxy.airo.R
-import com.tuxy.airo.Screen
 import com.tuxy.airo.composables.RouteBar
 import com.tuxy.airo.data.flightdata.FlightData
 import com.tuxy.airo.data.flightdata.FlightDataDao
@@ -520,6 +518,7 @@ fun SmallAppBarWithDelete(
         title = { Text(text, overflow = TextOverflow.Visible, maxLines = 1) },
         navigationIcon = {
             IconButton(onClick = {
+                // Prevent undefined state when deleting flight on extra pane
                 scope.launch { paneNavigator.navigateBack() }
             }) {
                 Icon(

@@ -44,15 +44,17 @@ fun SmallAppBar(text: String, paneNavigator: ThreePaneScaffoldNavigator<String>)
     TopAppBar(
         title = { Text(text) },
         navigationIcon = {
-            IconButton(onClick = {
-                scope.launch { paneNavigator.navigateBack() }
-            }) {
-                Icon(
-                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                    contentDescription = stringResource(R.string.back)
-                )
+            if (paneNavigator.scaffoldDirective.maxHorizontalPartitions == 1) {
+                IconButton(onClick = {
+                    scope.launch { paneNavigator.navigateBack() }
+                }) {
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                        contentDescription = stringResource(R.string.back)
+                    )
+                }
             }
-        }
+        },
     )
 }
 
