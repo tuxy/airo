@@ -149,10 +149,6 @@ suspend fun getData(
                     return@withContext Result.failure(FlightDataFetchException(FlightDataError.NetworkError))
                 }
 
-                if (body == "{\"message\":\"Could not parse server response\"}") {
-                    return@withContext Result.failure(FlightDataFetchException(FlightDataError.FlightNotFoundError))
-                }
-
                 try {
                     // Root.fromJson returns Root?, handle null if jsonListResponse is empty or invalid
                     val jsonRoot =
@@ -402,89 +398,3 @@ fun parseDateTime(time: String): ZonedDateTime {
     val pattern = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mmXXXXX")
     return ZonedDateTime.parse(time, pattern)
 }
-
-
-/* This is some sample json data for quick reference
-
-[
-  {
-    "greatCircleDistance": {
-      "meter": 6556365.47,
-      "km": 6556.37,
-      "mile": 4073.94,
-      "nm": 3540.15,
-      "feet": 21510385.4
-    },
-    "departure": {
-      "airport": {
-        "icao": "YBBN",
-        "iata": "BNE",
-        "name": "Brisbane City Brisbane",
-        "shortName": "Brisbane",
-        "municipalityName": "Brisbane City",
-        "location": {
-          "lat": -27.3842,
-          "lon": 153.117
-        },
-        "countryCode": "AU",
-        "timeZone": "Australia/Brisbane"
-      },
-      "scheduledTime": {
-        "utc": "2025-01-16 13:40Z",
-        "local": "2025-01-16 23:40+10:00"
-      },
-      "revisedTime": {
-        "utc": "2025-01-16 13:40Z",
-        "local": "2025-01-16 23:40+10:00"
-      },
-      "terminal": "I",
-      "gate": "79",
-      "quality": [
-        "Basic",
-        "Live"
-      ]
-    },
-    "arrival": {
-      "airport": {
-        "icao": "VVTS",
-        "iata": "SGN",
-        "name": "Ho Chi Minh City Tan Son Nhat",
-        "shortName": "Tan Son Nhat",
-        "municipalityName": "Ho Chi Minh City",
-        "location": {
-          "lat": 10.818799,
-          "lon": 106.652
-        },
-        "countryCode": "VN",
-        "timeZone": "Asia/Ho_Chi_Minh"
-      },
-      "scheduledTime": {
-        "utc": "2025-01-16 22:05Z",
-        "local": "2025-01-17 05:05+07:00"
-      },
-      "predictedTime": {
-        "utc": "2025-01-16 21:35Z",
-        "local": "2025-01-17 04:35+07:00"
-      },
-      "terminal": "2",
-      "quality": [
-        "Basic"
-      ]
-    },
-    "lastUpdatedUtc": "2025-01-14 14:45Z",
-    "number": "VJ 84",
-    "status": "Expected",
-    "codeshareStatus": "IsOperator",
-    "isCargo": false,
-    "aircraft": {
-      "model": "Airbus A330"
-    },
-    "airline": {
-      "name": "VietJetAir",
-      "iata": "VJ",
-      "icao": "VJC"
-    }
-  }
-]
-
- */
