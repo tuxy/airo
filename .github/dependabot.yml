@@ -9,6 +9,8 @@ updates:
       periodic-updates:
         patterns:
           - "*"
+    ignore:
+      - dependency-name: "agp"
 
   - package-ecosystem: "github-actions"
     directory: "/"
