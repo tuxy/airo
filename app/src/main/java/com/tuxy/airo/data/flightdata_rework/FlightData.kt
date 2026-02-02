@@ -14,7 +14,6 @@ import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
 import androidx.room.Update
 import com.tuxy.airo.data.database.Converters
-import org.openapitools.client.models.FlightContract
 import java.time.Duration
 import java.time.LocalDateTime
 import java.time.ZoneOffset
@@ -51,10 +50,6 @@ val terminal: String = "---",
     val aircraftUri: String = "---",
     val author: String = "---",
     val authorUri: String = "---",
-    val mapOriginLat: Double = 1.0,
-    val mapOriginLon: Double = 1.0,
-    val mapDestinationLat: Double = 1.0,
-    val mapDestinationLon: Double = 1.0,
     val attribution: String = "---"
 ) {
     internal fun parseDateTime(time: String?): ZonedDateTime {
