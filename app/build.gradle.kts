@@ -2,6 +2,7 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
     id("com.google.devtools.ksp")
+    id("org.openapi.generator")
 }
 
 android {
@@ -42,6 +43,21 @@ android {
             it.jvmArgs("-XX:+EnableDynamicAgentLoading")
         }
     }
+    sourceSets {
+        getByName("main") {
+            java {
+                directories.add("$projectDir/build/openapi/src/main/kotlin")
+            }
+        }
+    }
+}
+
+openApiGenerate {
+    inputSpec.set("$rootDir/openapi/openapi-apimarket-v1.yaml")
+    outputDir.set("$projectDir/build/openapi")
+    configOptions.put("serializableModel","false")
+    generatorName.set("kotlin")
+    skipValidateSpec.set(true)
 }
 
 dependencies {
