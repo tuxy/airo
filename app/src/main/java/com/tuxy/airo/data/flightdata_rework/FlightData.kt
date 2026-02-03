@@ -1,7 +1,6 @@
 package com.tuxy.airo.data.flightdata_rework
 
 import android.content.Context
-import androidx.compose.runtime.MutableState
 import androidx.room.Dao
 import androidx.room.Database
 import androidx.room.Delete
@@ -15,14 +14,13 @@ import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
 import androidx.room.Update
 import com.tuxy.airo.data.database.Converters
-import kotlinx.coroutines.DelicateCoroutinesApi
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.launch
+import org.openapitools.client.models.FlightContract
 import java.time.Duration
 import java.time.LocalDateTime
 import java.time.ZoneOffset
 import java.time.ZonedDateTime
+import java.time.format.DateTimeFormatter
+import kotlin.String
 
 @Entity(tableName = "flight_table")
 data class FlightData(
@@ -53,12 +51,77 @@ val terminal: String = "---",
     val aircraftUri: String = "---",
     val author: String = "---",
     val authorUri: String = "---",
-    val mapOriginX: Double = 1.0,
-    val mapOriginY: Double = 1.0,
-    val mapDestinationX: Double = 1.0,
-    val mapDestinationY: Double = 1.0,
+    val mapOriginLat: Double = 1.0,
+    val mapOriginLon: Double = 1.0,
+    val mapDestinationLat: Double = 1.0,
+    val mapDestinationLon: Double = 1.0,
     val attribution: String = "---"
-)
+) {
+    internal fun parseDateTime(time: String?): ZonedDateTime {
+        if (time == null) {
+            return ZonedDateTime.now(ZoneOffset.UTC) // If time isn't available
+        } // TODO Maybe add a notice that the time couldn't be received?
+        val pattern = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mmXXXXX")
+        return ZonedDateTime.parse(time, pattern)
+    }
+
+    fun from(response: List<FlightContract>): FlightData? {
+        val flight = response.firstOrNull() ?: return null
+
+        val departDate = parseDateTime(flight.departure.scheduledTime?.local)
+        val arriveDate = parseDateTime(flight.arrival.scheduledTime?.local)
+
+
+        return FlightData(
+            lastUpdate = LocalDateTime.now(),
+            callSign = flight.number,
+
+            // Airline Info (Safe handling of null airline object)
+            airline = flight.airline?.name ?: "N/A",
+            airlineIcao = flight.airline?.icao ?: "N/A",
+            airlineIata = flight.airline?.iata ?: "N/A",
+
+            // Departure Info
+            from = flight.departure.airport.iata ?: "N/A",
+            fromName = flight.departure.airport.name,
+            fromCountryCode = flight.departure.airport.countryCode ?: "---",
+            departDate = departDate,
+
+            // Arrival Info
+            to = flight.arrival.airport.iata ?: "N/A",
+            toName = flight.arrival.airport.name,
+            toCountryCode = flight.arrival.airport.countryCode ?: "---",
+            arriveDate = arriveDate,
+
+            // Airport Details
+            gate = flight.departure.gate ?: "—",
+            terminal = flight.departure.terminal ?: "—",
+            checkInDesk = flight.departure.checkInDesk ?: "—",
+            toGate = flight.arrival.gate ?: "—",
+            toTerminal = flight.arrival.terminal ?: "—",
+            toBaggageClaim = flight.arrival.baggageBelt ?: "—",
+
+            // Aircraft Info
+            aircraftName = flight.aircraft?.model ?: "N/A",
+            aircraftUri = flight.aircraft?.image?.url ?: "",
+            author = flight.aircraft?.image?.author ?: "",
+            authorUri = flight.aircraft?.image?.webUrl ?: "",
+            attribution = flight.aircraft?.image?.htmlAttributions?.firstOrNull() ?: "",
+
+            // Location / Map
+            mapOriginLat = flight.departure.airport.location?.lat?.toDouble() ?: 0.0, // TODO implement new map system
+            mapOriginLon = flight.departure.airport.location?.lon?.toDouble() ?: 0.0,
+            mapDestinationLat = flight.arrival.airport.location?.lat?.toDouble() ?: 0.0,
+            mapDestinationLon = flight.arrival.airport.location?.lon?.toDouble() ?: 0.0,
+
+            ticketData = "", // Keeping your default
+            duration = Duration.between(
+                departDate,
+                arriveDate
+            )
+        )
+    }
+}
 
 @Dao
 interface FlightDataDao {

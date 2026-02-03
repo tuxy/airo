@@ -75,7 +75,6 @@ fun FoldableFlightScreen(
     }
 
     val containerWidth = LocalWindowInfo.current.containerSize.width
-    println(containerWidth)
     val navigator = rememberListDetailPaneScaffoldNavigator<String>(
         calculatePaneScaffoldDirective(currentWindowAdaptiveInfo()).copy(
             maxHorizontalPartitions = if (containerWidth > 1200) 2 else 1

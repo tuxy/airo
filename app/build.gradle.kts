@@ -45,9 +45,8 @@ android {
     }
     sourceSets {
         getByName("main") {
-            java {
-                directories.add("$projectDir/build/openapi/src/main/kotlin")
-            }
+            kotlin.directories.add("$projectDir/build/openapi/src/main/kotlin")
+            java.directories.add("$projectDir/build/openapi/src/main/kotlin")
         }
     }
 }
@@ -55,9 +54,13 @@ android {
 openApiGenerate {
     inputSpec.set("$rootDir/openapi/openapi-apimarket-v1.yaml")
     outputDir.set("$projectDir/build/openapi")
-    configOptions.put("serializableModel","false")
     generatorName.set("kotlin")
     skipValidateSpec.set(true)
+    importMappings.put("OffsetDateTime","kotlin.String")
+
+    globalProperties.put("models", "")
+    globalProperties.put("modelDocs", "false")
+    globalProperties.put("apiDocs", "false")
 }
 
 dependencies {
@@ -93,6 +96,7 @@ dependencies {
 
     // klaxon
     implementation(libs.klaxon)
+    implementation(libs.moshi.kotlin)
 
     // datastore
     implementation(libs.androidx.datastore.preferences)
