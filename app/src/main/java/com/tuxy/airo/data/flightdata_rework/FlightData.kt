@@ -36,8 +36,10 @@ data class FlightData(
     val fromCountryCode: String = "---",
     val toCountryCode: String = "---",
     val fromName: String = "---",
-    val departDate: ZonedDateTime = ZonedDateTime.now(ZoneOffset.UTC),
-    val arriveDate: ZonedDateTime = ZonedDateTime.now(ZoneOffset.UTC),
+    val scheduledDepartDate: ZonedDateTime = ZonedDateTime.now(ZoneOffset.UTC),
+    val scheduledArriveDate: ZonedDateTime = ZonedDateTime.now(ZoneOffset.UTC),
+    val revisedDepartDate: ZonedDateTime = ZonedDateTime.now(ZoneOffset.UTC),
+    val revisedArriveDate: ZonedDateTime = ZonedDateTime.now(ZoneOffset.UTC),
     val duration: Duration = Duration.ofSeconds(1), // Prevents current = NaN
     val toName: String = "---",
     var ticketData: String = "",
@@ -68,9 +70,11 @@ val terminal: String = "---",
     fun from(response: List<FlightContract>): FlightData? {
         val flight = response.firstOrNull() ?: return null
 
-        val departDate = parseDateTime(flight.departure.scheduledTime?.local)
-        val arriveDate = parseDateTime(flight.arrival.scheduledTime?.local)
+        val scheduledDepartDate = parseDateTime(flight.departure.scheduledTime?.local)
+        val scheduledArriveDate = parseDateTime(flight.arrival.scheduledTime?.local)
 
+        val revisedDepartDate = parseDateTime(flight.departure.revisedTime?.local)
+        val revisedArriveDate = parseDateTime(flight.arrival.revisedTime?.local)
 
         return FlightData(
             lastUpdate = LocalDateTime.now(),
@@ -85,13 +89,15 @@ val terminal: String = "---",
             from = flight.departure.airport.iata ?: "N/A",
             fromName = flight.departure.airport.name,
             fromCountryCode = flight.departure.airport.countryCode ?: "---",
-            departDate = departDate,
+            scheduledDepartDate = scheduledDepartDate,
+            revisedDepartDate = revisedDepartDate,
 
             // Arrival Info
             to = flight.arrival.airport.iata ?: "N/A",
             toName = flight.arrival.airport.name,
             toCountryCode = flight.arrival.airport.countryCode ?: "---",
-            arriveDate = arriveDate,
+            scheduledArriveDate = scheduledArriveDate,
+            revisedArriveDate = revisedArriveDate,
 
             // Airport Details
             gate = flight.departure.gate ?: "—",
@@ -116,8 +122,8 @@ val terminal: String = "---",
 
             ticketData = "", // Keeping your default
             duration = Duration.between(
-                departDate,
-                arriveDate
+                scheduledDepartDate,
+                scheduledArriveDate
             )
         )
     }
