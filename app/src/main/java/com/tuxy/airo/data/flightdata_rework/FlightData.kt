@@ -67,58 +67,57 @@ val terminal: String = "---",
         return ZonedDateTime.parse(time, pattern)
     }
 
-    fun from(response: List<FlightContract>): FlightData? {
-        val flight = response.firstOrNull() ?: return null
+    fun from(response: FlightContract): FlightData {
 
-        val scheduledDepartDate = parseDateTime(flight.departure.scheduledTime?.local)
-        val scheduledArriveDate = parseDateTime(flight.arrival.scheduledTime?.local)
+        val scheduledDepartDate = parseDateTime(response.departure.scheduledTime?.local)
+        val scheduledArriveDate = parseDateTime(response.arrival.scheduledTime?.local)
 
-        val revisedDepartDate = parseDateTime(flight.departure.revisedTime?.local)
-        val revisedArriveDate = parseDateTime(flight.arrival.revisedTime?.local)
+        val revisedDepartDate = parseDateTime(response.departure.revisedTime?.local)
+        val revisedArriveDate = parseDateTime(response.arrival.revisedTime?.local)
 
         return FlightData(
             lastUpdate = LocalDateTime.now(),
-            callSign = flight.number,
+            callSign = response.number,
 
             // Airline Info (Safe handling of null airline object)
-            airline = flight.airline?.name ?: "N/A",
-            airlineIcao = flight.airline?.icao ?: "N/A",
-            airlineIata = flight.airline?.iata ?: "N/A",
+            airline = response.airline?.name ?: "N/A",
+            airlineIcao = response.airline?.icao ?: "N/A",
+            airlineIata = response.airline?.iata ?: "N/A",
 
             // Departure Info
-            from = flight.departure.airport.iata ?: "N/A",
-            fromName = flight.departure.airport.name,
-            fromCountryCode = flight.departure.airport.countryCode ?: "---",
+            from = response.departure.airport.iata ?: "N/A",
+            fromName = response.departure.airport.name,
+            fromCountryCode = response.departure.airport.countryCode ?: "---",
             scheduledDepartDate = scheduledDepartDate,
             revisedDepartDate = revisedDepartDate,
 
             // Arrival Info
-            to = flight.arrival.airport.iata ?: "N/A",
-            toName = flight.arrival.airport.name,
-            toCountryCode = flight.arrival.airport.countryCode ?: "---",
+            to = response.arrival.airport.iata ?: "N/A",
+            toName = response.arrival.airport.name,
+            toCountryCode = response.arrival.airport.countryCode ?: "---",
             scheduledArriveDate = scheduledArriveDate,
             revisedArriveDate = revisedArriveDate,
 
             // Airport Details
-            gate = flight.departure.gate ?: "—",
-            terminal = flight.departure.terminal ?: "—",
-            checkInDesk = flight.departure.checkInDesk ?: "—",
-            toGate = flight.arrival.gate ?: "—",
-            toTerminal = flight.arrival.terminal ?: "—",
-            toBaggageClaim = flight.arrival.baggageBelt ?: "—",
+            gate = response.departure.gate ?: "—",
+            terminal = response.departure.terminal ?: "—",
+            checkInDesk = response.departure.checkInDesk ?: "—",
+            toGate = response.arrival.gate ?: "—",
+            toTerminal = response.arrival.terminal ?: "—",
+            toBaggageClaim = response.arrival.baggageBelt ?: "—",
 
             // Aircraft Info
-            aircraftName = flight.aircraft?.model ?: "N/A",
-            aircraftUri = flight.aircraft?.image?.url ?: "",
-            author = flight.aircraft?.image?.author ?: "",
-            authorUri = flight.aircraft?.image?.webUrl ?: "",
-            attribution = flight.aircraft?.image?.htmlAttributions?.firstOrNull() ?: "",
+            aircraftName = response.aircraft?.model ?: "N/A",
+            aircraftUri = response.aircraft?.image?.url ?: "",
+            author = response.aircraft?.image?.author ?: "",
+            authorUri = response.aircraft?.image?.webUrl ?: "",
+            attribution = response.aircraft?.image?.htmlAttributions?.firstOrNull() ?: "",
 
             // Location / Map
-            mapOriginLat = flight.departure.airport.location?.lat?.toDouble() ?: 0.0, // TODO implement new map system
-            mapOriginLon = flight.departure.airport.location?.lon?.toDouble() ?: 0.0,
-            mapDestinationLat = flight.arrival.airport.location?.lat?.toDouble() ?: 0.0,
-            mapDestinationLon = flight.arrival.airport.location?.lon?.toDouble() ?: 0.0,
+            mapOriginLat = response.departure.airport.location?.lat?.toDouble() ?: 0.0, // TODO implement new map system
+            mapOriginLon = response.departure.airport.location?.lon?.toDouble() ?: 0.0,
+            mapDestinationLat = response.arrival.airport.location?.lat?.toDouble() ?: 0.0,
+            mapDestinationLon = response.arrival.airport.location?.lon?.toDouble() ?: 0.0,
 
             ticketData = "", // Keeping your default
             duration = Duration.between(

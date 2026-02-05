@@ -7,11 +7,27 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
+import androidx.navigation.NavController
 import com.tuxy.airo.R
 import com.tuxy.airo.data.database.PreferencesInterface
+import com.tuxy.airo.data.flightdata_rework.FlightDataDao
+import com.tuxy.airo.data.flightdata_rework.CaughtException
+import com.tuxy.airo.data.flightdata_rework.Error
+import com.tuxy.airo.data.flightdata_rework.FlightData
+import com.tuxy.airo.data.flightdata_rework.FlightDataRequest
+import com.tuxy.airo.data.flightdata_rework.InvalidApiUrlException
+import com.tuxy.airo.data.flightdata_rework.Success
+import com.tuxy.airo.data.flightdata_rework.UnexpectedResponseException
+import com.tuxy.airo.screens.ApiSettings
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
+import org.openapitools.client.models.FlightDirection
+import org.openapitools.client.models.FlightSearchByEnum
 import java.time.LocalDateTime
 import java.time.ZoneOffset
 import java.time.ZonedDateTime
+import java.time.format.DateTimeFormatter
 
 /**
  * A ViewModel for handling date and time related operations, and displaying toasts.
@@ -96,6 +112,67 @@ class DateViewModel(
             return "${splitString[0]}${splitString[1]}"
         }
         return string
+    }
+
+    /**
+     * Adds a flight to the database.
+     */
+    fun addFlight(
+        navController: NavController,
+        flightNumber: String,
+        timeMillis: Long,
+        flightDataDao: FlightDataDao,
+        settings: ApiSettings
+    ) {
+        GlobalScope.launch(Dispatchers.Main) {
+            loading = true
+
+            try {
+                val urlChoice = when (settings.choice) {
+                    "" -> "https://airoapi.tuxy.stream/flights" // When datastore hasn't initialised (user hasn't picked)
+                    "0" -> "https://airoapi.tuxy.stream/flights"
+                    "1" -> settings.server
+                    "2" -> settings.adbEndpoint
+                    else -> "https://airoapi.tuxy.stream/flights"
+                }
+
+                val request = FlightDataRequest(
+                    baseUrl = urlChoice!!,
+                    key = if (settings.choice == "2") settings.adbKey else null
+                )
+
+                val result = request.getFlightOnSpecificDate(
+                    searchParam = formatFlightNumber(flightNumber),
+                    dateLocal = getDateAsString(timeMillis)!!.format(DateTimeFormatter.ofPattern("yyyy-MM-dd")),
+                    searchBy = FlightSearchByEnum.Number,
+                    dateLocalRole = FlightDirection.Departure,
+                )
+
+                when(result) {
+                    is CaughtException -> {
+                        when(result.exception) {
+                            is InvalidApiUrlException -> toast(0).show()
+                            is UnexpectedResponseException -> toast(1).show()
+                        }
+                    }
+                    is Error -> {
+                        Toast.makeText(
+                            context,
+                            result.result.message,
+                            Toast.LENGTH_LONG
+                        ).show()
+                    }
+                    is Success -> {
+                        val contract = result.result.firstOrNull() ?: return@launch
+                        flightDataDao.addFlight(FlightData().from(contract))
+                    }
+                }
+            } finally {
+                loading = false
+                navController.navigateUp()
+                navController.navigateUp()
+            }
+        }
     }
 
     /**
