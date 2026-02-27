@@ -6,32 +6,30 @@ import androidx.compose.material3.ColorScheme
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.ui.unit.dp
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import com.tuxy.airo.R
+import com.tuxy.airo.data.background.formatFlightNumber
 import com.tuxy.airo.data.database.PreferencesInterface
-import com.tuxy.airo.data.flightdata.FlightData
-import com.tuxy.airo.data.flightdata.FlightDataDao
-import com.tuxy.airo.data.flightdata.getData
+import com.tuxy.airo.data.flightdata_rework.CaughtException
+import com.tuxy.airo.data.flightdata_rework.FlightData
+import com.tuxy.airo.data.flightdata_rework.FlightDataDao
+import com.tuxy.airo.data.flightdata_rework.FlightDataRequest
+import com.tuxy.airo.data.flightdata_rework.Success
 import com.tuxy.airo.screens.ApiSettings
-import com.tuxy.airo.screens.CustomMapMarker
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import org.openapitools.client.models.FlightDirection
+import org.openapitools.client.models.FlightSearchByEnum
 import ovh.plrapps.mapcompose.api.addLayer
-import ovh.plrapps.mapcompose.api.addMarker
-import ovh.plrapps.mapcompose.api.addPath
 import ovh.plrapps.mapcompose.api.disableGestures
 import ovh.plrapps.mapcompose.api.disableRotation
 import ovh.plrapps.mapcompose.api.disableScrolling
 import ovh.plrapps.mapcompose.api.disableZooming
-import ovh.plrapps.mapcompose.api.scrollTo
-import ovh.plrapps.mapcompose.api.snapScrollTo
 import ovh.plrapps.mapcompose.core.TileStreamProvider
 import ovh.plrapps.mapcompose.ui.state.MapState
 import java.time.Duration
@@ -83,8 +81,8 @@ class DetailsViewModel(
      * @return A string representing the time difference, e.g., "+02:00".
      */
     fun getZoneDifference(): String {
-        val departZoneSeconds = flightData.value.departDate.offset
-        val arriveZoneSeconds = flightData.value.arriveDate.offset
+        val departZoneSeconds = flightData.value.scheduledDepartDate.offset
+        val arriveZoneSeconds = flightData.value.scheduledDepartDate.offset
 
         val differenceInSeconds = arriveZoneSeconds.totalSeconds - departZoneSeconds.totalSeconds
 
@@ -112,7 +110,7 @@ class DetailsViewModel(
      */
     fun getProgress(): Float {
         val now = ZonedDateTime.now()
-        val departTime = flightData.value.departDate
+        val departTime = flightData.value.revisedDepartDate
 
         viewModelScope.launch {
             val timeFromStart = Duration.between(now, departTime).toMillis()
@@ -154,38 +152,50 @@ class DetailsViewModel(
      */
     fun refreshData(
         flightDataDao: FlightDataDao,
-        context: Context,
-        settings: ApiSettings,
+        settings: ApiSettings, // TODO Use the settings
         isRefreshing: MutableState<Boolean>
     ) {
         viewModelScope.launch(Dispatchers.IO) {
             isRefreshing.value = true
-            val collectedFlightData = getData(
-                flightNumber = flightData.value.callSign.replace(
-                    " ",
-                    ""
-                ), // Whitespace removal
-                flightDataDao = flightDataDao,
-                date = flightData.value.departDate.format(
-                    DateTimeFormatter.ofPattern("yyyy-MM-dd")
-                ),
-                settings = settings,
-                context = context,
-                update = true
+
+            val request = FlightDataRequest()
+            val result = request.getFlightOnSpecificDate(
+                searchParam = formatFlightNumber(flightData.value.callSign),
+                dateLocal = flightData.value.scheduledDepartDate.format(DateTimeFormatter.ofPattern("yyyy-MM-dd")),
+                searchBy = FlightSearchByEnum.Number,
+                dateLocalRole = FlightDirection.Departure,
+                withAircraftImage = true,
+                withLocation = true,
+                withFlightPlan = true,
             )
 
-            collectedFlightData.onSuccess { newFlight ->
-                Log.d("FlightUpdate", newFlight.toString())
-                val deleted = flightData.value.copy()
-                flightData.value = newFlight
+            when(result) {
+                is Success -> {
+                    val newFlight = FlightData().from(result.result[0]!!) // TODO fix nullable
 
-                flightDataDao.deleteFlight(deleted)
-                flightDataDao.addFlight(
-                    newFlight.copy(
-                        ticketData = flightData.value.ticketData,
-                    ) // Retain ticket information
-                )
+                    Log.d("FlightUpdate", newFlight.toString())
+                    val deleted = flightData.value.copy()
+                    flightData.value = newFlight
+
+                    flightDataDao.deleteFlight(deleted)
+                    flightDataDao.addFlight(
+                        newFlight.copy(
+                            ticketData = flightData.value.ticketData,
+                        ) // Retain ticket information
+                    )
+                    Log.d("FlightDetails", "Refreshed flight: ${newFlight.callSign}")
+                }
+                is Error -> {
+                    Log.e("FlightSchedulerWorker", "Failed to refresh flight: ${flightData.value.callSign} error: ${result.message}")
+                }
+                is CaughtException -> {
+                    Log.e("FlightSchedulerWorker", "Failed to refresh flight: ${flightData.value.callSign} exception: ${result.exception}")
+                }
+                else -> {
+                    Log.e("FlightSchedulerWorker", "Failed to refresh flight: ${flightData.value.callSign} unknown error")
+                }
             }
+
             isRefreshing.value = false
         }
     }
@@ -198,7 +208,7 @@ class DetailsViewModel(
     fun getDuration(context: Context): String {
         val duration = Duration.between(
             ZonedDateTime.now(),
-            flightData.value.departDate
+            flightData.value.revisedDepartDate
         )
 
         val offset =
@@ -264,7 +274,7 @@ class DetailsViewModel(
     fun getStatus(context: Context): String {
         val duration = Duration.between(
             ZonedDateTime.now(),
-            flightData.value.departDate
+            flightData.value.revisedDepartDate
         )
         val seconds = duration.seconds
 
@@ -302,46 +312,7 @@ class DetailsViewModel(
         disableRotation()
         disableScrolling()
         addLayer(tileStreamProvider)
-        GlobalScope.launch {
-            // Scroll map to show both origin and destination
-            snapScrollTo(
-                x = avr(flightData.value.mapOriginX, flightData.value.mapDestinationX), // Center X
-                y = avr(flightData.value.mapOriginY, flightData.value.mapDestinationY), // Center Y
-            )
-            scrollTo(
-                x = avr(flightData.value.mapOriginX, flightData.value.mapDestinationX), // Center X
-                y = avr(flightData.value.mapOriginY, flightData.value.mapDestinationY), // Center Y
-                destScale = calculateScale( // Calculated scale to fit points
-                    flightData.value.mapOriginX,
-                    flightData.value.mapOriginY,
-                    flightData.value.mapDestinationX,
-                    flightData.value.mapDestinationY
-                )
-            )
-            addPath("route", color = scheme.primary, width = 2.dp) {
-                // The y-offset of -0.0007 is likely a small visual adjustment for the path line
-                // relative to the marker's anchor point.
-                addPoint(x = flightData.value.mapOriginX, y = flightData.value.mapOriginY)
-                addPoint(
-                    x = flightData.value.mapDestinationX,
-                    y = flightData.value.mapDestinationY
-                )
-            }
-            addMarker(
-                "origin",
-                x = flightData.value.mapOriginX,
-                y = flightData.value.mapOriginY,
-            ) {
-                CustomMapMarker()
-            }
-            addMarker(
-                "destination",
-                x = flightData.value.mapDestinationX,
-                y = flightData.value.mapDestinationY,
-            ) {
-                CustomMapMarker()
-            }
-        }
+        // TODO Replace with newer, cleaner map
     }
 
     private fun mapSizeAtLevel(): Int {

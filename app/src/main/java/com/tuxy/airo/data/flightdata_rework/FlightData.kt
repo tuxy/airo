@@ -20,7 +20,6 @@ import java.time.LocalDateTime
 import java.time.ZoneOffset
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
-import kotlin.String
 
 @Entity(tableName = "flight_table")
 data class FlightData(
@@ -86,14 +85,14 @@ val terminal: String = "---",
 
             // Departure Info
             from = response.departure.airport.iata ?: "N/A",
-            fromName = response.departure.airport.name,
+            fromName = response.departure.airport.shortName ?: response.departure.airport.name,
             fromCountryCode = response.departure.airport.countryCode ?: "---",
             scheduledDepartDate = scheduledDepartDate,
             revisedDepartDate = revisedDepartDate,
 
             // Arrival Info
             to = response.arrival.airport.iata ?: "N/A",
-            toName = response.arrival.airport.name,
+            toName = response.arrival.airport.shortName ?: response.arrival.airport.name,
             toCountryCode = response.arrival.airport.countryCode ?: "---",
             scheduledArriveDate = scheduledArriveDate,
             revisedArriveDate = revisedArriveDate,
@@ -148,12 +147,12 @@ interface FlightDataDao {
     /**
      * Checks if a flight with the given departure date and call sign already exists in the database.
      *
-     * @param departDate The departure date and time of the flight.
+     * @param scheduledDepartDate The departure date and time of the flight.
      * @param callSign The call sign of the flight.
      * @return The number of flights matching the criteria (0 or 1, as duplicates are ignored on insert).
      */
-    @Query("SELECT COUNT() FROM flight_table WHERE departDate=:departDate AND callSign=:callSign")
-    fun queryExisting(departDate: ZonedDateTime, callSign: String): Int
+    @Query("SELECT COUNT() FROM flight_table WHERE scheduledDepartDate=:scheduledDepartDate AND callSign=:callSign")
+    fun queryExisting(scheduledDepartDate: ZonedDateTime, callSign: String): Int
 
 //    @Query("DELETE FROM flight_table") // ONLY FOR DEVELOPMENT
 //    fun nukeTable()

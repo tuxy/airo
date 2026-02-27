@@ -8,9 +8,12 @@ import androidx.core.net.toUri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import com.tuxy.airo.R
-import com.tuxy.airo.data.flightdata.FlightData
-import com.tuxy.airo.data.flightdata.FlightDataDao
-import com.tuxy.airo.data.flightdata.singleIntoMut
+import com.tuxy.airo.data.flightdata_rework.FlightData
+import com.tuxy.airo.data.flightdata_rework.FlightDataDao
+import kotlinx.coroutines.DelicateCoroutinesApi
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
 
 /**
  * A ViewModel that provides standard data for a flight.
@@ -19,16 +22,18 @@ import com.tuxy.airo.data.flightdata.singleIntoMut
  * @param flightDataDao The DAO for accessing flight data.
  * @param id The ID of the flight.
  */
+@OptIn(DelicateCoroutinesApi::class)
 @Suppress("UNCHECKED_CAST")
 class StandardDataViewModel(flightDataDao: FlightDataDao, id: String) : ViewModel() {
     var flightData = mutableStateOf(FlightData())
 
     init {
-        singleIntoMut(
-            flightData,
-            flightDataDao,
-            id
-        ) // On initialisation, pass db data into flightData
+        GlobalScope.launch(Dispatchers.IO) {
+            val job = GlobalScope.launch(Dispatchers.IO) { // TODO is this really the best way?
+                flightData.value = flightDataDao.readSingle(id) ?: FlightData()
+            }
+            job.join()
+        }
     }
 
     /**

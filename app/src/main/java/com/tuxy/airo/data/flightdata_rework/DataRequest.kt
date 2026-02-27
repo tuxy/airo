@@ -59,7 +59,7 @@ data class CaughtException(val exception: Exception) : Outcome
 
 
 class FlightDataRequest(
-    val baseUrl: String = "https://prod.api.market/api/v1/aedbx/aerodatabox",
+    val baseUrl: String = "https://airoapi.tuxy.stream/",
     val key: String? = null,
 ) {
     fun getFlightOnSpecificDate(
@@ -74,7 +74,7 @@ class FlightDataRequest(
 
         val request = ApiClient(
             baseUrl = this.baseUrl,
-            path = "/flights/$searchBy/$searchParam/$dateLocal",
+            path = "flights/$searchBy/$searchParam/$dateLocal",
             method = RequestMethod.GET,
             headers = if (this.key != null) mapOf("x-magicapi-key" to this.key) else emptyMap(),
             params = mapOf(

@@ -4,7 +4,7 @@ import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import com.tuxy.airo.data.database.PreferencesInterface
-import com.tuxy.airo.data.flightdata.FlightDataDao
+import com.tuxy.airo.data.flightdata_rework.FlightDataDao
 
 @Suppress("UNCHECKED_CAST")
 class NotificationViewModel(

@@ -7,8 +7,8 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import com.tuxy.airo.data.database.PreferencesInterface
-import com.tuxy.airo.data.flightdata.FlightData
-import com.tuxy.airo.data.flightdata.FlightDataDao
+import com.tuxy.airo.data.flightdata_rework.FlightData
+import com.tuxy.airo.data.flightdata_rework.FlightDataDao
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
@@ -22,7 +22,7 @@ class MainFlightViewModel(context: Context) : ViewModel() {
         private set
 
     var flights = flightData.associateBy { flight ->
-        flight.departDate.toEpochSecond()
+        flight.scheduledDepartDate.toEpochSecond()
     }.toSortedMap()
 
     var flightsUpcomingList = emptyList<List<FlightData>>()
@@ -34,7 +34,7 @@ class MainFlightViewModel(context: Context) : ViewModel() {
             flightData = flightDataDao.readAll()
             // Group by 1 day
             flights = flightData.associateBy { flight ->
-                flight.arriveDate.toEpochSecond()
+                flight.scheduledArriveDate.toEpochSecond()
             }.toSortedMap()
 
             val nowInEpochSeconds = ZonedDateTime.now().toEpochSecond()
@@ -69,7 +69,7 @@ class MainFlightViewModel(context: Context) : ViewModel() {
             val lastFlightInGroup = lastGroup?.lastOrNull()
 
             if (lastFlightInGroup != null) {
-                val timeDiff = Duration.between(lastFlightInGroup.departDate, flight.departDate).abs()
+                val timeDiff = Duration.between(lastFlightInGroup.scheduledDepartDate, flight.scheduledDepartDate).abs()
 
                 if (timeDiff <= Duration.ofHours(24)) {
                     val updatedLastGroup = lastGroup + flight

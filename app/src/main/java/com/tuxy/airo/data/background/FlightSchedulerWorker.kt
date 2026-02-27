@@ -5,10 +5,15 @@ import android.util.Log
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
 import com.tuxy.airo.data.database.PreferencesInterface
-import com.tuxy.airo.data.flightdata.FlightDataBase
-import com.tuxy.airo.data.flightdata.getData
+import com.tuxy.airo.data.flightdata_rework.CaughtException
+import com.tuxy.airo.data.flightdata_rework.FlightData
+import com.tuxy.airo.data.flightdata_rework.FlightDataBase
+import com.tuxy.airo.data.flightdata_rework.FlightDataRequest
+import com.tuxy.airo.data.flightdata_rework.Success
 import com.tuxy.airo.screens.ApiSettings
 import kotlinx.coroutines.flow.first
+import org.openapitools.client.models.FlightDirection
+import org.openapitools.client.models.FlightSearchByEnum
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
 
@@ -40,38 +45,60 @@ class FlightSchedulerWorker(
         val originalFlights = flightDataDao.readAll()
         for (oldFlight in originalFlights) {
             // Ignore flight if depart date has already passed
-            if (oldFlight.departDate < ZonedDateTime.now()) {
+            if (oldFlight.scheduledDepartDate < ZonedDateTime.now()) {
                 Log.d("FlightSchedulerWorker", "Ignored flight: ${oldFlight.callSign} (Past)")
                 continue
             }
 
             // Ignore flight if it's more than a week away to save API calls
-            if (oldFlight.departDate > ZonedDateTime.now().plusDays(7)) {
+            if (oldFlight.scheduledDepartDate > ZonedDateTime.now().plusDays(7)) {
                 continue
             }
 
-            // Get updated flight data
-            val result = getData(
-                flightNumber = formatFlightNumber(oldFlight.callSign),
-                flightDataDao = flightDataDao,
-                date = oldFlight.departDate.format(DateTimeFormatter.ofPattern("yyyy-MM-dd")),
-                settings = apiSettings,
-                context = applicationContext,
-                update = true
+//            // Get updated flight data
+//            val result = getData(
+//                flightNumber = formatFlightNumber(oldFlight.callSign),
+//                flightDataDao = flightDataDao,
+//                date = oldFlight.scheduledDepartDate.format(DateTimeFormatter.ofPattern("yyyy-MM-dd")),
+//                settings = apiSettings,
+//                context = applicationContext,
+//                update = true
+//            )
+
+            val request = FlightDataRequest()
+            val result = request.getFlightOnSpecificDate(
+                searchParam = formatFlightNumber(oldFlight.callSign),
+                dateLocal = oldFlight.scheduledDepartDate.format(DateTimeFormatter.ofPattern("yyyy-MM-dd")),
+                searchBy = FlightSearchByEnum.Number,
+                dateLocalRole = FlightDirection.Departure,
+                withAircraftImage = true,
+                withLocation = true,
+                withFlightPlan = true,
             )
 
-            result.onSuccess { newFlightData ->
-                // Notify the user if the flight time has changed. NOTE: this is the only change that occurs
-                if (oldFlight.departDate != newFlightData.departDate) {
-                    Log.d("FlightSchedulerWorker", "Flight time changed: ${oldFlight.callSign}")
-                    flightAlarmScheduler.setAlarmOnChange(oldFlight, newFlightData)
-                    // Update the database
-                    flightDataDao.deleteFlight(oldFlight)
-                    flightDataDao.addFlight(newFlightData)
+            when(result) {
+                is Success -> {
+                    val newFlightData = FlightData().from(result.result[0]!!) // TODO fix nullable
+
+                    // Notify the user if the flight time has changed. NOTE: this is the only change that occurs
+                    if (oldFlight.revisedDepartDate != newFlightData.revisedDepartDate) {
+                        Log.d("FlightSchedulerWorker", "Flight time changed: ${oldFlight.callSign}")
+                        flightAlarmScheduler.setAlarmOnChange(oldFlight, newFlightData)
+                        // Update the database
+                        flightDataDao.deleteFlight(oldFlight)
+                        flightDataDao.addFlight(newFlightData)
+                    }
+                    Log.d("FlightSchedulerWorker", "Updated flight: ${newFlightData.callSign}")
                 }
-                Log.d("FlightSchedulerWorker", "Updated flight: ${newFlightData.callSign}")
-            }.onFailure {
-                Log.e("FlightSchedulerWorker", "Failed to update flight: ${oldFlight.callSign}", it)
+                is Error -> {
+                    Log.e("FlightSchedulerWorker", "Failed to update flight: ${oldFlight.callSign} error: ${result.message}")
+                }
+                is CaughtException -> {
+                    Log.e("FlightSchedulerWorker", "Failed to update flight: ${oldFlight.callSign} exception: ${result.exception}")
+                }
+                else -> {
+                    Log.e("FlightSchedulerWorker", "Failed to update flight: ${oldFlight.callSign} unknown error")
+                }
             }
         }
 

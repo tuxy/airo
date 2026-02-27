@@ -4,8 +4,8 @@ import android.content.Context
 import android.content.res.Resources
 import androidx.compose.material3.lightColorScheme
 import com.tuxy.airo.data.database.PreferencesInterface
-import com.tuxy.airo.data.flightdata.FlightData
-import com.tuxy.airo.data.flightdata.FlightDataDao
+import com.tuxy.airo.data.flightdata_rework.FlightData
+import com.tuxy.airo.data.flightdata_rework.FlightDataDao
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.StandardTestDispatcher
@@ -61,7 +61,7 @@ class DetailsViewModelTest {
     fun `getZoneDifference should return correct time difference`() = runTest {
         val departTime = ZonedDateTime.parse("2024-01-01T12:00:00+01:00")
         val arriveTime = ZonedDateTime.parse("2024-01-01T18:00:00+03:00")
-        viewModel.flightData.value = FlightData(departDate = departTime, arriveDate = arriveTime)
+        viewModel.flightData.value = FlightData(scheduledDepartDate = departTime, scheduledArriveDate = arriveTime)
 
         val difference = viewModel.getZoneDifference()
 
@@ -72,7 +72,7 @@ class DetailsViewModelTest {
     fun `getZoneDifference should return empty string for same timezone`() = runTest {
         val departTime = ZonedDateTime.parse("2024-01-01T12:00:00+01:00")
         val arriveTime = ZonedDateTime.parse("2024-01-01T18:00:00+01:00")
-        viewModel.flightData.value = FlightData(departDate = departTime, arriveDate = arriveTime)
+        viewModel.flightData.value = FlightData(scheduledDepartDate = departTime, scheduledArriveDate = arriveTime)
 
         val difference = viewModel.getZoneDifference()
 
@@ -89,7 +89,7 @@ class DetailsViewModelTest {
     fun `getProgress should calculate progress correctly`() = runTest {
         val departTime = ZonedDateTime.now().minusHours(1)
         val duration = java.time.Duration.ofHours(2)
-        viewModel.flightData.value = FlightData(departDate = departTime, duration = duration)
+        viewModel.flightData.value = FlightData(scheduledDepartDate = departTime, duration = duration)
 
         viewModel.getProgress()
         testDispatcher.scheduler.advanceUntilIdle()

@@ -32,7 +32,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.tuxy.airo.R
-import com.tuxy.airo.data.flightdata.FlightData
+import com.tuxy.airo.data.flightdata_rework.FlightData
 import kotlinx.coroutines.launch
 
 // Used in Airport, Aircraft, Ticket and Flight information screens

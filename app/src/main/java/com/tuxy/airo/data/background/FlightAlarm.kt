@@ -11,8 +11,8 @@ import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
 import com.tuxy.airo.R
 import com.tuxy.airo.data.database.PreferencesInterface
-import com.tuxy.airo.data.flightdata.FlightData
-import com.tuxy.airo.data.flightdata.FlightDataDao
+import com.tuxy.airo.data.flightdata_rework.FlightData
+import com.tuxy.airo.data.flightdata_rework.FlightDataDao
 import java.time.Duration
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
@@ -81,14 +81,14 @@ class FlightAlarmScheduler(val context: Context) {
         val preferencesInterface = PreferencesInterface(context)
         val timeFormatWait = preferencesInterface.getValueTimeFormat("24_time")
 
-        val depTime = flightData.departDate
+        val depTime = flightData.revisedDepartDate
         val now = ZonedDateTime.now()
 
         val sixHoursBefore = depTime.minus(Duration.ofHours(6))
         val delayInSeconds = Duration.between(now, sixHoursBefore).seconds // Normal 6 hour delay
 
         if (delayInSeconds > 0) { // If the flight is in the past, don't schedule an alarm
-            val time = flightData.departDate.format(DateTimeFormatter.ofPattern(timeFormatWait))
+            val time = flightData.revisedDepartDate.format(DateTimeFormatter.ofPattern(timeFormatWait))
 
             val flight = context.getString(R.string.flight_alert_title, "6")
             val content =
@@ -118,7 +118,7 @@ class FlightAlarmScheduler(val context: Context) {
 
             Log.d(
                 "FlightAlarmScheduler",
-                "Scheduled alarm for flight: ${flightData.callSign} at ${flightData.departDate}"
+                "Scheduled alarm for flight: ${flightData.callSign} at ${flightData.revisedDepartDate}"
             )
         }
     }
@@ -139,8 +139,8 @@ class FlightAlarmScheduler(val context: Context) {
         val preferencesInterface = PreferencesInterface(context)
         val timeFormatWait = preferencesInterface.getValueTimeFormat("24_time")
 
-        val oldDepTime = previous.departDate
-        val newDepTime = new.departDate
+        val oldDepTime = previous.revisedDepartDate
+        val newDepTime = new.revisedDepartDate
 
         if (newDepTime != oldDepTime) {
             val oldTime = oldDepTime.format(DateTimeFormatter.ofPattern(timeFormatWait))

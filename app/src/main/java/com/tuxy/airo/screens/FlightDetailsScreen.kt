@@ -73,8 +73,8 @@ import androidx.graphics.shapes.toPath
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.tuxy.airo.R
 import com.tuxy.airo.composables.RouteBar
-import com.tuxy.airo.data.flightdata.FlightData
-import com.tuxy.airo.data.flightdata.FlightDataDao
+import com.tuxy.airo.data.flightdata_rework.FlightData
+import com.tuxy.airo.data.flightdata_rework.FlightDataDao
 import com.tuxy.airo.viewmodel.DetailsViewModel
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.GlobalScope
@@ -161,7 +161,6 @@ fun FlightDetailsView(
                     onRefresh = {
                         viewModel.refreshData(
                             flightDataDao,
-                            context,
                             settings,
                             isRefreshing
                         )
@@ -174,7 +173,7 @@ fun FlightDetailsView(
                     ) {
                         RouteBar(viewModel.flightData.value)
                         Text(
-                            text = viewModel.flightData.value.departDate.format(DateTimeFormatter.ofPattern("EEEE, MMM d, yyyy")),
+                            text = viewModel.flightData.value.revisedDepartDate.format(DateTimeFormatter.ofPattern("EEEE, MMM d, yyyy")),
                             modifier = Modifier.padding(start = 16.dp),
                             color = Color.Gray,
                             overflow = TextOverflow.Visible,
@@ -252,7 +251,7 @@ fun FlightBoardCard(
                 baggageClaim = "",
                 checkIn = flightData.checkInDesk,
                 timeFormat = timeFormat,
-                date = flightData.departDate
+                date = flightData.revisedDepartDate
             )
             Row(
                 verticalAlignment = Alignment.CenterVertically,
@@ -290,7 +289,7 @@ fun FlightBoardCard(
                 baggageClaim = flightData.toBaggageClaim,
                 checkIn = "",
                 timeFormat = timeFormat,
-                date = flightData.arriveDate,
+                date = flightData.revisedArriveDate,
                 to = true,
                 difference = viewModel.getZoneDifference()
             )
@@ -478,7 +477,7 @@ fun FlightStatusCard(viewModel: DetailsViewModel, context: Context) {
             LinearProgressIndicator(
                 progress = {
                     val now = ZonedDateTime.now()
-                    val departTime = viewModel.flightData.value.departDate
+                    val departTime = viewModel.flightData.value.revisedDepartDate
 
                     GlobalScope.launch {
 
