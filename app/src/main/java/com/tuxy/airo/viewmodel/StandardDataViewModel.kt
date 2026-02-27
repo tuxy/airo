@@ -7,12 +7,12 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.core.net.toUri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.viewModelScope
 import com.tuxy.airo.R
 import com.tuxy.airo.data.flightdata_rework.FlightData
 import com.tuxy.airo.data.flightdata_rework.FlightDataDao
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 
 /**
@@ -28,8 +28,8 @@ class StandardDataViewModel(flightDataDao: FlightDataDao, id: String) : ViewMode
     var flightData = mutableStateOf(FlightData())
 
     init {
-        GlobalScope.launch(Dispatchers.IO) {
-            val job = GlobalScope.launch(Dispatchers.IO) { // TODO is this really the best way?
+        viewModelScope.launch(Dispatchers.IO) {
+            val job = viewModelScope.launch(Dispatchers.IO) { // TODO is this really the best way?
                 flightData.value = flightDataDao.readSingle(id) ?: FlightData()
             }
             job.join()

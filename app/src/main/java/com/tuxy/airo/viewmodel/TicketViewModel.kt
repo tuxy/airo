@@ -11,6 +11,7 @@ import androidx.compose.runtime.setValue
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.viewModelScope
 import com.journeyapps.barcodescanner.ScanIntentResult
 import com.journeyapps.barcodescanner.ScanOptions
 import com.tuxy.airo.R
@@ -19,7 +20,6 @@ import com.tuxy.airo.data.flightdata_rework.FlightData
 import com.tuxy.airo.data.flightdata_rework.FlightDataDao
 import com.tuxy.airo.data.flightdata_rework.IataParserData
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 
 /**
@@ -77,7 +77,7 @@ class TicketViewModel(
     fun updateData(flightDataDao: FlightDataDao, context: Context) {
         flightData.value.ticketData = ticketString
         parseTicketData(context)
-        GlobalScope.launch(Dispatchers.IO) {
+        viewModelScope.launch(Dispatchers.IO) {
             flightDataDao.updateFlight(flightData.value)
         }
     }
@@ -91,14 +91,14 @@ class TicketViewModel(
         ticketString = ""
         flightData.value.ticketData = ""
         parseTicketData(context)
-        GlobalScope.launch(Dispatchers.IO) {
+        viewModelScope.launch(Dispatchers.IO) {
             flightDataDao.updateFlight(flightData.value)
         }
     }
 
     init {
-        GlobalScope.launch(Dispatchers.IO) {
-            val job = GlobalScope.launch(Dispatchers.IO) {
+        viewModelScope.launch(Dispatchers.IO) {
+            val job = viewModelScope.launch(Dispatchers.IO) {
                 flightData.value = flightDataDao.readSingle(id) ?: FlightData()
             }
             job.join()

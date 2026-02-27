@@ -129,12 +129,12 @@ class DateViewModel(
                 loading = true
 
                 val urlChoice = when (settings.choice) {
-                    "" -> "https://airoapi.tuxy.stream" // When datastore hasn't initialised (user hasn't picked)
-                    "0" -> "https://airoapi.tuxy.stream"
+                    "" -> "https://airoapi.tuxy.stream/" // When datastore hasn't initialised (user hasn't picked)
+                    "0" -> "https://airoapi.tuxy.stream/"
                     "1" -> settings.server
                     "2" -> settings.adbEndpoint
-                    else -> "https://airoapi.tuxy.stream"
-                } ?: "https://airoapi.tuxy.stream"
+                    else -> "https://airoapi.tuxy.stream/"
+                } ?: "https://airoapi.tuxy.stream/"
 
                 val request = FlightDataRequest(
                     baseUrl = urlChoice,
@@ -171,8 +171,10 @@ class DateViewModel(
                 }
             } finally {
                 loading = false
-                navController.navigateUp()
-                navController.navigateUp()
+                viewModelScope.launch(Dispatchers.Main) {
+                    navController.navigateUp()
+                    navController.navigateUp()
+                }
             }
         }
     }
