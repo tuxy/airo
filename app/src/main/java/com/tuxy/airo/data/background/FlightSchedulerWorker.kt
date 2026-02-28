@@ -78,7 +78,7 @@ class FlightSchedulerWorker(
 
             when(result) {
                 is Success -> {
-                    val newFlightData = FlightData().from(result.result[0]!!) // TODO fix nullable
+                    val newFlightData = FlightData().from(result.result[0] ?: break)
 
                     // Notify the user if the flight time has changed. NOTE: this is the only change that occurs
                     if (oldFlight.revisedDepartDate != newFlightData.revisedDepartDate) {

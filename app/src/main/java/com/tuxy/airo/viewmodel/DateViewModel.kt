@@ -123,7 +123,7 @@ class DateViewModel(
         timeMillis: Long,
         flightDataDao: FlightDataDao,
         settings: ApiSettings
-    ) { // TODO Settings
+    ) { // TODO Implement ApiSettings into DateViewModel
         viewModelScope.launch(Dispatchers.IO) {
             try {
                 loading = true

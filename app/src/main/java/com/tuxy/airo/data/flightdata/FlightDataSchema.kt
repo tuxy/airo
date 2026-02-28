@@ -38,7 +38,6 @@ data class RootElement(
     val isCargo: Boolean?, // Optional
     val aircraft: Aircraft?, // Optional section
     val airline: Airline?    // Optional section
-    // TODO add live flight location, and then ignore it for error handling (already present)
 )
 
 data class Aircraft(

@@ -82,7 +82,7 @@ class DetailsViewModel(
      */
     fun getZoneDifference(): String {
         val departZoneSeconds = flightData.value.scheduledDepartDate.offset
-        val arriveZoneSeconds = flightData.value.scheduledDepartDate.offset
+        val arriveZoneSeconds = flightData.value.scheduledArriveDate.offset
 
         val differenceInSeconds = arriveZoneSeconds.totalSeconds - departZoneSeconds.totalSeconds
 

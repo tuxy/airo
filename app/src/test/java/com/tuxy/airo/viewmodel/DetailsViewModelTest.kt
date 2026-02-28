@@ -89,7 +89,7 @@ class DetailsViewModelTest {
     fun `getProgress should calculate progress correctly`() = runTest {
         val departTime = ZonedDateTime.now().minusHours(1)
         val duration = java.time.Duration.ofHours(2)
-        viewModel.flightData.value = FlightData(scheduledDepartDate = departTime, duration = duration)
+        viewModel.flightData.value = FlightData(revisedDepartDate = departTime, duration = duration)
 
         viewModel.getProgress()
         testDispatcher.scheduler.advanceUntilIdle()
