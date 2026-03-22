@@ -3,6 +3,7 @@ package com.tuxy.airo.screens
 import android.content.Context
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -80,6 +81,12 @@ import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import org.maplibre.compose.map.GestureOptions
+import org.maplibre.compose.map.MapOptions
+import org.maplibre.compose.map.MaplibreMap
+import org.maplibre.compose.map.OrnamentOptions
+import org.maplibre.compose.style.BaseStyle
+import ovh.plrapps.mapcompose.ui.MapUI
 import java.time.Duration
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
