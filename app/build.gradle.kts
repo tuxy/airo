@@ -104,6 +104,7 @@ dependencies {
     // map-compose & other map utils
     implementation(libs.mapcompose)
     implementation(libs.androidx.graphics.shapes)
+    implementation(libs.maplibre.compose)
 
     // browser
     implementation(libs.androidx.browser)
