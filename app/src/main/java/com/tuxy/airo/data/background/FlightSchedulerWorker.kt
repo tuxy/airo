@@ -80,8 +80,10 @@ class FlightSchedulerWorker(
                 is Success -> {
                     val newFlightData = FlightData().from(result.result[0] ?: break)
 
+
+
                     // Notify the user if the flight time has changed. NOTE: this is the only change that occurs
-                    if (oldFlight.revisedDepartDate != newFlightData.revisedDepartDate) {
+                    if ((oldFlight.revisedDepartDate ?: oldFlight.scheduledDepartDate) != (newFlightData.revisedDepartDate ?: newFlightData.scheduledDepartDate)) {
                         Log.d("FlightSchedulerWorker", "Flight time changed: ${oldFlight.callSign}")
                         flightAlarmScheduler.setAlarmOnChange(oldFlight, newFlightData)
                         // Update the database

@@ -81,14 +81,14 @@ class FlightAlarmScheduler(val context: Context) {
         val preferencesInterface = PreferencesInterface(context)
         val timeFormatWait = preferencesInterface.getValueTimeFormat("24_time")
 
-        val depTime = flightData.revisedDepartDate
+        val depTime = flightData.revisedDepartDate ?: flightData.scheduledDepartDate
         val now = ZonedDateTime.now()
 
         val sixHoursBefore = depTime.minus(Duration.ofHours(6))
         val delayInSeconds = Duration.between(now, sixHoursBefore).seconds // Normal 6 hour delay
 
         if (delayInSeconds > 0) { // If the flight is in the past, don't schedule an alarm
-            val time = flightData.revisedDepartDate.format(DateTimeFormatter.ofPattern(timeFormatWait))
+            val time = depTime.format(DateTimeFormatter.ofPattern(timeFormatWait))
 
             val flight = context.getString(R.string.flight_alert_title, "6")
             val content =
@@ -118,7 +118,7 @@ class FlightAlarmScheduler(val context: Context) {
 
             Log.d(
                 "FlightAlarmScheduler",
-                "Scheduled alarm for flight: ${flightData.callSign} at ${flightData.revisedDepartDate}"
+                "Scheduled alarm for flight: ${flightData.callSign} at ${flightData.revisedDepartDate ?: flightData.scheduledDepartDate}"
             )
         }
     }
@@ -139,8 +139,8 @@ class FlightAlarmScheduler(val context: Context) {
         val preferencesInterface = PreferencesInterface(context)
         val timeFormatWait = preferencesInterface.getValueTimeFormat("24_time")
 
-        val oldDepTime = previous.revisedDepartDate
-        val newDepTime = new.revisedDepartDate
+        val oldDepTime = previous.revisedDepartDate ?: previous.scheduledDepartDate
+        val newDepTime = new.revisedDepartDate ?: new.scheduledDepartDate
 
         if (newDepTime != oldDepTime) {
             val oldTime = oldDepTime.format(DateTimeFormatter.ofPattern(timeFormatWait))

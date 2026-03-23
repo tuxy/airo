@@ -240,11 +240,14 @@ fun MainTicketView(
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.Bottom
         ) {
+            val depTime = flightData.revisedDepartDate ?: flightData.scheduledDepartDate
+            val arrTime = flightData.revisedArriveDate ?: flightData.scheduledArriveDate
+
             BoldDepartureAndDestinationText(
                 flightData.from,
                 flightData.fromCountryCode,
                 flightData.fromName,
-                flightData.revisedDepartDate.format(DateTimeFormatter.ofPattern(timeFormat)),
+                depTime.format(DateTimeFormatter.ofPattern(timeFormat)),
                 Alignment.Start
             )
             Icon(
@@ -255,7 +258,7 @@ fun MainTicketView(
                 flightData.to,
                 flightData.toCountryCode,
                 flightData.fromName,
-                flightData.revisedArriveDate.format(DateTimeFormatter.ofPattern(timeFormat)),
+                arrTime.format(DateTimeFormatter.ofPattern(timeFormat)),
                 Alignment.End
             )
         }

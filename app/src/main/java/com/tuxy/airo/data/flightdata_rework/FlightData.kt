@@ -1,6 +1,7 @@
 package com.tuxy.airo.data.flightdata_rework
 
 import android.content.Context
+import android.util.Log
 import androidx.room.Dao
 import androidx.room.Database
 import androidx.room.Delete
@@ -37,8 +38,8 @@ data class FlightData(
     val fromName: String = "---",
     val scheduledDepartDate: ZonedDateTime = ZonedDateTime.now(ZoneOffset.UTC),
     val scheduledArriveDate: ZonedDateTime = ZonedDateTime.now(ZoneOffset.UTC),
-    val revisedDepartDate: ZonedDateTime = ZonedDateTime.now(ZoneOffset.UTC),
-    val revisedArriveDate: ZonedDateTime = ZonedDateTime.now(ZoneOffset.UTC),
+    val revisedDepartDate: ZonedDateTime? = null,
+    val revisedArriveDate: ZonedDateTime? = null,
     val duration: Duration = Duration.ofSeconds(1), // Prevents current = NaN
     val toName: String = "---",
     var ticketData: String = "",
@@ -58,10 +59,11 @@ val terminal: String = "---",
     val mapDestinationLon: Double = 1.0,
     val attribution: String = "---"
 ) {
-    internal fun parseDateTime(time: String?): ZonedDateTime {
+    internal fun parseDateTime(time: String?): ZonedDateTime? {
         if (time == null) {
-            return ZonedDateTime.now(ZoneOffset.UTC) // If time isn't available
-        } // TODO Maybe add a notice that the time couldn't be received?
+            Log.d("FlightData", "Time is null")
+            return null // If time isn't available
+        }
         val pattern = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mmXXXXX")
         return ZonedDateTime.parse(time, pattern)
     }
@@ -87,14 +89,14 @@ val terminal: String = "---",
             from = response.departure.airport.iata ?: "N/A",
             fromName = response.departure.airport.shortName ?: response.departure.airport.name,
             fromCountryCode = response.departure.airport.countryCode ?: "---",
-            scheduledDepartDate = scheduledDepartDate,
+            scheduledDepartDate = scheduledDepartDate!!,
             revisedDepartDate = revisedDepartDate,
 
             // Arrival Info
             to = response.arrival.airport.iata ?: "N/A",
             toName = response.arrival.airport.shortName ?: response.arrival.airport.name,
             toCountryCode = response.arrival.airport.countryCode ?: "---",
-            scheduledArriveDate = scheduledArriveDate,
+            scheduledArriveDate = scheduledArriveDate!!,
             revisedArriveDate = revisedArriveDate,
 
             // Airport Details

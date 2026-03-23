@@ -110,7 +110,7 @@ class DetailsViewModel(
      */
     fun getProgress(): Float {
         val now = ZonedDateTime.now()
-        val departTime = flightData.value.revisedDepartDate
+        val departTime = flightData.value.revisedDepartDate ?: flightData.value.scheduledDepartDate
 
         viewModelScope.launch {
             val timeFromStart = Duration.between(now, departTime).toMillis()
@@ -208,7 +208,7 @@ class DetailsViewModel(
     fun getDuration(context: Context): String {
         val duration = Duration.between(
             ZonedDateTime.now(),
-            flightData.value.revisedDepartDate
+            flightData.value.revisedDepartDate ?: flightData.value.scheduledDepartDate
         )
 
         val offset =
@@ -274,7 +274,7 @@ class DetailsViewModel(
     fun getStatus(context: Context): String {
         val duration = Duration.between(
             ZonedDateTime.now(),
-            flightData.value.revisedDepartDate
+            flightData.value.revisedDepartDate ?: flightData.value.scheduledDepartDate
         )
         val seconds = duration.seconds
 

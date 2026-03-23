@@ -3,7 +3,6 @@ package com.tuxy.airo.screens
 import android.content.Context
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -81,12 +80,6 @@ import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import org.maplibre.compose.map.GestureOptions
-import org.maplibre.compose.map.MapOptions
-import org.maplibre.compose.map.MaplibreMap
-import org.maplibre.compose.map.OrnamentOptions
-import org.maplibre.compose.style.BaseStyle
-import ovh.plrapps.mapcompose.ui.MapUI
 import java.time.Duration
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
@@ -177,9 +170,11 @@ fun FlightDetailsView(
                             .verticalScroll(rememberScrollState())
                             .fillMaxHeight()
                     ) {
+                        val depTime = viewModel.flightData.value.revisedDepartDate ?: viewModel.flightData.value.scheduledDepartDate
+
                         RouteBar(viewModel.flightData.value)
                         Text(
-                            text = viewModel.flightData.value.revisedDepartDate.format(DateTimeFormatter.ofPattern("EEEE, MMM d, yyyy")),
+                            text = depTime.format(DateTimeFormatter.ofPattern("EEEE, MMM d, yyyy")),
                             modifier = Modifier.padding(start = 16.dp),
                             color = Color.Gray,
                             overflow = TextOverflow.Visible,
@@ -201,9 +196,9 @@ fun FlightDetailsView(
                                     .background(Color.Gray)
                                     .aspectRatio(1280f / 847f)
                             ) {
-                                MapUI(
-                                    state = viewModel.mapState
-                                )
+//                                MapUI(
+//                                    state = viewModel.mapState
+//                                )
 //                                val variant = if (isSystemInDarkTheme()) "dark" else "light"
 //                                MaplibreMap(
 //                                    baseStyle = BaseStyle.Uri("https://tiles.openfreemap.org/styles/liberty"),
@@ -273,7 +268,7 @@ fun FlightBoardCard(
                 baggageClaim = "",
                 checkIn = flightData.checkInDesk,
                 timeFormat = timeFormat,
-                date = flightData.revisedDepartDate
+                date = flightData.revisedDepartDate ?: flightData.scheduledDepartDate
             )
             Row(
                 verticalAlignment = Alignment.CenterVertically,
@@ -311,7 +306,7 @@ fun FlightBoardCard(
                 baggageClaim = flightData.toBaggageClaim,
                 checkIn = "",
                 timeFormat = timeFormat,
-                date = flightData.revisedArriveDate,
+                date = flightData.revisedArriveDate ?: flightData.scheduledArriveDate,
                 to = true,
                 difference = viewModel.getZoneDifference()
             )
@@ -499,13 +494,13 @@ fun FlightStatusCard(viewModel: DetailsViewModel, context: Context) {
             LinearProgressIndicator(
                 progress = {
                     val now = ZonedDateTime.now()
-                    val departTime = viewModel.flightData.value.revisedDepartDate
+                    val depTime = viewModel.flightData.value.revisedDepartDate ?: viewModel.flightData.value.scheduledDepartDate
 
                     GlobalScope.launch {
 
-                        val timeFromStart = Duration.between(now, departTime).toMillis()
+                        val timeFromStart = Duration.between(now, depTime).toMillis()
 
-                        if (now < departTime) {
+                        if (now < depTime) {
                             viewModel.progress.floatValue = 0.0F
                             return@launch
                         }
