@@ -25,13 +25,6 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.openapitools.client.models.FlightDirection
 import org.openapitools.client.models.FlightSearchByEnum
-import ovh.plrapps.mapcompose.api.addLayer
-import ovh.plrapps.mapcompose.api.disableGestures
-import ovh.plrapps.mapcompose.api.disableRotation
-import ovh.plrapps.mapcompose.api.disableScrolling
-import ovh.plrapps.mapcompose.api.disableZooming
-import ovh.plrapps.mapcompose.core.TileStreamProvider
-import ovh.plrapps.mapcompose.ui.state.MapState
 import java.time.Duration
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
@@ -289,34 +282,6 @@ class DetailsViewModel(
             return context.getString(R.string.flying) // Still flying
         }
 
-    }
-
-    /**
-     * Provides map tiles from local application assets (`assets/tiles/...`) for offline map display.
-     * This allows the map to function without needing network connectivity to fetch tiles.
-     */
-
-    private val tileStreamProvider =
-        TileStreamProvider { row, col, zoomLvl -> // Local map tiles for full offline usage
-            contextForAssets.assets.open("tiles/${zoomLvl}/${col}/${row}.png")
-        }
-    private val mapSize = mapSizeAtLevel()
-
-    /**
-     * The state of the map, including layers, markers, and paths.
-     */
-    @OptIn(DelicateCoroutinesApi::class)
-    val mapState = MapState(6, mapSize, mapSize).apply { // Max zoom level 6
-        disableZooming()
-        disableGestures()
-        disableRotation()
-        disableScrolling()
-        addLayer(tileStreamProvider)
-        // TODO Replace with newer, cleaner map
-    }
-
-    private fun mapSizeAtLevel(): Int {
-        return 256 * 2.0.pow(5).toInt() // Hardcoded zoom level 5 for map size calculation
     }
 
     /**

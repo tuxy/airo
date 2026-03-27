@@ -77,7 +77,11 @@ import androidx.graphics.shapes.RoundedPolygon
 import androidx.graphics.shapes.toPath
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.tuxy.airo.R
+import com.tuxy.airo.composables.MapLibreMapView
 import com.tuxy.airo.composables.RouteBar
+import com.tuxy.airo.composables.addAirportMarker
+import com.tuxy.airo.composables.addFlightRoute
+import com.tuxy.airo.composables.centerOnRoute
 import com.tuxy.airo.data.flightdata_rework.FlightData
 import com.tuxy.airo.data.flightdata_rework.FlightDataDao
 import com.tuxy.airo.viewmodel.DetailsViewModel
@@ -85,12 +89,6 @@ import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import org.maplibre.compose.map.GestureOptions
-import org.maplibre.compose.map.MapOptions
-import org.maplibre.compose.map.MaplibreMap
-import org.maplibre.compose.map.OrnamentOptions
-import org.maplibre.compose.style.BaseStyle
-import ovh.plrapps.mapcompose.ui.MapUI
 import java.time.Duration
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
@@ -201,30 +199,27 @@ fun FlightDetailsView(
                                 )
                                 .fillMaxWidth()
                         ) {
-                            Box(
+                            MapLibreMapView(
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .aspectRatio(1280f / 847f)
-                            ) {
-                                val centerLat = (viewModel.flightData.value.mapOriginLat + viewModel.flightData.value.mapDestinationLat) / 2
-                                val centerLon = (viewModel.flightData.value.mapOriginLon + viewModel.flightData.value.mapDestinationLon) / 2
+                                    .aspectRatio(1280f / 847f),
+                                styleUrl = "https://tiles.openfreemap.org/styles/liberty",
+                                scrollEnabled = false,
+                                zoomEnabled = false,
+                                tiltEnabled = false,
+                                rotateEnabled = false,
+                                onMapReady = { map ->
+                                    val originLat = viewModel.flightData.value.mapOriginLat
+                                    val originLon = viewModel.flightData.value.mapOriginLon
+                                    val destLat = viewModel.flightData.value.mapDestinationLat
+                                    val destLon = viewModel.flightData.value.mapDestinationLon
 
-                                MaplibreMap(
-                                    baseStyle = BaseStyle.Uri("https://tiles.openfreemap.org/styles/liberty"),
-                                    options = MapOptions(
-                                        gestureOptions = GestureOptions(
-                                            isTiltEnabled = true,
-                                            isZoomEnabled = true,
-                                            isRotateEnabled = false,
-                                            isScrollEnabled = true,
-                                        ),
-                                        ornamentOptions = OrnamentOptions(
-                                            isScaleBarEnabled = false,
-                                            isCompassEnabled = false,
-                                        )
-                                    )
-                                )
-                            }
+                                    map.addFlightRoute(originLat, originLon, destLat, destLon)
+                                    map.addAirportMarker(originLat, originLon, viewModel.flightData.value.from, isOrigin = true)
+                                    map.addAirportMarker(destLat, destLon, viewModel.flightData.value.to, isOrigin = false)
+                                    map.centerOnRoute(originLat, originLon, destLat, destLon)
+                                }
+                            )
                         }
                         FlightStatusCard(viewModel, context)
                         FlightInformationInteract(
