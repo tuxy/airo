@@ -127,12 +127,10 @@ class DetailsViewModel(
      * Deletes the current flight from the database.
      * @param flightDataDao The DAO for accessing flight data.
      */
-    fun deleteFlight(
+    suspend fun deleteFlight(
         flightDataDao: FlightDataDao,
     ) {
-        viewModelScope.launch(Dispatchers.IO) {
-            flightDataDao.deleteFlight(flightData.value)
-        }
+        flightDataDao.deleteFlight(flightData.value)
         openDialog.value = false
     }
 

@@ -635,6 +635,8 @@ fun DeleteDialog(
     viewModel: DetailsViewModel,
     onFlightDelete: () -> Unit
 ) {
+    val scope = rememberCoroutineScope()
+
     BasicAlertDialog(
         onDismissRequest = {
             viewModel.openDialog.value = false
@@ -668,8 +670,10 @@ fun DeleteDialog(
                     }
                     TextButton(
                         onClick = {
-                            viewModel.deleteFlight(flightDataDao)
-                            onFlightDelete()
+                            scope.launch {
+                                viewModel.deleteFlight(flightDataDao)
+                                onFlightDelete()
+                            }
                         }
                     ) {
                         Text(stringResource(R.string.delete), overflow = TextOverflow.Visible, maxLines = 1)
