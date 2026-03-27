@@ -14,39 +14,7 @@ import org.openapitools.client.models.FlightContract
 import org.openapitools.client.models.FlightDirection
 import org.openapitools.client.models.FlightSearchByEnum
 
-class DataRequest {
-    fun test() {
-
-        val api = FlightDataRequest(
-            baseUrl = "https://airoapi.tuxy.stream"
-        )
-
-        val res = api.getFlightOnSpecificDate(
-            searchParam = "vj81",
-            dateLocal = "2026-04-02",
-            searchBy = FlightSearchByEnum.Number,
-            dateLocalRole = FlightDirection.Departure,
-            withAircraftImage = true,
-            withLocation = false, // Maybe true in the future
-            withFlightPlan = false,
-        ) // <- this has exception classes built-in, so utilise those for any messages received
-
-        when(res) {
-            is Success -> {
-                println(res.result)
-            }
-            is Error -> { // TODO Just ignoring for testing
-                println(res.result)
-            }
-            is CaughtException -> {
-                println(res.exception)
-            }
-        }
-    }
-}
-
 // A few helper enums & classes
-
 enum class RequestMethod { // Simple enum for now
     GET,
     POST
@@ -59,7 +27,7 @@ data class CaughtException(val exception: Exception) : Outcome
 
 
 class FlightDataRequest(
-    val baseUrl: String = "https://prod.api.market/api/v1/aedbx/aerodatabox",
+    val baseUrl: String = "https://airoapi.tuxy.stream/",
     val key: String? = null,
 ) {
     fun getFlightOnSpecificDate(
@@ -74,7 +42,7 @@ class FlightDataRequest(
 
         val request = ApiClient(
             baseUrl = this.baseUrl,
-            path = "/flights/$searchBy/$searchParam/$dateLocal",
+            path = "flights/$searchBy/$searchParam/$dateLocal",
             method = RequestMethod.GET,
             headers = if (this.key != null) mapOf("x-magicapi-key" to this.key) else emptyMap(),
             params = mapOf(

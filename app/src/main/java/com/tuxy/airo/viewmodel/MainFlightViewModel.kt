@@ -6,11 +6,12 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.viewModelScope
 import com.tuxy.airo.data.database.PreferencesInterface
-import com.tuxy.airo.data.flightdata.FlightData
-import com.tuxy.airo.data.flightdata.FlightDataDao
+import com.tuxy.airo.data.flightdata_rework.FlightData
+import com.tuxy.airo.data.flightdata_rework.FlightDataDao
 import kotlinx.coroutines.DelicateCoroutinesApi
-import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import java.time.Duration
 import java.time.ZonedDateTime
@@ -22,7 +23,7 @@ class MainFlightViewModel(context: Context) : ViewModel() {
         private set
 
     var flights = flightData.associateBy { flight ->
-        flight.departDate.toEpochSecond()
+        flight.scheduledDepartDate.toEpochSecond()
     }.toSortedMap()
 
     var flightsUpcomingList = emptyList<List<FlightData>>()
@@ -30,11 +31,11 @@ class MainFlightViewModel(context: Context) : ViewModel() {
 
     @OptIn(DelicateCoroutinesApi::class)
     fun loadData(flightDataDao: FlightDataDao) {
-        GlobalScope.launch {
+        viewModelScope.launch(Dispatchers.IO) {
             flightData = flightDataDao.readAll()
             // Group by 1 day
             flights = flightData.associateBy { flight ->
-                flight.arriveDate.toEpochSecond()
+                flight.scheduledArriveDate.toEpochSecond()
             }.toSortedMap()
 
             val nowInEpochSeconds = ZonedDateTime.now().toEpochSecond()
@@ -69,7 +70,7 @@ class MainFlightViewModel(context: Context) : ViewModel() {
             val lastFlightInGroup = lastGroup?.lastOrNull()
 
             if (lastFlightInGroup != null) {
-                val timeDiff = Duration.between(lastFlightInGroup.departDate, flight.departDate).abs()
+                val timeDiff = Duration.between(lastFlightInGroup.scheduledDepartDate, flight.scheduledDepartDate).abs()
 
                 if (timeDiff <= Duration.ofHours(24)) {
                     val updatedLastGroup = lastGroup + flight

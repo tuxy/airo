@@ -3,6 +3,7 @@ package com.tuxy.airo.screens
 import android.content.Context
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -64,23 +65,30 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.graphics.shapes.RoundedPolygon
 import androidx.graphics.shapes.toPath
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.tuxy.airo.R
+import com.tuxy.airo.composables.MapLibreMapView
 import com.tuxy.airo.composables.RouteBar
-import com.tuxy.airo.data.flightdata.FlightData
-import com.tuxy.airo.data.flightdata.FlightDataDao
+import com.tuxy.airo.composables.addAirportMarker
+import com.tuxy.airo.composables.addFlightRoute
+import com.tuxy.airo.composables.centerOnRoute
+import com.tuxy.airo.data.flightdata_rework.FlightData
+import com.tuxy.airo.data.flightdata_rework.FlightDataDao
 import com.tuxy.airo.viewmodel.DetailsViewModel
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import ovh.plrapps.mapcompose.ui.MapUI
 import java.time.Duration
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
@@ -161,7 +169,6 @@ fun FlightDetailsView(
                     onRefresh = {
                         viewModel.refreshData(
                             flightDataDao,
-                            context,
                             settings,
                             isRefreshing
                         )
@@ -172,9 +179,11 @@ fun FlightDetailsView(
                             .verticalScroll(rememberScrollState())
                             .fillMaxHeight()
                     ) {
+                        val depTime = viewModel.flightData.value.revisedDepartDate ?: viewModel.flightData.value.scheduledDepartDate
+
                         RouteBar(viewModel.flightData.value)
                         Text(
-                            text = viewModel.flightData.value.departDate.format(DateTimeFormatter.ofPattern("EEEE, MMM d, yyyy")),
+                            text = depTime.format(DateTimeFormatter.ofPattern("EEEE, MMM d, yyyy")),
                             modifier = Modifier.padding(start = 16.dp),
                             color = Color.Gray,
                             overflow = TextOverflow.Visible,
@@ -187,19 +196,30 @@ fun FlightDetailsView(
                                     top = 17.dp,
                                     start = 17.dp,
                                     end = 17.dp
-                                ) // Not sure why, but map seems to pop out a bit more than the others
+                                )
                                 .fillMaxWidth()
                         ) {
-                            Box(
+                            MapLibreMapView(
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .background(Color.Gray)
-                                    .aspectRatio(1280f / 847f)
-                            ) {
-                                MapUI(
-                                    state = viewModel.mapState
-                                )
-                            }
+                                    .aspectRatio(1280f / 847f),
+                                styleUrl = "https://tiles.openfreemap.org/styles/liberty",
+                                scrollEnabled = false,
+                                zoomEnabled = false,
+                                tiltEnabled = false,
+                                rotateEnabled = false,
+                                onMapReady = { map ->
+                                    val originLat = viewModel.flightData.value.mapOriginLat
+                                    val originLon = viewModel.flightData.value.mapOriginLon
+                                    val destLat = viewModel.flightData.value.mapDestinationLat
+                                    val destLon = viewModel.flightData.value.mapDestinationLon
+
+                                    map.addFlightRoute(originLat, originLon, destLat, destLon)
+                                    map.addAirportMarker(originLat, originLon, viewModel.flightData.value.from, isOrigin = true)
+                                    map.addAirportMarker(destLat, destLon, viewModel.flightData.value.to, isOrigin = false)
+                                    map.centerOnRoute(originLat, originLon, destLat, destLon)
+                                }
+                            )
                         }
                         FlightStatusCard(viewModel, context)
                         FlightInformationInteract(
@@ -252,7 +272,8 @@ fun FlightBoardCard(
                 baggageClaim = "",
                 checkIn = flightData.checkInDesk,
                 timeFormat = timeFormat,
-                date = flightData.departDate
+                scheduledDate = flightData.scheduledDepartDate,
+                revisedDate = flightData.revisedDepartDate
             )
             Row(
                 verticalAlignment = Alignment.CenterVertically,
@@ -290,7 +311,8 @@ fun FlightBoardCard(
                 baggageClaim = flightData.toBaggageClaim,
                 checkIn = "",
                 timeFormat = timeFormat,
-                date = flightData.arriveDate,
+                scheduledDate = flightData.scheduledArriveDate,
+                revisedDate = flightData.revisedArriveDate,
                 to = true,
                 difference = viewModel.getZoneDifference()
             )
@@ -307,10 +329,15 @@ fun FlightBoard(
     baggageClaim: String,
     checkIn: String,
     timeFormat: String,
-    date: ZonedDateTime,
+    scheduledDate: ZonedDateTime,
+    revisedDate: ZonedDateTime?,
     to: Boolean = false,
     difference: String = ""
 ) {
+    val showRevised = revisedDate != null && revisedDate != scheduledDate
+    val green = Color(0xFF4CAF50)
+    val red = Color(0xFFF44336)
+
     Row(
         horizontalArrangement = Arrangement.SpaceBetween,
         modifier = Modifier.fillMaxWidth()
@@ -359,15 +386,37 @@ fun FlightBoard(
         Column(
             horizontalAlignment = Alignment.End
         ) {
-            Text(
-                date.format(DateTimeFormatter.ofPattern(timeFormat)),
-                fontWeight = FontWeight.W500,
-                fontSize = 24.sp,
-                color = MaterialTheme.colorScheme.primary,
-                modifier = Modifier.padding(bottom = 4.dp),
-                overflow = TextOverflow.Visible,
-                maxLines = 1
-            )
+            if (showRevised) {
+                val revisedColor = if (revisedDate < scheduledDate) green else red
+                Text(
+                    buildAnnotatedString {
+                        withStyle(SpanStyle(color = MaterialTheme.colorScheme.primary, fontSize = 16.sp)) {
+                            append(scheduledDate.format(DateTimeFormatter.ofPattern(timeFormat)))
+                        }
+                        withStyle(SpanStyle(color = MaterialTheme.colorScheme.primary, fontSize = 16.sp)) {
+                            append(" →\n")
+                        }
+                        withStyle(SpanStyle(color = revisedColor, fontSize = 24.sp, fontWeight = FontWeight.W500)) {
+                            append(revisedDate.format(DateTimeFormatter.ofPattern(timeFormat)))
+                        }
+                    },
+                    modifier = Modifier.padding(bottom = 4.dp),
+		    lineHeight = 30.sp,
+		    textAlign = TextAlign.End,
+                    overflow = TextOverflow.Visible,
+                    maxLines = 2
+                )
+            } else {
+                Text(
+                    text = scheduledDate.format(DateTimeFormatter.ofPattern(timeFormat)),
+                    fontWeight = FontWeight.W500,
+                    fontSize = 24.sp,
+                    color = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.padding(bottom = 4.dp),
+                    overflow = TextOverflow.Visible,
+                    maxLines = 2
+                )
+            }
             if (to) { // Time zone difference
                 Text(
                     difference,
@@ -478,13 +527,13 @@ fun FlightStatusCard(viewModel: DetailsViewModel, context: Context) {
             LinearProgressIndicator(
                 progress = {
                     val now = ZonedDateTime.now()
-                    val departTime = viewModel.flightData.value.departDate
+                    val depTime = viewModel.flightData.value.revisedDepartDate ?: viewModel.flightData.value.scheduledDepartDate
 
                     GlobalScope.launch {
 
-                        val timeFromStart = Duration.between(now, departTime).toMillis()
+                        val timeFromStart = Duration.between(now, depTime).toMillis()
 
-                        if (now < departTime) {
+                        if (now < depTime) {
                             viewModel.progress.floatValue = 0.0F
                             return@launch
                         }
@@ -586,6 +635,8 @@ fun DeleteDialog(
     viewModel: DetailsViewModel,
     onFlightDelete: () -> Unit
 ) {
+    val scope = rememberCoroutineScope()
+
     BasicAlertDialog(
         onDismissRequest = {
             viewModel.openDialog.value = false
@@ -619,8 +670,10 @@ fun DeleteDialog(
                     }
                     TextButton(
                         onClick = {
-                            viewModel.deleteFlight(flightDataDao)
-                            onFlightDelete()
+                            scope.launch {
+                                viewModel.deleteFlight(flightDataDao)
+                                onFlightDelete()
+                            }
                         }
                     ) {
                         Text(stringResource(R.string.delete), overflow = TextOverflow.Visible, maxLines = 1)

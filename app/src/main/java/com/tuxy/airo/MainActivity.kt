@@ -20,14 +20,11 @@ import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.preferencesDataStore
 import com.tuxy.airo.data.database.PreferencesInterface
-import com.tuxy.airo.data.flightdata.FlightDataBase
-import com.tuxy.airo.data.flightdata.FlightDataDao
-import com.tuxy.airo.data.flightdata_rework.DataRequest
+import com.tuxy.airo.data.flightdata_rework.FlightDataBase
+import com.tuxy.airo.data.flightdata_rework.FlightDataDao
 import com.tuxy.airo.ui.theme.AeroTheme
 import de.raphaelebner.roomdatabasebackup.core.RoomBackup
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.DelicateCoroutinesApi
 
 val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "settings")
 
@@ -41,6 +38,7 @@ class MainActivity : ComponentActivity() {
         getSystemService(POWER_SERVICE) as PowerManager
     }
 
+    @OptIn(DelicateCoroutinesApi::class)
     @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter", "CoroutineCreationDuringComposition")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -75,10 +73,6 @@ class MainActivity : ComponentActivity() {
                             arrayOf(Manifest.permission.POST_NOTIFICATIONS), 101
                         )
                     } // If the user denies notifications, we ignore forever
-                }
-
-                GlobalScope.launch(Dispatchers.IO) {
-                    DataRequest().test()
                 }
 
                 Surface(color = MaterialTheme.colorScheme.background) {

@@ -37,9 +37,13 @@ See [Contributing.md](/Contributing.md) for more information on how you can help
 
 *all code from libraries are to follow their respective project licenses*
 
+Previously used:
 - MapCompose https://github.com/p-lr/MapCompose
 - USGS Topo map https://www.usgs.gov/ (December 2024)
     - MOBAC (MOBile Atlas Creator) https://mobac.sourceforge.io/
+
+Current:
+- MapLibre-Native https://github.com/maplibre/maplibre-native
 - ComposedBarcodes https://github.com/simonsickle/ComposedBarcodes
 - Coil Image loading https://coil-kt.github.io/coil/
 - Square libraries https://square.github.io/

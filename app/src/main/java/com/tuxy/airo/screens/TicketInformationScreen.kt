@@ -65,9 +65,9 @@ import com.simonsickle.compose.barcodes.BarcodeType
 import com.tuxy.airo.R
 import com.tuxy.airo.composables.BoldDepartureAndDestinationText
 import com.tuxy.airo.composables.LargeTopSmallBottom
-import com.tuxy.airo.data.flightdata.FlightData
-import com.tuxy.airo.data.flightdata.FlightDataDao
-import com.tuxy.airo.data.flightdata.IataParserData
+import com.tuxy.airo.data.flightdata_rework.FlightData
+import com.tuxy.airo.data.flightdata_rework.FlightDataDao
+import com.tuxy.airo.data.flightdata_rework.IataParserData
 import com.tuxy.airo.viewmodel.TicketViewModel
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
@@ -240,11 +240,14 @@ fun MainTicketView(
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.Bottom
         ) {
+            val depTime = flightData.revisedDepartDate ?: flightData.scheduledDepartDate
+            val arrTime = flightData.revisedArriveDate ?: flightData.scheduledArriveDate
+
             BoldDepartureAndDestinationText(
                 flightData.from,
                 flightData.fromCountryCode,
                 flightData.fromName,
-                flightData.departDate.format(DateTimeFormatter.ofPattern(timeFormat)),
+                depTime.format(DateTimeFormatter.ofPattern(timeFormat)),
                 Alignment.Start
             )
             Icon(
@@ -255,7 +258,7 @@ fun MainTicketView(
                 flightData.to,
                 flightData.toCountryCode,
                 flightData.fromName,
-                flightData.arriveDate.format(DateTimeFormatter.ofPattern(timeFormat)),
+                arrTime.format(DateTimeFormatter.ofPattern(timeFormat)),
                 Alignment.End
             )
         }

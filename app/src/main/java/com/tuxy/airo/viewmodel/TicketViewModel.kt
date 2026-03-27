@@ -11,16 +11,15 @@ import androidx.compose.runtime.setValue
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.viewModelScope
 import com.journeyapps.barcodescanner.ScanIntentResult
 import com.journeyapps.barcodescanner.ScanOptions
 import com.tuxy.airo.R
 import com.tuxy.airo.data.database.PreferencesInterface
-import com.tuxy.airo.data.flightdata.FlightData
-import com.tuxy.airo.data.flightdata.FlightDataDao
-import com.tuxy.airo.data.flightdata.IataParserData
-import com.tuxy.airo.data.flightdata.singleIntoMut
+import com.tuxy.airo.data.flightdata_rework.FlightData
+import com.tuxy.airo.data.flightdata_rework.FlightDataDao
+import com.tuxy.airo.data.flightdata_rework.IataParserData
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 
 /**
@@ -66,7 +65,7 @@ class TicketViewModel(
 
     var openDialog = mutableStateOf(false)
 
-    private fun getData(context: Context) {
+    private fun parseTicketData(context: Context) {
         ticketData = IataParserData().parseData(flightData.value.ticketData, context)
     }
 
@@ -77,8 +76,8 @@ class TicketViewModel(
      */
     fun updateData(flightDataDao: FlightDataDao, context: Context) {
         flightData.value.ticketData = ticketString
-        getData(context)
-        GlobalScope.launch(Dispatchers.IO) {
+        parseTicketData(context)
+        viewModelScope.launch(Dispatchers.IO) {
             flightDataDao.updateFlight(flightData.value)
         }
     }
@@ -91,21 +90,20 @@ class TicketViewModel(
     fun deleteData(flightDataDao: FlightDataDao, context: Context) {
         ticketString = ""
         flightData.value.ticketData = ""
-        getData(context)
-        GlobalScope.launch(Dispatchers.IO) {
+        parseTicketData(context)
+        viewModelScope.launch(Dispatchers.IO) {
             flightDataDao.updateFlight(flightData.value)
         }
     }
 
     init {
-        GlobalScope.launch(Dispatchers.IO) {
-            val job = singleIntoMut(
-                flightData,
-                flightDataDao,
-                id
-            ) // On initialisation, pass db data into flightData
+        viewModelScope.launch(Dispatchers.IO) {
+            val job = viewModelScope.launch(Dispatchers.IO) {
+                flightData.value = flightDataDao.readSingle(id) ?: FlightData()
+            }
             job.join()
-            getData(context)
+            parseTicketData(context)
+
             ticketString = flightData.value.ticketData
         }
     }

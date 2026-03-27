@@ -23,6 +23,9 @@ jobs:
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v6
 
+      - name: Generate OpenAPI schemas
+        run: ./gradlew :app:openApiGenerate
+
       - name: Build gradle project
         run: ./gradlew build
 

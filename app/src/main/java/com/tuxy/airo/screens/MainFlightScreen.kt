@@ -71,8 +71,8 @@ import com.tuxy.airo.R
 import com.tuxy.airo.Screen
 import com.tuxy.airo.composables.BoldDepartureAndDestinationText
 import com.tuxy.airo.composables.LargeTopSmallBottom
-import com.tuxy.airo.data.flightdata.FlightData
-import com.tuxy.airo.data.flightdata.FlightDataDao
+import com.tuxy.airo.data.flightdata_rework.FlightData
+import com.tuxy.airo.data.flightdata_rework.FlightDataDao
 import com.tuxy.airo.viewmodel.MainFlightViewModel
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
@@ -207,7 +207,8 @@ fun FlightsList(
                         NoFlight(Modifier.fillMaxSize().padding(128.dp))
                     } else {
                         viewModel.flightsUpcomingList.forEach { flights ->
-                            DateHeader(flights[0].departDate, flights.size)
+                            val depTime = flights[0].revisedDepartDate ?: flights[0].scheduledDepartDate
+                            DateHeader(depTime, flights.size)
                             flights.groupBy { flight ->
                                 FlightCard(flight, viewModel, onFlightClick)
                             }
@@ -219,7 +220,8 @@ fun FlightsList(
                         NoFlight(Modifier.fillMaxSize().padding(128.dp))
                     } else {
                         viewModel.flightsPastList.forEach { flights ->
-                            DateHeader(flights[0].departDate, flights.size)
+                            val depTime = flights[0].revisedDepartDate ?: flights[0].scheduledDepartDate
+                            DateHeader(depTime, flights.size)
                             flights.groupBy { flight ->
                                 FlightCard(flight, viewModel, onFlightClick)
                             }
@@ -294,11 +296,14 @@ fun FlightCard(
                     itemVerticalAlignment = Alignment.CenterVertically,
                     maxLines = 1
                 ) {
+                    val depTime = flightData.revisedDepartDate ?: flightData.scheduledDepartDate
+                    val arrTime = flightData.revisedArriveDate ?: flightData.scheduledArriveDate
+
                     BoldDepartureAndDestinationText(
                         flightData.from,
                         flightData.fromCountryCode,
                         flightData.fromName,
-                        flightData.departDate.format(DateTimeFormatter.ofPattern(timeFormat)),
+                        depTime.format(DateTimeFormatter.ofPattern(timeFormat)),
                         Alignment.Start
                     )
                     Icon(
@@ -309,7 +314,7 @@ fun FlightCard(
                         flightData.to,
                         flightData.toCountryCode,
                         flightData.toName,
-                        flightData.arriveDate.format(DateTimeFormatter.ofPattern(timeFormat)),
+                        arrTime.format(DateTimeFormatter.ofPattern(timeFormat)),
                         Alignment.End
                     )
                 }
@@ -317,7 +322,7 @@ fun FlightCard(
                 LinearProgressIndicator(
                     progress = {
                         val now = ZonedDateTime.now()
-                        val departTime = flightData.departDate
+                        val departTime = flightData.revisedDepartDate ?: flightData.scheduledDepartDate
 
                         if (now < departTime) {
                             0.0F

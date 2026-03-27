@@ -1,6 +1,7 @@
 package com.tuxy.airo.data.flightdata_rework
 
 import android.content.Context
+import android.util.Log
 import androidx.room.Dao
 import androidx.room.Database
 import androidx.room.Delete
@@ -20,7 +21,6 @@ import java.time.LocalDateTime
 import java.time.ZoneOffset
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
-import kotlin.String
 
 @Entity(tableName = "flight_table")
 data class FlightData(
@@ -36,8 +36,10 @@ data class FlightData(
     val fromCountryCode: String = "---",
     val toCountryCode: String = "---",
     val fromName: String = "---",
-    val departDate: ZonedDateTime = ZonedDateTime.now(ZoneOffset.UTC),
-    val arriveDate: ZonedDateTime = ZonedDateTime.now(ZoneOffset.UTC),
+    val scheduledDepartDate: ZonedDateTime = ZonedDateTime.now(ZoneOffset.UTC),
+    val scheduledArriveDate: ZonedDateTime = ZonedDateTime.now(ZoneOffset.UTC),
+    val revisedDepartDate: ZonedDateTime? = null,
+    val revisedArriveDate: ZonedDateTime? = null,
     val duration: Duration = Duration.ofSeconds(1), // Prevents current = NaN
     val toName: String = "---",
     var ticketData: String = "",
@@ -57,67 +59,71 @@ val terminal: String = "---",
     val mapDestinationLon: Double = 1.0,
     val attribution: String = "---"
 ) {
-    internal fun parseDateTime(time: String?): ZonedDateTime {
+    internal fun parseDateTime(time: String?): ZonedDateTime? {
         if (time == null) {
-            return ZonedDateTime.now(ZoneOffset.UTC) // If time isn't available
-        } // TODO Maybe add a notice that the time couldn't be received?
+            Log.d("FlightData", "Time is null")
+            return null // If time isn't available
+        }
         val pattern = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mmXXXXX")
         return ZonedDateTime.parse(time, pattern)
     }
 
-    fun from(response: List<FlightContract>): FlightData? {
-        val flight = response.firstOrNull() ?: return null
+    fun from(response: FlightContract): FlightData {
 
-        val departDate = parseDateTime(flight.departure.scheduledTime?.local)
-        val arriveDate = parseDateTime(flight.arrival.scheduledTime?.local)
+        val scheduledDepartDate = parseDateTime(response.departure.scheduledTime?.local)
+        val scheduledArriveDate = parseDateTime(response.arrival.scheduledTime?.local)
 
+        val revisedDepartDate = parseDateTime(response.departure.revisedTime?.local)
+        val revisedArriveDate = parseDateTime(response.arrival.revisedTime?.local)
 
         return FlightData(
             lastUpdate = LocalDateTime.now(),
-            callSign = flight.number,
+            callSign = response.number,
 
             // Airline Info (Safe handling of null airline object)
-            airline = flight.airline?.name ?: "N/A",
-            airlineIcao = flight.airline?.icao ?: "N/A",
-            airlineIata = flight.airline?.iata ?: "N/A",
+            airline = response.airline?.name ?: "N/A",
+            airlineIcao = response.airline?.icao ?: "N/A",
+            airlineIata = response.airline?.iata ?: "N/A",
 
             // Departure Info
-            from = flight.departure.airport.iata ?: "N/A",
-            fromName = flight.departure.airport.name,
-            fromCountryCode = flight.departure.airport.countryCode ?: "---",
-            departDate = departDate,
+            from = response.departure.airport.iata ?: "N/A",
+            fromName = response.departure.airport.shortName ?: response.departure.airport.name,
+            fromCountryCode = response.departure.airport.countryCode ?: "---",
+            scheduledDepartDate = scheduledDepartDate!!,
+            revisedDepartDate = revisedDepartDate,
 
             // Arrival Info
-            to = flight.arrival.airport.iata ?: "N/A",
-            toName = flight.arrival.airport.name,
-            toCountryCode = flight.arrival.airport.countryCode ?: "---",
-            arriveDate = arriveDate,
+            to = response.arrival.airport.iata ?: "N/A",
+            toName = response.arrival.airport.shortName ?: response.arrival.airport.name,
+            toCountryCode = response.arrival.airport.countryCode ?: "---",
+            scheduledArriveDate = scheduledArriveDate!!,
+            revisedArriveDate = revisedArriveDate,
 
             // Airport Details
-            gate = flight.departure.gate ?: "—",
-            terminal = flight.departure.terminal ?: "—",
-            checkInDesk = flight.departure.checkInDesk ?: "—",
-            toGate = flight.arrival.gate ?: "—",
-            toTerminal = flight.arrival.terminal ?: "—",
-            toBaggageClaim = flight.arrival.baggageBelt ?: "—",
+            gate = response.departure.gate ?: "—",
+            terminal = response.departure.terminal ?: "—",
+            checkInDesk = response.departure.checkInDesk ?: "—",
+            toGate = response.arrival.gate ?: "—",
+            toTerminal = response.arrival.terminal ?: "—",
+            toBaggageClaim = response.arrival.baggageBelt ?: "—",
 
             // Aircraft Info
-            aircraftName = flight.aircraft?.model ?: "N/A",
-            aircraftUri = flight.aircraft?.image?.url ?: "",
-            author = flight.aircraft?.image?.author ?: "",
-            authorUri = flight.aircraft?.image?.webUrl ?: "",
-            attribution = flight.aircraft?.image?.htmlAttributions?.firstOrNull() ?: "",
+            aircraftName = response.aircraft?.model ?: "N/A",
+            aircraftUri = response.aircraft?.image?.url ?: "",
+            author = response.aircraft?.image?.author ?: "",
+            authorUri = response.aircraft?.image?.webUrl ?: "",
+            attribution = response.aircraft?.image?.htmlAttributions?.firstOrNull() ?: "",
 
             // Location / Map
-            mapOriginLat = flight.departure.airport.location?.lat?.toDouble() ?: 0.0, // TODO implement new map system
-            mapOriginLon = flight.departure.airport.location?.lon?.toDouble() ?: 0.0,
-            mapDestinationLat = flight.arrival.airport.location?.lat?.toDouble() ?: 0.0,
-            mapDestinationLon = flight.arrival.airport.location?.lon?.toDouble() ?: 0.0,
+            mapOriginLat = response.departure.airport.location?.lat?.toDouble() ?: 0.0, // TODO implement new map system
+            mapOriginLon = response.departure.airport.location?.lon?.toDouble() ?: 0.0,
+            mapDestinationLat = response.arrival.airport.location?.lat?.toDouble() ?: 0.0,
+            mapDestinationLon = response.arrival.airport.location?.lon?.toDouble() ?: 0.0,
 
             ticketData = "", // Keeping your default
             duration = Duration.between(
-                departDate,
-                arriveDate
+                scheduledDepartDate,
+                scheduledArriveDate
             )
         )
     }
@@ -143,12 +149,12 @@ interface FlightDataDao {
     /**
      * Checks if a flight with the given departure date and call sign already exists in the database.
      *
-     * @param departDate The departure date and time of the flight.
+     * @param scheduledDepartDate The departure date and time of the flight.
      * @param callSign The call sign of the flight.
      * @return The number of flights matching the criteria (0 or 1, as duplicates are ignored on insert).
      */
-    @Query("SELECT COUNT() FROM flight_table WHERE departDate=:departDate AND callSign=:callSign")
-    fun queryExisting(departDate: ZonedDateTime, callSign: String): Int
+    @Query("SELECT COUNT() FROM flight_table WHERE scheduledDepartDate=:scheduledDepartDate AND callSign=:callSign")
+    fun queryExisting(scheduledDepartDate: ZonedDateTime, callSign: String): Int
 
 //    @Query("DELETE FROM flight_table") // ONLY FOR DEVELOPMENT
 //    fun nukeTable()
