@@ -65,8 +65,12 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.graphics.shapes.RoundedPolygon
@@ -194,34 +198,32 @@ fun FlightDetailsView(
                                     top = 17.dp,
                                     start = 17.dp,
                                     end = 17.dp
-                                ) // Not sure why, but map seems to pop out a bit more than the others
+                                )
                                 .fillMaxWidth()
                         ) {
                             Box(
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .background(Color.Gray)
                                     .aspectRatio(1280f / 847f)
                             ) {
-//                                MapUI(
-//                                    state = viewModel.mapState
-//                                )
-//                                val variant = if (isSystemInDarkTheme()) "dark" else "light"
-//                                MaplibreMap(
-//                                    baseStyle = BaseStyle.Uri("https://tiles.openfreemap.org/styles/liberty"),
-//                                    options = MapOptions(
-//                                        gestureOptions = GestureOptions(
-//                                            isTiltEnabled = true,
-//                                            isZoomEnabled = true,
-//                                            isRotateEnabled = false,
-//                                            isScrollEnabled = true,
-//                                        ),
-//                                        ornamentOptions = OrnamentOptions(
-//                                            isScaleBarEnabled = false,
-//                                            isCompassEnabled = false,
-//                                        )
-//                                    )
-//                                )
+                                val centerLat = (viewModel.flightData.value.mapOriginLat + viewModel.flightData.value.mapDestinationLat) / 2
+                                val centerLon = (viewModel.flightData.value.mapOriginLon + viewModel.flightData.value.mapDestinationLon) / 2
+
+                                MaplibreMap(
+                                    baseStyle = BaseStyle.Uri("https://tiles.openfreemap.org/styles/liberty"),
+                                    options = MapOptions(
+                                        gestureOptions = GestureOptions(
+                                            isTiltEnabled = true,
+                                            isZoomEnabled = true,
+                                            isRotateEnabled = false,
+                                            isScrollEnabled = true,
+                                        ),
+                                        ornamentOptions = OrnamentOptions(
+                                            isScaleBarEnabled = false,
+                                            isCompassEnabled = false,
+                                        )
+                                    )
+                                )
                             }
                         }
                         FlightStatusCard(viewModel, context)
@@ -275,7 +277,8 @@ fun FlightBoardCard(
                 baggageClaim = "",
                 checkIn = flightData.checkInDesk,
                 timeFormat = timeFormat,
-                date = flightData.revisedDepartDate ?: flightData.scheduledDepartDate
+                scheduledDate = flightData.scheduledDepartDate,
+                revisedDate = flightData.revisedDepartDate
             )
             Row(
                 verticalAlignment = Alignment.CenterVertically,
@@ -313,7 +316,8 @@ fun FlightBoardCard(
                 baggageClaim = flightData.toBaggageClaim,
                 checkIn = "",
                 timeFormat = timeFormat,
-                date = flightData.revisedArriveDate ?: flightData.scheduledArriveDate,
+                scheduledDate = flightData.scheduledArriveDate,
+                revisedDate = flightData.revisedArriveDate,
                 to = true,
                 difference = viewModel.getZoneDifference()
             )
@@ -330,10 +334,15 @@ fun FlightBoard(
     baggageClaim: String,
     checkIn: String,
     timeFormat: String,
-    date: ZonedDateTime,
+    scheduledDate: ZonedDateTime,
+    revisedDate: ZonedDateTime?,
     to: Boolean = false,
     difference: String = ""
 ) {
+    val showRevised = revisedDate != null && revisedDate != scheduledDate
+    val green = Color(0xFF4CAF50)
+    val red = Color(0xFFF44336)
+
     Row(
         horizontalArrangement = Arrangement.SpaceBetween,
         modifier = Modifier.fillMaxWidth()
@@ -382,15 +391,37 @@ fun FlightBoard(
         Column(
             horizontalAlignment = Alignment.End
         ) {
-            Text(
-                date.format(DateTimeFormatter.ofPattern(timeFormat)),
-                fontWeight = FontWeight.W500,
-                fontSize = 24.sp,
-                color = MaterialTheme.colorScheme.primary,
-                modifier = Modifier.padding(bottom = 4.dp),
-                overflow = TextOverflow.Visible,
-                maxLines = 1
-            )
+            if (showRevised) {
+                val revisedColor = if (revisedDate < scheduledDate) green else red
+                Text(
+                    buildAnnotatedString {
+                        withStyle(SpanStyle(color = MaterialTheme.colorScheme.primary, fontSize = 16.sp)) {
+                            append(scheduledDate.format(DateTimeFormatter.ofPattern(timeFormat)))
+                        }
+                        withStyle(SpanStyle(color = MaterialTheme.colorScheme.primary, fontSize = 16.sp)) {
+                            append(" →\n")
+                        }
+                        withStyle(SpanStyle(color = revisedColor, fontSize = 24.sp, fontWeight = FontWeight.W500)) {
+                            append(revisedDate.format(DateTimeFormatter.ofPattern(timeFormat)))
+                        }
+                    },
+                    modifier = Modifier.padding(bottom = 4.dp),
+		    lineHeight = 30.sp,
+		    textAlign = TextAlign.End,
+                    overflow = TextOverflow.Visible,
+                    maxLines = 2
+                )
+            } else {
+                Text(
+                    text = scheduledDate.format(DateTimeFormatter.ofPattern(timeFormat)),
+                    fontWeight = FontWeight.W500,
+                    fontSize = 24.sp,
+                    color = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.padding(bottom = 4.dp),
+                    overflow = TextOverflow.Visible,
+                    maxLines = 2
+                )
+            }
             if (to) { // Time zone difference
                 Text(
                     difference,
