@@ -1,15 +1,17 @@
-name: Android Build
+name: Android Release
 on:
-  push:
-    branches: [ main, github-actions-android-build ]
-    paths-ignore:
-      - 'README.md'
-      - 'Contributing.md'
-  pull_request:
-    branches: [ main ]
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Release version'
+        required: true
+        type: string
+
 jobs:
   build:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - name: Checkout code
         uses: actions/checkout@v6
@@ -30,11 +32,15 @@ jobs:
       - name: Generate OpenAPI schemas
         run: ./gradlew :app:openApiGenerate
 
-      - name: Build gradle project
-        run: ./gradlew build
+      - name: Build Release APK
+        run: ./gradlew :app:assembleRelease
 
-      - name: Upload Debug APK
-        uses: actions/upload-artifact@v7
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
         with:
-          name: app-debug-apk
-          path: app/build/outputs/apk/debug/app-debug.apk
+          tag_name: ${{ github.event.inputs.version }}
+          release_name: Release ${{ github.event.inputs.version }}
+          draft: true
+          files: "app/build/outputs/apk/release/*.apk"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
