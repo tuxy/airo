@@ -1,6 +1,5 @@
 package com.tuxy.airo.composables
 
-import android.graphics.Color
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -9,11 +8,11 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.viewinterop.AndroidView
+import androidx.core.graphics.toColorInt
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import org.maplibre.android.MapLibre
 import org.maplibre.android.annotations.MarkerOptions
 import org.maplibre.android.annotations.PolylineOptions
@@ -75,7 +74,6 @@ fun MapLibreMapView(
     rotateEnabled: Boolean = false,
     onMapReady: (MapLibreMap) -> Unit = {}
 ) {
-    val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
 
     var mapHolder by remember {
@@ -196,7 +194,7 @@ fun MapLibreMap.addFlightRoute(
     originLon: Double,
     destLat: Double,
     destLon: Double,
-    color: Int = Color.parseColor("#2563EB"),
+    color: Int = "#2563EB".toColorInt(),
     width: Float = 5f
 ): org.maplibre.android.annotations.Polyline? {
     val points = greatCirclePoints(originLat, originLon, destLat, destLon)

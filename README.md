@@ -28,6 +28,12 @@
 - Notifications 6 hour before flight
 - Backup/Restore flights into file
 
+## Build
+
+Debug: `./gradlew :app:openApigenerate :app:assembleDebug`
+
+Optimized: `./gradlew :app:openApigenerate :app:assembleRelease`
+
 ## Contributing?
 
 For anyone that would like to help with this mess of a codebase, you are completely welcome!

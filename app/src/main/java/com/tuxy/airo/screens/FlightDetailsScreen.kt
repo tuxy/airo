@@ -180,6 +180,7 @@ fun FlightDetailsView(
                             .fillMaxHeight()
                     ) {
                         val depTime = viewModel.flightData.value.revisedDepartDate ?: viewModel.flightData.value.scheduledDepartDate
+                        val dark = if(isSystemInDarkTheme()) "dark-matter" else "positron"
 
                         RouteBar(viewModel.flightData.value)
                         Text(
@@ -203,7 +204,7 @@ fun FlightDetailsView(
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .aspectRatio(1280f / 847f),
-                                styleUrl = "https://tiles.openfreemap.org/styles/liberty",
+                                styleUrl = "https://basemaps.cartocdn.com/gl/${dark}-gl-style/style.json",
                                 scrollEnabled = false,
                                 zoomEnabled = false,
                                 tiltEnabled = false,
