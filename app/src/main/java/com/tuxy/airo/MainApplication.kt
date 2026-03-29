@@ -7,12 +7,15 @@ import com.tuxy.airo.data.background.AlarmSchedulerHelper
 import com.tuxy.airo.data.background.FlightAlarmScheduler
 import com.tuxy.airo.data.background.NetworkCallbackHandler
 import com.tuxy.airo.data.background.NetworkChangeReceiver
+import com.tuxy.airo.data.database.PreferencesInterface
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
+import java.time.Duration
+import java.time.ZonedDateTime
 
 /**
  * Main application class that initializes app-wide components.
@@ -53,16 +56,30 @@ class MainApplication : Application(), Configuration.Provider {
      *
      * Tasks:
      * 1. Cancels all existing flight alarms (clean slate)
-     * 2. Schedules an immediate refresh to fetch latest flight data
+     * 2. Schedules an immediate refresh only if last refresh was > 12 hours ago
      */
     @OptIn(DelicateCoroutinesApi::class)
     private suspend fun setupStartupWork() {
-        Log.d("MainApplication", "Running startup work - immediate refresh and alarm reset")
+        Log.d("MainApplication", "Running startup work")
 
-        val flightAlarmScheduler = FlightAlarmScheduler(applicationContext)
-        flightAlarmScheduler.cancelAll()
+        val preferencesInterface = PreferencesInterface(applicationContext)
+        val lastRefreshString = preferencesInterface.getValueFlowString("last_refresh_time").first()
+        val intervalString = preferencesInterface.getValueFlowString("update_interval").first()
+        val intervalHours = intervalString?.toLongOrNull() ?: 12
 
-        AlarmSchedulerHelper.scheduleImmediateRefresh(applicationContext)
+        val shouldRefresh = lastRefreshString.isEmpty() ||
+            runCatching {
+                val lastRefresh = ZonedDateTime.parse(lastRefreshString)
+                val hoursSinceRefresh = Duration.between(lastRefresh, ZonedDateTime.now()).toHours()
+                hoursSinceRefresh >= intervalHours
+            }.getOrDefault(true)
+
+        if (shouldRefresh) {
+            Log.d("MainApplication", "Scheduling immediate refresh (last refresh was > ${intervalHours}h ago)")
+            AlarmSchedulerHelper.scheduleImmediateRefresh(applicationContext)
+        } else {
+            Log.d("MainApplication", "Skipping refresh (last refresh was < ${intervalHours}h ago)")
+        }
 
         Log.d("MainApplication", "Startup work complete")
     }

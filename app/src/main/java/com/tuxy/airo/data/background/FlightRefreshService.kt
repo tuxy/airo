@@ -30,27 +30,8 @@ import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
 
 /**
- * A foreground service that handles periodic flight data updates.
- *
- * This service runs in the foreground to ensure updates are not interrupted by Android's
- * battery optimization. It shows a progress notification while updating and a completion
- * notification when finished.
- *
- * ## Notification Behavior
- * - While running: Shows indeterminate progress with "Updating flights…"
- * - On completion: Shows success/failure notification with flight count
- * - On flight time change: Triggers separate alarm notification via FlightAlarmScheduler
- *
- * ## Service Actions
- * - [ACTION_REFRESH]: Scheduled periodic refresh (triggered by AlarmManager)
- * - [ACTION_NETWORK_CHANGE]: Immediate refresh when network becomes available
- *
- * ## Lifecycle
- * - Started as foreground service to prevent being killed
- * - Self-stops after completing updates and showing completion notification
- *
- * @see AlarmSchedulerHelper for scheduling logic
- * @see NetworkCallbackHandler for network-based triggers
+ * Foreground service that handles flight data updates.
+ * Shows progress notification while updating, completion notification when done.
  */
 class FlightRefreshService : Service() {
 
@@ -116,12 +97,6 @@ class FlightRefreshService : Service() {
         notificationManager.createNotificationChannel(channel)
     }
 
-    /**
-     * Creates the progress notification shown while flights are being updated.
-     * Uses indeterminate progress (spinning indicator) since we don't know how long it will take.
-     *
-     * @return Notification with indeterminate progress indicator
-     */
     private fun createProgressNotification(): android.app.Notification {
         val intent = Intent(this, MainActivity::class.java).apply {
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
@@ -141,12 +116,6 @@ class FlightRefreshService : Service() {
             .build()
     }
 
-    /**
-     * Creates the completion notification shown after flight updates finish.
-     *
-     * @param success True if updates completed successfully
-     * @param flightCount Number of flights that had time changes
-     */
     private fun createCompletionNotification(success: Boolean, flightCount: Int) {
         val intent = Intent(this, MainActivity::class.java).apply {
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
@@ -180,14 +149,6 @@ class FlightRefreshService : Service() {
         notificationManager.notify(COMPLETION_NOTIFICATION_ID, notification)
     }
 
-    /**
-     * Core refresh logic that:
-     * 1. Fetches all flights from database
-     * 2. For each flight within 7 days, checks for time changes via API
-     * 3. If departure time changed, triggers alarm notification and updates database
-     * 4. Reschedules all alarms after processing
-     * 5. Shows completion notification and stops the service
-     */
     private fun refreshFlights() {
         serviceScope.launch {
             Log.d(LOG_TAG, "Starting flight refresh")
@@ -204,15 +165,19 @@ class FlightRefreshService : Service() {
             )
 
             val originalFlights = flightDataDao.readAll()
-            var updatedCount = 0
+            var processedCount = 0
 
             for (oldFlight in originalFlights) {
-                if (oldFlight.scheduledDepartDate < ZonedDateTime.now()) {
-                    Log.d(LOG_TAG, "Ignored flight: ${oldFlight.callSign} (Past)")
+                val departDate = oldFlight.revisedDepartDate ?: oldFlight.scheduledDepartDate
+                val arriveDate = oldFlight.revisedArriveDate ?: oldFlight.scheduledArriveDate
+                val now = ZonedDateTime.now()
+
+                if (arriveDate.isBefore(now)) {
+                    Log.d(LOG_TAG, "Ignored flight: ${oldFlight.callSign} (Already arrived)")
                     continue
                 }
 
-                if (oldFlight.scheduledDepartDate > ZonedDateTime.now().plusDays(7)) {
+                if (departDate.isAfter(now.plusDays(7))) {
                     continue
                 }
 
@@ -231,14 +196,18 @@ class FlightRefreshService : Service() {
                     is Success -> {
                         val newFlightData = FlightData().from(result.result[0] ?: continue)
 
-                        if ((oldFlight.revisedDepartDate ?: oldFlight.scheduledDepartDate) != (newFlightData.revisedDepartDate ?: newFlightData.scheduledDepartDate)) {
+                        val oldTime = oldFlight.revisedDepartDate ?: oldFlight.scheduledDepartDate
+                        val newTime = newFlightData.revisedDepartDate ?: newFlightData.scheduledDepartDate
+
+                        if (oldTime != newTime) {
                             Log.d(LOG_TAG, "Flight time changed: ${oldFlight.callSign}")
                             flightAlarmScheduler.setAlarmOnChange(oldFlight, newFlightData)
-                            flightDataDao.deleteFlight(oldFlight)
-                            flightDataDao.addFlight(newFlightData)
-                            updatedCount++
                         }
-                        Log.d(LOG_TAG, "Updated flight: ${newFlightData.callSign}")
+
+                        flightDataDao.deleteFlight(oldFlight)
+                        flightDataDao.addFlight(newFlightData)
+                        processedCount++
+                        Log.d(LOG_TAG, "Processed flight: ${newFlightData.callSign}")
                     }
                     is Error -> {
                         Log.e(LOG_TAG, "Failed to update flight: ${oldFlight.callSign} error: ${result.message}")
@@ -255,8 +224,10 @@ class FlightRefreshService : Service() {
             Log.d(LOG_TAG, "All flights processed. Resetting alarms.")
             flightAlarmScheduler.resetAll(flightDataDao)
 
-            Log.d(LOG_TAG, "Flight refresh complete. Updated: $updatedCount flights")
-            createCompletionNotification(true, updatedCount)
+            Log.d(LOG_TAG, "Flight refresh complete. Processed: $processedCount flights")
+            createCompletionNotification(true, processedCount)
+
+            preferencesInterface.saveValue("last_refresh_time", ZonedDateTime.now().toString())
 
             stopForeground(STOP_FOREGROUND_REMOVE)
             stopSelf()
@@ -270,12 +241,6 @@ class FlightRefreshService : Service() {
     }
 }
 
-/**
- * Formats a flight number string by removing any spaces or hyphens.
- *
- * @param string The flight number string to be formatted.
- * @return The formatted flight number.
- */
 fun formatFlightNumber(string: String): String {
     val splitString = string.split("[- ]".toRegex())
     if (splitString.size == 2) {
