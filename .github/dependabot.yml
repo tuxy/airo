@@ -11,7 +11,11 @@ updates:
           - "*"
     ignore:
       - dependency-name: "*"
-        versions: ["*[alpha|beta|rc|milestone]*"]
+        versions:
+          - "*alpha*"
+          - "*beta*"
+          - "*milestone*"
+          - "*rc*"
 
   - package-ecosystem: "github-actions"
     directory: "/"
