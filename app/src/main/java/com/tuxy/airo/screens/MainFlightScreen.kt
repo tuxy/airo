@@ -1,7 +1,5 @@
 package com.tuxy.airo.screens
 
-import android.annotation.SuppressLint
-import android.widget.Toast
 import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.Arrangement
@@ -18,7 +16,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.pager.HorizontalPager
-import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
@@ -28,7 +25,6 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.FlightTakeoff
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.Card
-import androidx.compose.material3.Divider
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExtendedFloatingActionButton
@@ -44,9 +40,6 @@ import androidx.compose.material3.Tab
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.TopAppBarScrollBehavior
-import androidx.compose.material3.adaptive.ExperimentalMaterial3AdaptiveApi
-import androidx.compose.material3.adaptive.layout.ListDetailPaneScaffoldRole
-import androidx.compose.material3.adaptive.navigation.ThreePaneScaffoldNavigator
 import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -62,7 +55,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -86,17 +78,15 @@ import java.time.format.DateTimeFormatter
 import kotlin.math.absoluteValue
 import kotlin.time.toKotlinDuration
 
-@OptIn(ExperimentalFoundationApi::class, ExperimentalMaterial3Api::class,
-    ExperimentalMaterial3AdaptiveApi::class
-)
+@OptIn(ExperimentalFoundationApi::class, ExperimentalMaterial3Api::class)
 @Composable
 fun MainFlightView(
     navController: NavController,
     flightDataDao: FlightDataDao,
     viewModel: MainFlightViewModel,
-    paneNavigator: ThreePaneScaffoldNavigator<String>,
     pagerState: PagerState,
-    onFlightClick: (String) -> Unit
+    onFlightClick: (String) -> Unit,
+    onNavigateToSettings: () -> Unit,
 ) {
     val selectedTabIndex = remember { derivedStateOf { pagerState.currentPage } }
     val scope = rememberCoroutineScope()
@@ -114,10 +104,8 @@ fun MainFlightView(
             .fillMaxSize()
             .nestedScroll(scrollBehavior.nestedScrollConnection),
         topBar = { MainTopBar(
-            navController,
-            scrollBehavior,
-            viewModel,
-            paneNavigator
+            scrollBehavior = scrollBehavior,
+            onNavigateToSettings = onNavigateToSettings,
         ) },
         floatingActionButton = {
             ExtendedFloatingActionButton(
@@ -502,43 +490,18 @@ fun FlightGroupCard(
     }
 }
 
-@SuppressLint("ShowToast")
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3AdaptiveApi::class)
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MainTopBar(
-    navController: NavController,
     scrollBehavior: TopAppBarScrollBehavior,
-    viewModel: MainFlightViewModel,
-    paneNavigator: ThreePaneScaffoldNavigator<String>
+    onNavigateToSettings: () -> Unit,
 ) {
-    val toast = Toast.makeText(LocalContext.current, R.string.no_flight, Toast.LENGTH_SHORT)
-    val scope = rememberCoroutineScope()
-
     LargeTopAppBar(
         title = { Text(stringResource(R.string.my_flights), overflow = TextOverflow.Visible, maxLines = 1) },
         colors = TopAppBarDefaults.topAppBarColors(),
         actions = {
             IconButton(onClick = {
-                val closestFlight = viewModel.findClosestFlightId()
-
-                if (closestFlight == null) {
-                    toast.show()
-                    return@IconButton
-                } else closestFlight.let {
-                    if (it > 0) {
-                        scope.launch {
-                            paneNavigator.navigateTo(ListDetailPaneScaffoldRole.Detail, closestFlight.toString())
-                        }
-                    }
-                }
-            }) {
-                Icon(
-                    imageVector = Icons.Filled.FlightTakeoff,
-                    contentDescription = stringResource(R.string.upcoming_flights)
-                )
-            }
-            IconButton(onClick = {
-                navController.navigate(route = Screen.SettingsScreen.route)
+                onNavigateToSettings()
             }) {
                 Icon(
                     imageVector = Icons.Filled.Settings,

@@ -77,16 +77,23 @@ fun SmallAppBarLegacy(text: String, navController: NavController) {
 }
 
 // Used in main flight screen and settings
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3AdaptiveApi::class)
 @Composable
-fun LargeAppBar(text: String, navController: NavController) {
+fun LargeAppBar(
+    text: String,
+    paneNavigator: ThreePaneScaffoldNavigator<String>? = null
+) {
+    val scope = rememberCoroutineScope()
+
     LargeTopAppBar(
         title = { Text(text) },
         navigationIcon = {
-            IconButton(onClick = {
-                navController.navigateUp()
-            }) {
-                Icon(Icons.AutoMirrored.Filled.ArrowBack, stringResource(R.string.back))
+            if (paneNavigator != null && paneNavigator.scaffoldDirective.maxHorizontalPartitions == 1) {
+                IconButton(onClick = {
+                    scope.launch { paneNavigator.navigateBack() }
+                }) {
+                    Icon(Icons.AutoMirrored.Filled.ArrowBack, stringResource(R.string.back))
+                }
             }
         }
     )

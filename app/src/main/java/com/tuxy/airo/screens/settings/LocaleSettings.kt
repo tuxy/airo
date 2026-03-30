@@ -8,20 +8,20 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.tooling.preview.Preview
-import androidx.navigation.NavController
-import androidx.navigation.compose.rememberNavController
+import androidx.compose.material3.adaptive.ExperimentalMaterial3AdaptiveApi
+import androidx.compose.material3.adaptive.navigation.ThreePaneScaffoldNavigator
 import com.jamal.composeprefs3.ui.PrefsScreen
 import com.tuxy.airo.R
 import com.tuxy.airo.composables.LargeAppBar
 import com.tuxy.airo.dataStore
 import com.tuxy.airo.screens.settings.prefs.SwitchPref
 
+@OptIn(ExperimentalMaterial3AdaptiveApi::class)
 @Composable
-fun LocaleSettingsView(navController: NavController) {
+fun LocaleSettingsView(paneNavigator: ThreePaneScaffoldNavigator<String>? = null) {
     Scaffold(
         modifier = Modifier.fillMaxSize(),
-        topBar = { LargeAppBar(stringResource(R.string.locale_settings), navController) },
+        topBar = { LargeAppBar(stringResource(R.string.locale_settings), paneNavigator) },
     ) { innerPadding ->
         Column(
             modifier = Modifier.padding(innerPadding)
@@ -49,10 +49,4 @@ fun LocaleSettingsView(navController: NavController) {
             }
         }
     }
-}
-
-@Composable
-@Preview(showBackground = true)
-fun LocaleSettingsViewPreview() {
-    LocaleSettingsView(rememberNavController())
 }

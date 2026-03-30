@@ -29,17 +29,19 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.key
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.staticCompositionLocalOf
+import kotlinx.coroutines.launch
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.core.net.toUri
-import androidx.navigation.NavController
+import androidx.compose.material3.adaptive.ExperimentalMaterial3AdaptiveApi
+import androidx.compose.material3.adaptive.navigation.ThreePaneScaffoldNavigator
 import com.jamal.composeprefs3.ui.LocalPrefsDataStore
 import com.tuxy.airo.R
-import com.tuxy.airo.Screen
 import com.tuxy.airo.composables.LargeAppBar
 import com.tuxy.airo.data.database.PreferencesInterface
 import com.tuxy.airo.dataStore
@@ -47,11 +49,12 @@ import com.tuxy.airo.screens.settings.SettingSub
 import com.tuxy.airo.screens.settings.prefs.ButtonPref
 
 @SuppressLint("BatteryLife")
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3AdaptiveApi::class)
 @Composable
 fun SettingsView(
-    navController: NavController,
-    powerManager: PowerManager
+    powerManager: PowerManager,
+    paneNavigator: ThreePaneScaffoldNavigator<String>? = null,
+    onNavigateToSubSetting: ((SettingsSubPaneTypes) -> Unit)? = null,
 ) {
     val context = LocalContext.current
     val activity = LocalActivity.current as Activity
@@ -69,7 +72,11 @@ fun SettingsView(
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),
-        topBar = { LargeAppBar(stringResource(R.string.settings), navController) },
+        topBar = {
+            if (paneNavigator != null) {
+                LargeAppBar(stringResource(R.string.settings), paneNavigator)
+            }
+        },
     ) { innerPadding ->
         Column(
             modifier = Modifier.padding(innerPadding)
@@ -77,39 +84,39 @@ fun SettingsView(
             key(ignored, isIgnoringBatteryOptimizations) {
                 if (!(isIgnoringBatteryOptimizations || ignored)) {
                     PowerMessage(
-                        activity,
-                        navController,
-                        intent
+                        activity = activity,
+                        intent = intent,
+                        paneNavigator = paneNavigator
                     )
                 }
             }
             SettingSub(
-                stringResource(R.string.api_settings),
-                Icons.Outlined.Link,
-                stringResource(R.string.api_settings_desc),
-                Screen.ApiSettingsScreen.route,
-                navController
+                name = stringResource(R.string.api_settings),
+                icon = Icons.Outlined.Link,
+                description = stringResource(R.string.api_settings_desc),
+                location = "",
+                onClick = if (onNavigateToSubSetting != null) {{ onNavigateToSubSetting(SettingsSubPaneTypes.Api) }} else null
             )
 //            SettingSub( // Currently unused & not ready
-//                stringResource(R.string.notifications),
-//                Icons.Outlined.Notifications,
-//                stringResource(R.string.notifications_desc),
-//                Screen.NotificationsSettingsScreen.route,
-//                navController
+//                name = stringResource(R.string.notifications),
+//                icon = Icons.Outlined.Notifications,
+//                description = stringResource(R.string.notifications_desc),
+//                location = "",
+//                onClick = if (onNavigateToSubSetting != null) {{ onNavigateToSubSetting(SettingsSubPaneTypes.Notifications) }} else null
 //            )
 //            SettingSub( // Currently unused & not ready, only 24hr time utilised
-//                stringResource(R.string.locale_settings),
-//                Icons.Outlined.LocationOn,
-//                stringResource(R.string.locale_settings_desc),
-//                Screen.LocaleSettingsScreen.route,
-//                navController
+//                name = stringResource(R.string.locale_settings),
+//                icon = Icons.Outlined.LocationOn,
+//                description = stringResource(R.string.locale_settings_desc),
+//                location = "",
+//                onClick = if (onNavigateToSubSetting != null) {{ onNavigateToSubSetting("locale") }} else null
 //            )
             SettingSub(
-                stringResource(R.string.backup_and_restore),
-                Icons.Outlined.Save,
-                stringResource(R.string.backup_and_restore_desc),
-                Screen.BackupSettingsScreen.route,
-                navController
+                name = stringResource(R.string.backup_and_restore),
+                icon = Icons.Outlined.Save,
+                description = stringResource(R.string.backup_and_restore_desc),
+                location = "",
+                onClick = if (onNavigateToSubSetting != null) {{ onNavigateToSubSetting(SettingsSubPaneTypes.Backup) }} else null
             )
             ListItem(
                 modifier = Modifier.clickable(onClick = {
@@ -129,12 +136,15 @@ fun SettingsView(
 }
 
 @SuppressLint("BatteryLife")
+@OptIn(ExperimentalMaterial3AdaptiveApi::class)
 @Composable
 fun PowerMessage(
     activity: Activity,
-    navController: NavController,
-    intent: Intent
+    intent: Intent,
+    paneNavigator: ThreePaneScaffoldNavigator<String>? = null
 ) {
+    val scope = rememberCoroutineScope()
+
     ElevatedCard(
         modifier = Modifier
             .fillMaxWidth()
@@ -162,7 +172,9 @@ fun PowerMessage(
             )
             Button(onClick = {
                 activity.startActivity(intent)
-                navController.navigateUp()
+                paneNavigator?.let {
+                    scope.launch { it.navigateBack() }
+                }
             }) {
                 Text(stringResource(R.string.allow))
             }

@@ -1,6 +1,7 @@
 package com.tuxy.airo
 
 import android.os.PowerManager
+import androidx.compose.material3.adaptive.ExperimentalMaterial3AdaptiveApi
 import androidx.compose.runtime.Composable
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
@@ -11,15 +12,11 @@ import com.tuxy.airo.motion.materialSharedAxisXOut
 import com.tuxy.airo.screens.DatePickerView
 import com.tuxy.airo.screens.FoldableFlightScreen
 import com.tuxy.airo.screens.NewFlightView
-import com.tuxy.airo.screens.SettingsView
-import com.tuxy.airo.screens.settings.ApiSettingsView
-import com.tuxy.airo.screens.settings.BackupSettingsView
-import com.tuxy.airo.screens.settings.LocaleSettingsView
-import com.tuxy.airo.screens.settings.NotificationsSettingsView
 import de.raphaelebner.roomdatabasebackup.core.RoomBackup
 
 private const val INITIAL_OFFSET_FACTOR = 0.10f
 
+@OptIn(ExperimentalMaterial3AdaptiveApi::class)
 @Composable
 fun SetupNavGraph(
     // Transitions taken from Read You's repository
@@ -38,17 +35,28 @@ fun SetupNavGraph(
     ) {
         composable(route = Screen.MainFlightsScreen.route) {
             FoldableFlightScreen(
-                navController,
-                flightDataDao,
+                navController = navController,
+                flightDataDao = flightDataDao,
+                backup = backup,
+                powerManager = powerManager,
             )
         }
-        composable(route = Screen.SettingsScreen.route) { SettingsView(navController, powerManager) }
+        composable(route = Screen.SettingsScreen.route) {
+            FoldableFlightScreen(
+                navController = navController,
+                flightDataDao = flightDataDao,
+                backup = backup,
+                powerManager = powerManager,
+            )
+        }
 
         // Passing flight id into FlightDetails
         composable(route = "${Screen.FlightDetailsScreen.route}/{id}") {
             FoldableFlightScreen(
-                navController,
-                flightDataDao,
+                navController = navController,
+                flightDataDao = flightDataDao,
+                backup = backup,
+                powerManager = powerManager,
             )
         }
 
@@ -60,41 +68,6 @@ fun SetupNavGraph(
                 navController,
                 backStackEntry.arguments?.getString("flight_number").toString(),
                 flightDataDao,
-            )
-        }
-
-//        // Aircraft Information
-//        composable(route = "${Screen.AircraftInformationScreen.route}/{id}") { backStackEntry ->
-//            AircraftInformationView(
-//                navController,
-//                backStackEntry.arguments?.getString("id").toString(),
-//                flightDataDao
-//            )
-//        }
-//
-//        // Ticket information
-//        composable(route = "${Screen.TicketInformationScreen.route}/{id}") { backStackEntry ->
-//            TicketInformationView(
-//                navController,
-//                backStackEntry.arguments?.getString("id").toString(),
-//                flightDataDao,
-//            )
-//        }
-
-        // Settings Sub-Screens
-        composable(route = Screen.ApiSettingsScreen.route) {
-            ApiSettingsView(navController = navController)
-        }
-        composable(route = Screen.NotificationsSettingsScreen.route) {
-            NotificationsSettingsView(navController, flightDataDao)
-        }
-        composable(route = Screen.LocaleSettingsScreen.route) {
-            LocaleSettingsView(navController = navController)
-        }
-        composable(route = Screen.BackupSettingsScreen.route) {
-            BackupSettingsView(
-                navController,
-                backup
             )
         }
     }
