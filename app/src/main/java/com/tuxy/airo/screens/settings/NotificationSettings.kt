@@ -9,7 +9,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.viewmodel.compose.viewModel
-import androidx.navigation.NavController
+import androidx.compose.material3.adaptive.ExperimentalMaterial3AdaptiveApi
+import androidx.compose.material3.adaptive.navigation.ThreePaneScaffoldNavigator
 import com.jamal.composeprefs3.ui.PrefsScreen
 import com.tuxy.airo.R
 import com.tuxy.airo.composables.LargeAppBar
@@ -19,9 +20,10 @@ import com.tuxy.airo.dataStore
 import com.tuxy.airo.screens.settings.prefs.SwitchPref
 import com.tuxy.airo.viewmodel.settings.NotificationViewModel
 
+@OptIn(ExperimentalMaterial3AdaptiveApi::class)
 @Composable
 fun NotificationsSettingsView(
-    navController: NavController,
+    paneNavigator: ThreePaneScaffoldNavigator<String>? = null,
     flightDataDao: FlightDataDao
 ) {
     val context = LocalContext.current
@@ -32,7 +34,7 @@ fun NotificationsSettingsView(
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),
-        topBar = { LargeAppBar("Notification Settings", navController) },
+        topBar = { LargeAppBar("Notification Settings", paneNavigator) },
     ) { innerPadding ->
         Column(
             modifier = Modifier.padding(innerPadding)

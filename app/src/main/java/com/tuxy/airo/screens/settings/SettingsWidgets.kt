@@ -25,14 +25,15 @@ import androidx.navigation.NavController
  *
  * This item typically represents a sub-setting or a navigation point within the settings screen.
  * It displays a name, an icon, and a description. Clicking on the item will navigate
- * to the specified [location] using the provided [navController].
+ * to the specified [location] using the provided [navController], or call [onClick] if provided.
  *
  * @param name The name of the setting to be displayed as the headline.
  * @param icon The [ImageVector] to be displayed as the leading icon.
  * @param description A brief description of the setting, displayed as supporting content.
  *                    This is also used as the content description for the icon.
- * @param location The route or destination to navigate to when the item is clicked.
- * @param navController The [NavController] used for handling navigation.
+ * @param location The route or destination to navigate to when the item is clicked (used if onClick is null).
+ * @param navController The [NavController] used for handling navigation (used if onClick is null).
+ * @param onClick Optional callback to be invoked when the item is clicked. If provided, this takes precedence over navController.navigate.
  */
 @Composable
 fun SettingSub(
@@ -40,11 +41,12 @@ fun SettingSub(
     icon: ImageVector,
     description: String,
     location: String,
-    navController: NavController
+    navController: NavController? = null,
+    onClick: (() -> Unit)? = null
 ) {
     ListItem(
         modifier = Modifier.clickable(onClick = {
-            navController.navigate(location)
+            onClick?.invoke() ?: navController?.navigate(location)
         }),
         headlineContent = { Text(name) },
         supportingContent = { Text(description) },

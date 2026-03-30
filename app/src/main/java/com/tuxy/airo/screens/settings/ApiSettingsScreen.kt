@@ -15,7 +15,8 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
-import androidx.navigation.NavController
+import androidx.compose.material3.adaptive.ExperimentalMaterial3AdaptiveApi
+import androidx.compose.material3.adaptive.navigation.ThreePaneScaffoldNavigator
 import com.ireward.htmlcompose.HtmlText
 import com.jamal.composeprefs3.ui.PrefsScreen
 import com.tuxy.airo.R
@@ -26,16 +27,16 @@ import com.tuxy.airo.screens.settings.prefs.SingleSegmentedListPref
 import com.tuxy.airo.screens.settings.prefs.SliderPref
 import com.tuxy.airo.screens.settings.prefs.TextFieldPref
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalComposeUiApi::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalComposeUiApi::class, ExperimentalMaterial3AdaptiveApi::class)
 @Composable
 fun ApiSettingsView(
-    navController: NavController
+    paneNavigator: ThreePaneScaffoldNavigator<String>? = null
 ) {
     val preferencesInterface = PreferencesInterface(LocalContext.current)
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),
-        topBar = { LargeAppBar("API Settings", navController) },
+        topBar = { LargeAppBar("API Settings", paneNavigator) },
     ) { innerPadding ->
         Column(
             modifier = Modifier.padding(innerPadding)

@@ -1,5 +1,6 @@
 package com.tuxy.airo.screens
 
+import android.os.PowerManager
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
@@ -48,20 +49,20 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.tuxy.airo.R
 import com.tuxy.airo.data.flightdata_rework.FlightDataDao
+import com.tuxy.airo.screens.settings.ApiSettingsView
+import com.tuxy.airo.screens.settings.BackupSettingsView
+import com.tuxy.airo.screens.settings.NotificationsSettingsView
 import com.tuxy.airo.viewmodel.MainFlightViewModel
+import de.raphaelebner.roomdatabasebackup.core.RoomBackup
 import kotlinx.coroutines.launch
-
-enum class ExtraPaneTypes {
-    Undefined,
-    TicketInformation,
-    AircraftInformation
-}
 
 @OptIn(ExperimentalMaterial3AdaptiveApi::class)
 @Composable
 fun FoldableFlightScreen(
     navController: NavController,
     flightDataDao: FlightDataDao,
+    backup: RoomBackup,
+    powerManager: PowerManager,
 ) {
     val viewModelFactory = MainFlightViewModel.Factory(LocalContext.current)
     val viewModel: MainFlightViewModel = viewModel(factory = viewModelFactory)
@@ -70,6 +71,8 @@ fun FoldableFlightScreen(
     // val isDragged by interactionSource.collectIsDraggedAsState() // Future reference
 
     var currentExtraPaneType by remember { mutableStateOf(ExtraPaneTypes.Undefined) }
+    var currentSettingsSubKey by remember { mutableStateOf<SettingsSubPaneTypes?>(null) }
+    var isInSettingsFlow by remember { mutableStateOf(false) }
     val pagerState = rememberPagerState(pageCount = {2})
 
     LaunchedEffect(Unit) {
@@ -85,7 +88,17 @@ fun FoldableFlightScreen(
 
     BackHandler(navigator.canNavigateBack()) {
         scope.launch {
-            navigator.navigateBack()
+            when {
+                currentSettingsSubKey != null -> {
+                    currentSettingsSubKey = null
+                    navigator.navigateBack()
+                }
+                isInSettingsFlow -> {
+                    isInSettingsFlow = false
+                    navigator.navigateBack()
+                }
+                else -> navigator.navigateBack()
+            }
         }
     }
 
@@ -103,9 +116,8 @@ fun FoldableFlightScreen(
         NavigableListDetailPaneScaffold(
             navigator = navigator,
             listPane = {
-                val listId = navigator.currentDestination?.contentKey
                 AnimatedPane {
-                    key(listId) {
+                    key(navigator.currentDestination?.contentKey) {
                         Row(
                             Modifier.fillMaxWidth()
                         ) {
@@ -113,12 +125,18 @@ fun FoldableFlightScreen(
                                 navController = navController,
                                 flightDataDao = flightDataDao,
                                 viewModel = viewModel,
-                                paneNavigator = navigator,
                                 pagerState = pagerState,
                                 onFlightClick = { id ->
+                                    isInSettingsFlow = false
+                                    currentSettingsSubKey = null
                                     scope.launch {
                                         navigator.navigateTo(ListDetailPaneScaffoldRole.Detail, id)
                                     }
+                                },
+                                onNavigateToSettings = {
+                                    isInSettingsFlow = true
+                                    currentSettingsSubKey = null
+                                    scope.launch { navigator.navigateTo(ListDetailPaneScaffoldRole.Detail, "settings") }
                                 },
                             )
                         }
@@ -127,49 +145,66 @@ fun FoldableFlightScreen(
             },
             detailPane = {
                 AnimatedPane {
-                    key(viewModel.flightData) {
-                        val detailId = navigator.currentDestination?.contentKey
-                        if (detailId != null) {
-                            FlightDetailsView(
-                                id = detailId,
-                                flightDataDao = flightDataDao,
+                    key(viewModel.flightData, isInSettingsFlow) {
+                        if (isInSettingsFlow) {
+                            SettingsView(
+                                powerManager = powerManager,
                                 paneNavigator = navigator,
-                                onFlightDelete = {
-                                    scope.launch {
-                                        viewModel.loadData(flightDataDao) // Reload data
-                                        navigator.navigateBack()
-                                    }
-                                },
-                                onShowTicket = {
-                                    currentExtraPaneType = ExtraPaneTypes.TicketInformation
-                                    scope.launch { navigator.navigateTo(ListDetailPaneScaffoldRole.Extra, detailId) }
-                                },
-                                onShowAircraft = {
-                                    currentExtraPaneType = ExtraPaneTypes.AircraftInformation
-                                    scope.launch { navigator.navigateTo(ListDetailPaneScaffoldRole.Extra, detailId) }
+                                onNavigateToSubSetting = { subKey ->
+                                    currentSettingsSubKey = subKey
+                                    scope.launch { navigator.navigateTo(ListDetailPaneScaffoldRole.Extra, subKey.name.lowercase()) }
                                 }
                             )
                         } else {
-                            EmptyFlight()
+                            val detailId = navigator.currentDestination?.contentKey
+                            if (detailId != null) {
+                                FlightDetailsView(
+                                    id = detailId,
+                                    flightDataDao = flightDataDao,
+                                    paneNavigator = navigator,
+                                    onFlightDelete = {
+                                        scope.launch {
+                                            viewModel.loadData(flightDataDao)
+                                            navigator.navigateBack()
+                                        }
+                                    },
+                                    onShowTicket = {
+                                        currentExtraPaneType = ExtraPaneTypes.TicketInformation
+                                        scope.launch { navigator.navigateTo(ListDetailPaneScaffoldRole.Extra, detailId) }
+                                    },
+                                    onShowAircraft = {
+                                        currentExtraPaneType = ExtraPaneTypes.AircraftInformation
+                                        scope.launch { navigator.navigateTo(ListDetailPaneScaffoldRole.Extra, detailId) }
+                                    }
+                                )
+                            } else {
+                                EmptyFlight()
+                            }
                         }
                     }
                 }
             },
             extraPane = {
                 AnimatedPane {
-                    val extraId = navigator.currentDestination?.contentKey
-                    when(currentExtraPaneType) {
-                        ExtraPaneTypes.TicketInformation -> TicketInformationView(
-                            paneNavigator = navigator,
-                            id = extraId ?: "0",
-                            flightDataDao = flightDataDao,
-                        )
-                        ExtraPaneTypes.AircraftInformation -> AircraftInformationView(
-                            paneNavigator = navigator,
-                            id = extraId ?: "0",
-                            flightDataDao = flightDataDao
-                        )
-                        else -> EmptyFlight()
+                    when (currentSettingsSubKey) {
+                        SettingsSubPaneTypes.Api -> ApiSettingsView(paneNavigator = navigator)
+                        SettingsSubPaneTypes.Backup -> BackupSettingsView(paneNavigator = navigator, backup = backup)
+                        SettingsSubPaneTypes.Notifications -> NotificationsSettingsView(paneNavigator = navigator, flightDataDao = flightDataDao)
+                        else -> {
+                            when (currentExtraPaneType) {
+                                ExtraPaneTypes.TicketInformation -> TicketInformationView(
+                                    paneNavigator = navigator,
+                                    id = navigator.currentDestination?.contentKey ?: "0",
+                                    flightDataDao = flightDataDao,
+                                )
+                                ExtraPaneTypes.AircraftInformation -> AircraftInformationView(
+                                    paneNavigator = navigator,
+                                    id = navigator.currentDestination?.contentKey ?: "0",
+                                    flightDataDao = flightDataDao
+                                )
+                                else -> { }
+                            }
+                        }
                     }
                 }
             },

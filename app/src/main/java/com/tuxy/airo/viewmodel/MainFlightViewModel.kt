@@ -85,19 +85,6 @@ class MainFlightViewModel(context: Context) : ViewModel() {
         }
     }
 
-    fun findClosestFlightId(): Int? {
-        if (flights.isEmpty()) return null
-
-        val nowInEpochSeconds = ZonedDateTime.now().toEpochSecond()
-
-        val upcomingFlightKey = flights.keys.firstOrNull { it > nowInEpochSeconds }
-
-        return when {
-            upcomingFlightKey == null -> null
-            else -> flights[upcomingFlightKey]?.id
-        }
-    }
-
     @Suppress("UNCHECKED_CAST")
     class Factory(
         private val context: Context,

@@ -16,16 +16,17 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import androidx.navigation.NavController
+import androidx.compose.material3.adaptive.ExperimentalMaterial3AdaptiveApi
+import androidx.compose.material3.adaptive.navigation.ThreePaneScaffoldNavigator
 import com.tuxy.airo.R
 import com.tuxy.airo.composables.LargeAppBar
 import com.tuxy.airo.viewmodel.settings.BackupViewModel
 import de.raphaelebner.roomdatabasebackup.core.RoomBackup
 
-@OptIn(ExperimentalComposeUiApi::class)
+@OptIn(ExperimentalComposeUiApi::class, ExperimentalMaterial3AdaptiveApi::class)
 @Composable
 fun BackupSettingsView(
-    navController: NavController,
+    paneNavigator: ThreePaneScaffoldNavigator<String>? = null,
     backup: RoomBackup
 ) {
     val context = LocalContext.current
@@ -34,7 +35,7 @@ fun BackupSettingsView(
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),
-        topBar = { LargeAppBar(stringResource(R.string.backup_and_restore), navController) },
+        topBar = { LargeAppBar(stringResource(R.string.backup_and_restore), paneNavigator) },
     ) { innerPadding ->
         Column(
             modifier = Modifier.padding(innerPadding)
