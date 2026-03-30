@@ -26,5 +26,5 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "aero"
+rootProject.name = "airo"
 include(":app")
