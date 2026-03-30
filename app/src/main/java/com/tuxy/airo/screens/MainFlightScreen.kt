@@ -2,6 +2,7 @@ package com.tuxy.airo.screens
 
 import android.annotation.SuppressLint
 import android.widget.Toast
+import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -17,7 +18,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.pager.HorizontalPager
-import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
@@ -27,6 +27,8 @@ import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.FlightTakeoff
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material3.Card
+import androidx.compose.material3.Divider
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExtendedFloatingActionButton
@@ -34,8 +36,10 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LargeTopAppBar
 import androidx.compose.material3.LinearProgressIndicator
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.PrimaryTabRow
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Tab
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
@@ -80,6 +84,7 @@ import java.time.Duration
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
 import kotlin.math.absoluteValue
+import kotlin.time.toKotlinDuration
 
 @OptIn(ExperimentalFoundationApi::class, ExperimentalMaterial3Api::class,
     ExperimentalMaterial3AdaptiveApi::class
@@ -90,9 +95,9 @@ fun MainFlightView(
     flightDataDao: FlightDataDao,
     viewModel: MainFlightViewModel,
     paneNavigator: ThreePaneScaffoldNavigator<String>,
+    pagerState: PagerState,
     onFlightClick: (String) -> Unit
 ) {
-    val pagerState = rememberPagerState(pageCount = {2})
     val selectedTabIndex = remember { derivedStateOf { pagerState.currentPage } }
     val scope = rememberCoroutineScope()
     var key by remember { mutableStateOf(viewModel.loadData(flightDataDao)) }
@@ -209,8 +214,15 @@ fun FlightsList(
                         viewModel.flightsUpcomingList.forEach { flights ->
                             val depTime = flights[0].revisedDepartDate ?: flights[0].scheduledDepartDate
                             DateHeader(depTime, flights.size)
-                            flights.groupBy { flight ->
-                                FlightCard(flight, viewModel, onFlightClick)
+                            if (flights.size == 1) {
+                                FlightCard(
+                                    flights[0],
+                                    viewModel,
+                                    onFlightClick,
+                                    Modifier.padding(vertical = 8.dp, horizontal = 16.dp)
+                                )
+                            } else {
+                                FlightGroupCard(flights, viewModel, onFlightClick)
                             }
                         }
                     }
@@ -222,8 +234,15 @@ fun FlightsList(
                         viewModel.flightsPastList.forEach { flights ->
                             val depTime = flights[0].revisedDepartDate ?: flights[0].scheduledDepartDate
                             DateHeader(depTime, flights.size)
-                            flights.groupBy { flight ->
-                                FlightCard(flight, viewModel, onFlightClick)
+                            if (flights.size == 1) {
+                                FlightCard(
+                                    flights[0],
+                                    viewModel,
+                                    onFlightClick,
+                                    Modifier.padding(vertical = 8.dp, horizontal = 16.dp)
+                                )
+                            } else {
+                                FlightGroupCard(flights, viewModel, onFlightClick)
                             }
                         }
                     }
@@ -270,14 +289,13 @@ fun FlightCard(
     flightData: FlightData,
     viewModel: MainFlightViewModel,
     onFlightClick: (String) -> Unit,
+    modifier: Modifier = Modifier,
 ) {
     val timeFormat = viewModel.preferencesInterface.getValueTimeFormatComposable("24_time")
 
     Column(
-        modifier = Modifier
-            .padding(horizontal = 16.dp, vertical = 8.dp)
+        modifier = modifier
     ) {
-        // Top main card
         ElevatedCard(
             modifier = Modifier
                 .fillMaxWidth(),
@@ -391,6 +409,95 @@ fun DateHeader(time: ZonedDateTime, count: Int) {
                 overflow = TextOverflow.Visible,
                 maxLines = 1
             )
+        }
+    }
+}
+
+@Composable
+fun TransferChip(
+    airportCode: String,
+    layoverDuration: Duration,
+    modifier: Modifier = Modifier,
+) {
+    val isNegative = layoverDuration.isNegative
+    val isShort = !isNegative && layoverDuration.toMinutes() < 60
+
+    val durationText = if (isNegative) {
+        stringResource(R.string.no_transfer_time)
+    } else {
+        layoverDuration.toKotlinDuration().toComponents { hours, minutes, _, _ ->
+            if (hours > 0) "${hours}h ${minutes}m" else "${minutes}m"
+        }
+    }
+
+    val containerColor = when {
+        isNegative -> Color.LightGray
+        isShort -> Color.Red.copy(alpha = 0.15f)
+        else -> Color.LightGray
+    }
+
+    val labelColor = when {
+        isNegative -> Color.Gray
+        isShort -> Color.Red
+        else -> Color.DarkGray
+    }
+
+    Surface(
+        onClick = { },
+        modifier = modifier,
+        color = containerColor,
+        shape = MaterialTheme.shapes.small,
+    ) {
+        Text(
+            text = "$airportCode • $durationText",
+            color = labelColor,
+            fontSize = 12.sp,
+            modifier = Modifier.padding(horizontal = 12.dp, vertical = 2.dp),
+        )
+    }
+}
+
+fun calculateLayover(currentFlight: FlightData, nextFlight: FlightData): Duration {
+    val arrivalTime = currentFlight.revisedArriveDate ?: currentFlight.scheduledArriveDate
+    val departureTime = nextFlight.revisedDepartDate ?: nextFlight.scheduledDepartDate
+    return Duration.between(arrivalTime, departureTime)
+}
+
+@Composable
+fun FlightGroupCard(
+    flights: List<FlightData>,
+    viewModel: MainFlightViewModel,
+    onFlightClick: (String) -> Unit,
+) {
+    Column(
+        modifier = Modifier
+            .padding(horizontal = 16.dp, vertical = 8.dp)
+    ) {
+        Card(
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Column(
+                modifier = Modifier.padding(4.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                flights.forEachIndexed { index, flight ->
+                    FlightCard(
+                        flight,
+                        viewModel,
+                        onFlightClick,
+                        modifier = Modifier.padding(horizontal = 2.dp, vertical = 2.dp)
+                    )
+                    if (index < flights.size - 1) {
+                        val nextFlight = flights[index + 1]
+                        val layoverDuration = calculateLayover(flight, nextFlight)
+                        TransferChip(
+                            airportCode = flight.to,
+                            layoverDuration = layoverDuration,
+                            modifier = Modifier.padding(horizontal = 6.dp)
+                        )
+                    }
+                }
+            }
         }
     }
 }

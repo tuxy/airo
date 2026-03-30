@@ -93,6 +93,7 @@
     <string name="has_updated">has updated its departure from</string>
     <string name="update_interval">Update interval (in hours)</string>
     <string name="flights">flights</string>
+    <string name="no_transfer_time">No transfer</string>
     <string name="restore_warning">Warning: Restore will wipe all existing data!</string>
     <string name="last_updated">Last updated:</string>
     <string name="remove_background_optimisation">Remove background optimisation</string>

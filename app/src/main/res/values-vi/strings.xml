@@ -90,6 +90,7 @@
     <string name="has_updated">đã thay đổi thời gian khởi hành từ</string>
     <string name="update_interval">Thời gian cập nhật (trong tiếng)</string>
     <string name="flights">chuyến bay</string>
+    <string name="no_transfer_time">Không thể nối chuyến</string>
     <string name="restore_warning">Lưu ý: Khôi phục sẽ tẩy thông tin hiện tại</string>
     <string name="last_updated">Cập nhật cuối:</string>
     <string name="remove_background_optimisation">Loại bỏ tối ưu hóa nền</string>

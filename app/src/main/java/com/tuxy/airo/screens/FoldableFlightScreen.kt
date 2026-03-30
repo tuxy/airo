@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Airlines
 import androidx.compose.material3.Icon
@@ -69,6 +70,7 @@ fun FoldableFlightScreen(
     // val isDragged by interactionSource.collectIsDraggedAsState() // Future reference
 
     var currentExtraPaneType by remember { mutableStateOf(ExtraPaneTypes.Undefined) }
+    val pagerState = rememberPagerState(pageCount = {2})
 
     LaunchedEffect(Unit) {
         viewModel.loadData(flightDataDao)
@@ -112,6 +114,7 @@ fun FoldableFlightScreen(
                                 flightDataDao = flightDataDao,
                                 viewModel = viewModel,
                                 paneNavigator = navigator,
+                                pagerState = pagerState,
                                 onFlightClick = { id ->
                                     scope.launch {
                                         navigator.navigateTo(ListDetailPaneScaffoldRole.Detail, id)
