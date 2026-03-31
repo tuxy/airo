@@ -36,6 +36,8 @@
     <string name="other">Other/Unknown</string>
     <string name="more">More</string>
     <string name="add_ticket">Add ticket</string>
+    <string name="scan_barcode">Scan barcode</string>
+    <string name="select_file">Select file</string>
     <string name="class_s">Class</string>
     <string name="passenger_name">Passenger name</string>
     <string name="switch_ticket">Switch ticket types</string>
