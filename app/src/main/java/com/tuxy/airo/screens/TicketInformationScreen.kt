@@ -1,8 +1,6 @@
 package com.tuxy.airo.screens
 
-import android.Manifest
 import android.content.ClipData
-import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -44,7 +42,11 @@ import androidx.compose.material3.adaptive.ExperimentalMaterial3AdaptiveApi
 import androidx.compose.material3.adaptive.navigation.ThreePaneScaffoldNavigator
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -57,12 +59,10 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.google.accompanist.permissions.ExperimentalPermissionsApi
-import com.google.accompanist.permissions.rememberPermissionState
-import com.journeyapps.barcodescanner.ScanContract
 import com.simonsickle.compose.barcodes.Barcode
 import com.simonsickle.compose.barcodes.BarcodeType
 import com.tuxy.airo.R
+import com.tuxy.airo.composables.BarcodeScannerSheet
 import com.tuxy.airo.composables.BoldDepartureAndDestinationText
 import com.tuxy.airo.composables.LargeTopSmallBottom
 import com.tuxy.airo.data.flightdata_rework.FlightData
@@ -71,13 +71,11 @@ import com.tuxy.airo.data.flightdata_rework.IataParserData
 import com.tuxy.airo.viewmodel.TicketViewModel
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.time.format.DateTimeFormatter
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalPermissionsApi::class,
-    ExperimentalMaterial3AdaptiveApi::class
-)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3AdaptiveApi::class)
 @Composable
 fun TicketInformationView(
     paneNavigator: ThreePaneScaffoldNavigator<String>,
@@ -93,18 +91,16 @@ fun TicketInformationView(
 
     val scope = rememberCoroutineScope()
 
-    val barCodeLauncher = rememberLauncherForActivityResult(ScanContract()) { result ->
-        if (result.contents != null) {
-            viewModel.ticketString = result.contents
-            viewModel.updateData(flightDataDao, context)
-        }
-    }
-
-    val permissionState = rememberPermissionState(
-        permission = Manifest.permission.CAMERA,
-        onPermissionResult = { result ->
-            viewModel.hasCameraPermission = result
-            if (result) { viewModel.showCamera(barCodeLauncher, context) }
+    var showScanner by remember { mutableStateOf(false) }
+    BarcodeScannerSheet(
+        visible = showScanner,
+        onDismiss = { showScanner = false },
+        onResult = { result ->
+            result?.let { text ->
+                viewModel.ticketString = text
+                viewModel.updateData(flightDataDao, context)
+            }
+            showScanner = false
         }
     )
 
@@ -139,14 +135,7 @@ fun TicketInformationView(
         },
         floatingActionButton = {
             ExtendedFloatingActionButton(onClick = {
-                if (viewModel.hasCameraPermission) {
-                    viewModel.showCamera(barCodeLauncher, context)
-                } else {
-                    if (!viewModel.hasCameraPermission) {
-                        viewModel.toast.show()
-                        permissionState.launchPermissionRequest()
-                    }
-                }
+                showScanner = true
             }) {
                 Icon(
                     imageVector = Icons.Filled.QrCode,
@@ -190,11 +179,6 @@ fun TicketInformationView(
                     }
                 }
                 MainTicketView(viewModel.ticketData, viewModel.flightData.value, viewModel)
-//                if(viewModel.ticketData != IataParserData()) {
-//                    MainTicketView(viewModel.ticketData, viewModel.flightData.value)
-//                } else {
-//                    Toast.makeText(LocalContext.current, stringResource(R.string.invalid_pass), Toast.LENGTH_LONG).show()
-//                }
             }
         }
         if (!viewModel.isDataPopulated()) {
@@ -324,7 +308,6 @@ fun MainTicketView(
                                 value = viewModel.ticketString
                             )
                         }
-
                         false -> {} // Do nothing if the code cannot be processed
                     }
                 }
@@ -378,6 +361,7 @@ fun DeleteTicketDialog(
         }
     ) {
         val context = LocalContext.current
+        val scope = rememberCoroutineScope()
 
         Surface(
             modifier = Modifier
@@ -405,8 +389,10 @@ fun DeleteTicketDialog(
                     }
                     TextButton(
                         onClick = {
-                            GlobalScope.launch(Dispatchers.IO) {
-                                viewModel.deleteData(flightDataDao, context)
+                            scope.launch {
+                                withContext(Dispatchers.IO) {
+                                    viewModel.deleteData(flightDataDao, context)
+                                }
                                 paneNavigator.navigateBack()
                             }
                             openDialog.value = false

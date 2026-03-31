@@ -473,7 +473,7 @@ fun FlightGroupCard(
                         flight,
                         viewModel,
                         onFlightClick,
-                        modifier = Modifier.padding(horizontal = 2.dp, vertical = 2.dp)
+                        modifier = Modifier.padding(4.dp)
                     )
                     if (index < flights.size - 1) {
                         val nextFlight = flights[index + 1]

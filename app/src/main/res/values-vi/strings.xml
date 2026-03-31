@@ -35,6 +35,7 @@
     <string name="other">Khác/Không xác định</string>
     <string name="more">Thêm</string>
     <string name="add_ticket">Thêm vé</string>
+    <string name="select_file">Chọn tệp file</string>
     <string name="class_s">Hạng bay</string>
     <string name="passenger_name">Tên hành khách</string>
     <string name="switch_ticket">Đổi loại vé</string>
@@ -98,4 +99,5 @@
     <string name="ignore">Không chấp nhận</string>
     <string name="allow">Cho phép</string>
     <string name="select_flight">Chọn chuyến bay để xem thêm chi tiết</string>
+    <string name="scan_barcode">Quét mã QR/Barcode</string>
 </resources>
