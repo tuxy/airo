@@ -26,6 +26,7 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import org.openapitools.client.models.FlightDirection
 import org.openapitools.client.models.FlightSearchByEnum
+import java.time.Duration
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
 
@@ -162,10 +163,29 @@ class FlightRefreshService : Service() {
 
     private fun refreshFlights() {
         serviceScope.launch {
+            val preferencesInterface = PreferencesInterface(applicationContext)
+
+            val lastRefreshString = preferencesInterface.getValueFlowString("last_refresh_time").first()
+            val intervalString = preferencesInterface.getValueFlowString("update_interval").first()
+            val intervalHours = intervalString?.toLongOrNull() ?: 12
+
+            val shouldRefresh = lastRefreshString.isEmpty() ||
+                runCatching {
+                    val lastRefresh = ZonedDateTime.parse(lastRefreshString)
+                    val hoursSinceRefresh = Duration.between(lastRefresh, ZonedDateTime.now()).toHours()
+                    hoursSinceRefresh >= intervalHours
+                }.getOrDefault(true)
+
+            if (!shouldRefresh) {
+                Log.d(LOG_TAG, "Skipping refresh (last refresh was < ${intervalHours}h ago)")
+                isRefreshing = false
+                stopSelf()
+                return@launch
+            }
+
             Log.d(LOG_TAG, "Starting flight refresh")
 
             val flightDataDao = FlightDataBase.getDatabase(applicationContext).flightDataDao()
-            val preferencesInterface = PreferencesInterface(applicationContext)
             val flightAlarmScheduler = FlightAlarmScheduler(applicationContext)
 
             val apiSettings = ApiSettings(
