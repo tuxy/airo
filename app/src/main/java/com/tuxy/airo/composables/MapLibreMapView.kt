@@ -104,7 +104,7 @@ fun MapLibreMapView(
 
                 mapView.getMapAsync { map ->
                     map.setStyle(styleUrl) {
-                        Handler(Looper.getMainLooper()).postDelayed({ isMapReady = true }, 400)
+                        Handler(Looper.getMainLooper()).postDelayed({ isMapReady = true }, 200)
                     }
                     mapHolder = mapHolder?.copy(mapLibreMap = map, isStyleLoaded = true)
                     configureMapSettings(map.uiSettings, scrollEnabled, zoomEnabled, tiltEnabled, rotateEnabled)

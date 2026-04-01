@@ -90,10 +90,9 @@ fun MainFlightView(
 ) {
     val selectedTabIndex = remember { derivedStateOf { pagerState.currentPage } }
     val scope = rememberCoroutineScope()
-    var key by remember { mutableStateOf(viewModel.loadData(flightDataDao)) }
 
-    LaunchedEffect(key) {
-        viewModel.loadData(flightDataDao)
+    LaunchedEffect(Unit) {
+        viewModel.startCollecting(flightDataDao)
     }
 
     val scrollBehavior =

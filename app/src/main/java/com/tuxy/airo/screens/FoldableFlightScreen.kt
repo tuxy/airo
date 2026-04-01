@@ -76,7 +76,7 @@ fun FoldableFlightScreen(
     val pagerState = rememberPagerState(pageCount = {2})
 
     LaunchedEffect(Unit) {
-        viewModel.loadData(flightDataDao)
+        viewModel.startCollecting(flightDataDao)
     }
 
     val containerWidth = LocalWindowInfo.current.containerSize.width
@@ -164,7 +164,6 @@ fun FoldableFlightScreen(
                                     paneNavigator = navigator,
                                     onFlightDelete = {
                                         scope.launch {
-                                            viewModel.loadData(flightDataDao)
                                             navigator.navigateBack()
                                         }
                                     },

@@ -45,6 +45,9 @@ class FlightRefreshService : Service() {
         const val ACTION_NETWORK_CHANGE = "com.tuxy.airo.ACTION_NETWORK_CHANGE"
 
         private const val LOG_TAG = "FlightRefreshService"
+
+        @Volatile
+        private var isRefreshing = false
     }
 
     override fun onCreate() {
@@ -55,6 +58,14 @@ class FlightRefreshService : Service() {
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         Log.d(LOG_TAG, "onStartCommand called with action: ${intent?.action}")
+
+        if (isRefreshing) {
+            Log.d(LOG_TAG, "Refresh already in progress, skipping")
+            stopSelf()
+            return START_NOT_STICKY
+        }
+
+        isRefreshing = true
 
         when (intent?.action) {
             ACTION_REFRESH -> {
@@ -164,7 +175,7 @@ class FlightRefreshService : Service() {
                 server = preferencesInterface.getValueFlowString("endpoint_airoapi").first()
             )
 
-            val originalFlights = flightDataDao.readAll()
+            val originalFlights = flightDataDao.readAll().first()
             var processedCount = 0
 
             for (oldFlight in originalFlights) {
@@ -229,6 +240,7 @@ class FlightRefreshService : Service() {
 
             preferencesInterface.saveValue("last_refresh_time", ZonedDateTime.now().toString())
 
+            isRefreshing = false
             stopForeground(STOP_FOREGROUND_REMOVE)
             stopSelf()
         }
@@ -236,6 +248,7 @@ class FlightRefreshService : Service() {
 
     override fun onDestroy() {
         super.onDestroy()
+        isRefreshing = false
         serviceScope.cancel()
         Log.d(LOG_TAG, "Service destroyed")
     }

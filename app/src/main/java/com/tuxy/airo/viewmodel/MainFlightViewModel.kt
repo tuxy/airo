@@ -10,8 +10,8 @@ import androidx.lifecycle.viewModelScope
 import com.tuxy.airo.data.database.PreferencesInterface
 import com.tuxy.airo.data.flightdata_rework.FlightData
 import com.tuxy.airo.data.flightdata_rework.FlightDataDao
-import kotlinx.coroutines.DelicateCoroutinesApi
-import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import java.time.Duration
 import java.time.ZonedDateTime
@@ -29,31 +29,39 @@ class MainFlightViewModel(context: Context) : ViewModel() {
     var flightsUpcomingList = emptyList<List<FlightData>>()
     var flightsPastList = emptyList<List<FlightData>>()
 
-    @OptIn(DelicateCoroutinesApi::class)
-    fun loadData(flightDataDao: FlightDataDao) {
-        viewModelScope.launch(Dispatchers.IO) {
-            flightData = flightDataDao.readAll()
-            // Group by 1 day
-            flights = flightData.associateBy { flight ->
-                flight.scheduledArriveDate.toEpochSecond()
-            }.toSortedMap()
+    private var collectingJob: Job? = null
 
-            val nowInEpochSeconds = ZonedDateTime.now().toEpochSecond()
+    fun startCollecting(flightDataDao: FlightDataDao) {
+        if (collectingJob?.isActive == true) return
 
-            val flightsUpcoming = flights
-                .filterKeys {
-                    it > nowInEpochSeconds
-                }
-                .toSortedMap(compareBy { it })
-            val flightsPast = flights
-                .filterKeys {
-                    it <= nowInEpochSeconds
-                }
-                .toSortedMap(compareBy { it })
-
-            flightsUpcomingList = groupFlightsByProximity(flightsUpcoming)
-            flightsPastList = groupFlightsByProximity(flightsPast).reversed()
+        collectingJob = viewModelScope.launch {
+            flightDataDao.readAll().collect { newFlightData ->
+                flightData = newFlightData
+                processFlights(newFlightData)
+            }
         }
+    }
+
+    private fun processFlights(newFlightData: List<FlightData>) {
+        flights = newFlightData.associateBy { flight ->
+            flight.scheduledArriveDate.toEpochSecond()
+        }.toSortedMap()
+
+        val nowInEpochSeconds = ZonedDateTime.now().toEpochSecond()
+
+        val flightsUpcoming = flights
+            .filterKeys {
+                it > nowInEpochSeconds
+            }
+            .toSortedMap(compareBy { it })
+        val flightsPast = flights
+            .filterKeys {
+                it <= nowInEpochSeconds
+            }
+            .toSortedMap(compareBy { it })
+
+        flightsUpcomingList = groupFlightsByProximity(flightsUpcoming)
+        flightsPastList = groupFlightsByProximity(flightsPast).reversed()
     }
 
     fun groupFlightsByProximity(
