@@ -32,6 +32,7 @@ import androidx.compose.material3.adaptive.navigation.NavigableListDetailPaneSca
 import androidx.compose.material3.adaptive.navigation.rememberListDetailPaneScaffoldNavigator
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
@@ -145,7 +146,8 @@ fun FoldableFlightScreen(
             },
             detailPane = {
                 AnimatedPane {
-                    key(viewModel.flightData, isInSettingsFlow) {
+                    val flightData by viewModel.flightData.collectAsState()
+                    key(flightData, isInSettingsFlow) {
                         if (isInSettingsFlow) {
                             SettingsView(
                                 powerManager = powerManager,

@@ -218,6 +218,7 @@ fun FlightDetailsView(
                                     val destLon = viewModel.flightData.value.mapDestinationLon
 
                                     // map.addFlightRoute(originLat, originLon, destLat, destLon)
+                                    map.addFlightRoute(originLat, originLon, destLat, destLon)
                                     map.addAirportMarker(originLat, originLon, viewModel.flightData.value.from, isOrigin = true)
                                     map.addAirportMarker(destLat, destLon, viewModel.flightData.value.to, isOrigin = false)
                                     map.centerOnRoute(originLat, originLon, destLat, destLon)
