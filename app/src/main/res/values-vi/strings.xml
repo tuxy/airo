@@ -71,6 +71,7 @@
     <string name="default_server_extra">Server sẽ mặc định tới https://airoapi.tuxy.stream. Chế độ này không được khuyến khích và chỉ nên dùng khi đang thử.</string>
     <string name="adb_text">Xem <a href="https://aerodatabox.com/">https://aerodatabox.com</a> cho thêm thông tin</string>
     <string name="update_error">Lỗi đã xảy ra khi cập nhật</string>
+    <string name="update_error_desc">Cập nhật chuyến bay không thành công</string>
     <string name="about">Giới Thiệu</string>
     <string name="source_and_license">Mã nguồn &amp; thảo thuận</string>
     <string name="backup_and_restore">Sao lưu &amp; Khôi phục</string>
@@ -100,4 +101,8 @@
     <string name="allow">Cho phép</string>
     <string name="select_flight">Chọn chuyến bay để xem thêm chi tiết</string>
     <string name="scan_barcode">Quét mã QR/Barcode</string>
+    <string name="updating_flights">Đang cập nhật chuyến bay...</string>
+    <string name="refreshing_flight_data">Đang cập nhật thông tin</string>
+    <string name="flight_refresh_complete">Cập nhật chuyến bay hoàn thành</string>
+    <string name="flight_refresh_complete_desc">Đã cập nhật %1$d chuyến bay</string>
 </resources>

@@ -32,6 +32,7 @@ import androidx.compose.material3.adaptive.navigation.NavigableListDetailPaneSca
 import androidx.compose.material3.adaptive.navigation.rememberListDetailPaneScaffoldNavigator
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
@@ -55,6 +56,8 @@ import com.tuxy.airo.screens.settings.NotificationsSettingsView
 import com.tuxy.airo.viewmodel.MainFlightViewModel
 import de.raphaelebner.roomdatabasebackup.core.RoomBackup
 import kotlinx.coroutines.launch
+import java.time.Duration
+import java.time.ZonedDateTime
 
 @OptIn(ExperimentalMaterial3AdaptiveApi::class)
 @Composable
@@ -76,7 +79,7 @@ fun FoldableFlightScreen(
     val pagerState = rememberPagerState(pageCount = {2})
 
     LaunchedEffect(Unit) {
-        viewModel.loadData(flightDataDao)
+        viewModel.startCollecting(flightDataDao)
     }
 
     val containerWidth = LocalWindowInfo.current.containerSize.width
@@ -85,6 +88,19 @@ fun FoldableFlightScreen(
             maxHorizontalPartitions = if (containerWidth > 1200) 2 else 1
         )
     )
+
+    val flightData by viewModel.flightData.collectAsState()
+    val closestFlightId = remember(flightData) {
+        if (navigator.scaffoldDirective.maxHorizontalPartitions == 1) {
+            flightData
+                .filter { Duration.between(ZonedDateTime.now(), it.scheduledDepartDate).seconds >= 0 }
+                .minByOrNull {
+                    Duration.between(it.scheduledDepartDate, ZonedDateTime.now()).seconds
+                }?.id?.toString()
+        } else {
+            null
+        }
+    }
 
     BackHandler(navigator.canNavigateBack()) {
         scope.launch {
@@ -145,7 +161,8 @@ fun FoldableFlightScreen(
             },
             detailPane = {
                 AnimatedPane {
-                    key(viewModel.flightData, isInSettingsFlow) {
+                    val flightData by viewModel.flightData.collectAsState()
+                    key(flightData, isInSettingsFlow) {
                         if (isInSettingsFlow) {
                             SettingsView(
                                 powerManager = powerManager,
@@ -156,7 +173,7 @@ fun FoldableFlightScreen(
                                 }
                             )
                         } else {
-                            val detailId = navigator.currentDestination?.contentKey
+                            val detailId = navigator.currentDestination?.contentKey ?: closestFlightId
                             if (detailId != null) {
                                 FlightDetailsView(
                                     id = detailId,
@@ -164,7 +181,6 @@ fun FoldableFlightScreen(
                                     paneNavigator = navigator,
                                     onFlightDelete = {
                                         scope.launch {
-                                            viewModel.loadData(flightDataDao)
                                             navigator.navigateBack()
                                         }
                                     },

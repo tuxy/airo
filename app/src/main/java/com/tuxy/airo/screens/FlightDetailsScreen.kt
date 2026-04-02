@@ -71,6 +71,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.withStyle
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.graphics.shapes.RoundedPolygon
@@ -89,6 +90,7 @@ import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import org.maplibre.android.geometry.LatLng
 import java.time.Duration
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
@@ -207,6 +209,7 @@ fun FlightDetailsView(
                                 styleUrl = "https://basemaps.cartocdn.com/gl/${dark}-gl-style/style.json",
                                 scrollEnabled = false,
                                 zoomEnabled = false,
+                                cameraTarget = LatLng(viewModel.flightData.value.mapOriginLat, viewModel.flightData.value.mapOriginLon),
                                 tiltEnabled = false,
                                 rotateEnabled = false,
                                 onMapReady = { map ->
@@ -215,6 +218,7 @@ fun FlightDetailsView(
                                     val destLat = viewModel.flightData.value.mapDestinationLat
                                     val destLon = viewModel.flightData.value.mapDestinationLon
 
+                                    // map.addFlightRoute(originLat, originLon, destLat, destLon)
                                     map.addFlightRoute(originLat, originLon, destLat, destLon)
                                     map.addAirportMarker(originLat, originLon, viewModel.flightData.value.from, isOrigin = true)
                                     map.addAirportMarker(destLat, destLon, viewModel.flightData.value.to, isOrigin = false)

@@ -43,6 +43,7 @@ import androidx.compose.material3.TopAppBarScrollBehavior
 import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -90,11 +91,6 @@ fun MainFlightView(
 ) {
     val selectedTabIndex = remember { derivedStateOf { pagerState.currentPage } }
     val scope = rememberCoroutineScope()
-    var key by remember { mutableStateOf(viewModel.loadData(flightDataDao)) }
-
-    LaunchedEffect(key) {
-        viewModel.loadData(flightDataDao)
-    }
 
     val scrollBehavior =
         TopAppBarDefaults.exitUntilCollapsedScrollBehavior(rememberTopAppBarState())
@@ -117,12 +113,14 @@ fun MainFlightView(
             )
         },
     ) { innerPadding ->
+        val flightData by viewModel.flightData.collectAsState()
+
         Column(
             modifier = Modifier
                 .padding(innerPadding)
                 .fillMaxSize()
         ) {
-            if (viewModel.flightData.isEmpty()) {
+            if (flightData.isEmpty()) {
                 NoFlight(Modifier.fillMaxSize().padding(96.dp))
             } else {
                 TabRow(
@@ -184,6 +182,9 @@ fun FlightsList(
     modifier: Modifier = Modifier,
     onFlightClick: (String) -> Unit
 ) {
+    val upcomingList by viewModel.flightsUpcomingList.collectAsState()
+    val pastList by viewModel.flightsPastList.collectAsState()
+
     HorizontalPager(
         state = pagerState,
         modifier = modifier
@@ -196,10 +197,10 @@ fun FlightsList(
             Spacer(Modifier.height(16.dp))
             when (page) {
                 0 -> {
-                    if (viewModel.flightsUpcomingList.isEmpty()) {
+                    if (upcomingList.isEmpty()) {
                         NoFlight(Modifier.fillMaxSize().padding(128.dp))
                     } else {
-                        viewModel.flightsUpcomingList.forEach { flights ->
+                        upcomingList.forEach { flights ->
                             val depTime = flights[0].revisedDepartDate ?: flights[0].scheduledDepartDate
                             DateHeader(depTime, flights.size)
                             if (flights.size == 1) {
@@ -216,10 +217,10 @@ fun FlightsList(
                     }
                 }
                 1 -> {
-                    if (viewModel.flightsPastList.isEmpty()) {
+                    if (pastList.isEmpty()) {
                         NoFlight(Modifier.fillMaxSize().padding(128.dp))
                     } else {
-                        viewModel.flightsPastList.forEach { flights ->
+                        pastList.forEach { flights ->
                             val depTime = flights[0].revisedDepartDate ?: flights[0].scheduledDepartDate
                             DateHeader(depTime, flights.size)
                             if (flights.size == 1) {

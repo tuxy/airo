@@ -1,17 +1,16 @@
 package com.tuxy.airo.viewmodel
 
 import android.content.Context
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.tuxy.airo.data.database.PreferencesInterface
 import com.tuxy.airo.data.flightdata_rework.FlightData
 import com.tuxy.airo.data.flightdata_rework.FlightDataDao
-import kotlinx.coroutines.DelicateCoroutinesApi
-import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import java.time.Duration
 import java.time.ZonedDateTime
@@ -19,41 +18,53 @@ import java.time.ZonedDateTime
 class MainFlightViewModel(context: Context) : ViewModel() {
     val preferencesInterface = PreferencesInterface(context)
 
-    var flightData by mutableStateOf(emptyList<FlightData>())
-        private set
+    private val _flightData = MutableStateFlow<List<FlightData>>(emptyList())
+    val flightData: StateFlow<List<FlightData>> = _flightData.asStateFlow()
 
-    var flights = flightData.associateBy { flight ->
-        flight.scheduledDepartDate.toEpochSecond()
-    }.toSortedMap()
+    private val _flights = MutableStateFlow<Map<Long, FlightData>>(emptyMap())
+    val flights: StateFlow<Map<Long, FlightData>> = _flights.asStateFlow()
 
-    var flightsUpcomingList = emptyList<List<FlightData>>()
-    var flightsPastList = emptyList<List<FlightData>>()
+    // Why mix states and flows? Why? Because I don't know.
+    private val _flightsUpcomingList = MutableStateFlow<List<List<FlightData>>>(emptyList())
+    val flightsUpcomingList: StateFlow<List<List<FlightData>>> = _flightsUpcomingList.asStateFlow()
 
-    @OptIn(DelicateCoroutinesApi::class)
-    fun loadData(flightDataDao: FlightDataDao) {
-        viewModelScope.launch(Dispatchers.IO) {
-            flightData = flightDataDao.readAll()
-            // Group by 1 day
-            flights = flightData.associateBy { flight ->
-                flight.scheduledArriveDate.toEpochSecond()
-            }.toSortedMap()
+    private val _flightsPastList = MutableStateFlow<List<List<FlightData>>>(emptyList())
+    val flightsPastList: StateFlow<List<List<FlightData>>> = _flightsPastList.asStateFlow()
 
-            val nowInEpochSeconds = ZonedDateTime.now().toEpochSecond()
+    private var collectingJob: Job? = null
 
-            val flightsUpcoming = flights
-                .filterKeys {
-                    it > nowInEpochSeconds
-                }
-                .toSortedMap(compareBy { it })
-            val flightsPast = flights
-                .filterKeys {
-                    it <= nowInEpochSeconds
-                }
-                .toSortedMap(compareBy { it })
+    fun startCollecting(flightDataDao: FlightDataDao) {
+        if (collectingJob?.isActive == true) return
 
-            flightsUpcomingList = groupFlightsByProximity(flightsUpcoming)
-            flightsPastList = groupFlightsByProximity(flightsPast).reversed()
+        collectingJob = viewModelScope.launch {
+            flightDataDao.readAll().collect { newFlightData ->
+                _flightData.value = newFlightData
+                processFlights(newFlightData)
+            }
         }
+    }
+
+    private fun processFlights(newFlightData: List<FlightData>) {
+        val newFlights = newFlightData.associateBy { flight ->
+            flight.scheduledArriveDate.toEpochSecond()
+        }.toSortedMap()
+        _flights.value = newFlights
+
+        val nowInEpochSeconds = ZonedDateTime.now().toEpochSecond()
+
+        val flightsUpcoming = newFlights
+            .filterKeys {
+                it > nowInEpochSeconds
+            }
+            .toSortedMap(compareBy { it })
+        val flightsPast = newFlights
+            .filterKeys {
+                it <= nowInEpochSeconds
+            }
+            .toSortedMap(compareBy { it })
+
+        _flightsUpcomingList.value = groupFlightsByProximity(flightsUpcoming)
+        _flightsPastList.value = groupFlightsByProximity(flightsPast).reversed()
     }
 
     fun groupFlightsByProximity(

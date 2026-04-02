@@ -1,5 +1,14 @@
 package com.tuxy.airo.composables
 
+import android.os.Handler
+import android.os.Looper
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeOut
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -7,6 +16,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.graphics.toColorInt
@@ -20,6 +30,7 @@ import org.maplibre.android.camera.CameraPosition
 import org.maplibre.android.geometry.LatLng
 import org.maplibre.android.maps.MapLibreMap
 import org.maplibre.android.maps.MapView
+import org.maplibre.android.maps.Style
 import org.maplibre.android.maps.UiSettings
 import kotlin.math.asin
 import kotlin.math.atan2
@@ -81,33 +92,32 @@ fun MapLibreMapView(
     }
 
     var pendingOnMapReady by remember { mutableStateOf<(MapLibreMap) -> Unit>({}) }
+    var isMapReady by remember { mutableStateOf(false) }
 
-    AndroidView(
-        modifier = modifier,
-        factory = { ctx ->
-            MapLibre.getInstance(ctx)
-            val mapView = MapView(ctx)
-            mapHolder = MapViewHolder(mapView = mapView)
+    Box(modifier = modifier, contentAlignment = Alignment.Center) {
+        AndroidView(
+            modifier = Modifier.fillMaxSize(),
+            factory = { ctx ->
+                MapLibre.getInstance(ctx)
+                val mapView = MapView(ctx)
+                mapHolder = MapViewHolder(mapView = mapView)
 
-            mapView.getMapAsync { map ->
-                map.setStyle(styleUrl)
-                mapHolder = mapHolder?.copy(
-                    mapLibreMap = map,
-                    isStyleLoaded = true
-                )
-                configureMapSettings(
-                    map.uiSettings,
-                    scrollEnabled = scrollEnabled,
-                    zoomEnabled = zoomEnabled,
-                    tiltEnabled = tiltEnabled,
-                    rotateEnabled = rotateEnabled
-                )
-                pendingOnMapReady(map)
+                mapView.getMapAsync { map ->
+                    map.setStyle(styleUrl) {
+                        Handler(Looper.getMainLooper()).postDelayed({ isMapReady = true }, 200)
+                    }
+                    mapHolder = mapHolder?.copy(mapLibreMap = map, isStyleLoaded = true)
+                    configureMapSettings(map.uiSettings, scrollEnabled, zoomEnabled, tiltEnabled, rotateEnabled)
+                    pendingOnMapReady(map)
+                }
+                mapView
             }
+        )
 
-            mapView
+        AnimatedVisibility(!isMapReady, exit = fadeOut(tween(300))) {
+            Box(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.surfaceVariant))
         }
-    )
+    }
 
     LaunchedEffect(Unit) {
         pendingOnMapReady = onMapReady

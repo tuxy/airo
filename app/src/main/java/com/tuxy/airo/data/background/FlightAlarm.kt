@@ -13,6 +13,7 @@ import com.tuxy.airo.R
 import com.tuxy.airo.data.database.PreferencesInterface
 import com.tuxy.airo.data.flightdata_rework.FlightData
 import com.tuxy.airo.data.flightdata_rework.FlightDataDao
+import kotlinx.coroutines.flow.first
 import java.time.Duration
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
@@ -191,7 +192,7 @@ class FlightAlarmScheduler(val context: Context) {
      * @param flightDataDao The DAO used to retrieve the list of all flights.
      */
     suspend fun resetAll(flightDataDao: FlightDataDao) {
-        val flightList = flightDataDao.readAll()
+        val flightList = flightDataDao.readAll().first()
         for (i in flightList) {
             setAlarm(i)
         }

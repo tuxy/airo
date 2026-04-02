@@ -1,11 +1,11 @@
 package com.tuxy.airo.data.flightdata_rework
 
 import android.content.Context
-import android.util.Log
 import androidx.room.Dao
 import androidx.room.Database
 import androidx.room.Delete
 import androidx.room.Entity
+import androidx.room.Index
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.PrimaryKey
@@ -15,6 +15,7 @@ import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
 import androidx.room.Update
 import com.tuxy.airo.data.database.Converters
+import kotlinx.coroutines.flow.Flow
 import org.openapitools.client.models.FlightContract
 import java.time.Duration
 import java.time.LocalDateTime
@@ -22,7 +23,10 @@ import java.time.ZoneOffset
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
 
-@Entity(tableName = "flight_table")
+@Entity(
+    tableName = "flight_table",
+    indices = [Index(value = ["callSign", "scheduledDepartDate"], unique = true)]
+)
 data class FlightData(
     @PrimaryKey(autoGenerate = true)
     val id: Int = 0,
@@ -61,11 +65,14 @@ val terminal: String = "---",
 ) {
     internal fun parseDateTime(time: String?): ZonedDateTime? {
         if (time == null) {
-            Log.d("FlightData", "Time is null")
-            return null // If time isn't available
+            return null
         }
         val pattern = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mmXXXXX")
-        return ZonedDateTime.parse(time, pattern)
+        return try {
+            ZonedDateTime.parse(time, pattern)
+        } catch (e: Exception) {
+            null
+        }
     }
 
     fun from(response: FlightContract): FlightData {
@@ -89,14 +96,14 @@ val terminal: String = "---",
             from = response.departure.airport.iata ?: "N/A",
             fromName = response.departure.airport.shortName ?: response.departure.airport.name,
             fromCountryCode = response.departure.airport.countryCode ?: "---",
-            scheduledDepartDate = scheduledDepartDate!!,
+            scheduledDepartDate = scheduledDepartDate ?: ZonedDateTime.now(ZoneOffset.UTC),
             revisedDepartDate = revisedDepartDate,
 
             // Arrival Info
             to = response.arrival.airport.iata ?: "N/A",
             toName = response.arrival.airport.shortName ?: response.arrival.airport.name,
             toCountryCode = response.arrival.airport.countryCode ?: "---",
-            scheduledArriveDate = scheduledArriveDate!!,
+            scheduledArriveDate = scheduledArriveDate ?: ZonedDateTime.now(ZoneOffset.UTC),
             revisedArriveDate = revisedArriveDate,
 
             // Airport Details
@@ -115,10 +122,10 @@ val terminal: String = "---",
             attribution = response.aircraft?.image?.htmlAttributions?.firstOrNull() ?: "",
 
             // Location / Map
-            mapOriginLat = response.departure.airport.location?.lat?.toDouble() ?: 0.0, // TODO implement new map system
-            mapOriginLon = response.departure.airport.location?.lon?.toDouble() ?: 0.0,
-            mapDestinationLat = response.arrival.airport.location?.lat?.toDouble() ?: 0.0,
-            mapDestinationLon = response.arrival.airport.location?.lon?.toDouble() ?: 0.0,
+            mapOriginLat = response.departure.airport.location?.lat?.toDouble() ?: 1.0,
+            mapOriginLon = response.departure.airport.location?.lon?.toDouble() ?: 1.0,
+            mapDestinationLat = response.arrival.airport.location?.lat?.toDouble() ?: 1.0,
+            mapDestinationLon = response.arrival.airport.location?.lon?.toDouble() ?: 1.0,
 
             ticketData = "", // Keeping your default
             duration = Duration.between(
@@ -141,7 +148,7 @@ interface FlightDataDao {
     suspend fun updateFlight(flightData: FlightData)
 
     @Query("SELECT * FROM flight_table ORDER BY id ASC")
-    fun readAll(): List<FlightData>
+    fun readAll(): Flow<List<FlightData>>
 
     @Query("SELECT * FROM flight_table WHERE id=:id ")
     fun readSingle(id: String): FlightData?
@@ -161,7 +168,7 @@ interface FlightDataDao {
 }
 
 
-@Database(entities = [FlightData::class], version = 2, exportSchema = false)
+@Database(entities = [FlightData::class], version = 3, exportSchema = false)
 @TypeConverters(Converters::class)
 abstract class FlightDataBase : RoomDatabase() {
     abstract fun flightDataDao(): FlightDataDao
@@ -170,10 +177,11 @@ abstract class FlightDataBase : RoomDatabase() {
         @Volatile
         private var Instance: FlightDataBase? = null
 
-        fun getDatabase(context: Context): FlightDataBase { // Gets database, creates if doesn't exist
+        fun getDatabase(context: Context): FlightDataBase {
             return Instance ?: synchronized(this) {
                 Room.databaseBuilder(context, FlightDataBase::class.java, "flight_database")
                     .setJournalMode(JournalMode.TRUNCATE)
+                    .fallbackToDestructiveMigration()
                     .build()
                     .also { Instance = it }
             }

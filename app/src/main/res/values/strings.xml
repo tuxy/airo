@@ -74,6 +74,11 @@
     <string name="default_server_extra">Server will default to https://airoapi.tuxy.stream/flights. This is only recommended for testing due to the limited API calls available.</string>
     <string name="adb_text">Refer to <a href='https://aerodatabox.com/'>https://aerodatabox.com/</a> for more information</string>
     <string name="update_error">Error occurred when updating</string>
+    <string name="updating_flights">Updating flights…</string>
+    <string name="refreshing_flight_data">Refreshing your flight data</string>
+    <string name="flight_refresh_complete">Flight refresh complete</string>
+    <string name="flight_refresh_complete_desc">%1$d flights updated</string>
+    <string name="update_error_desc">Failed to refresh some flights</string>
     <string name="about">About</string>
     <string name="source_code" translatable="false">https://github.com/tuxy/airo</string>
     <string name="source_and_license">Source code &amp; Licenses</string>

@@ -27,7 +27,7 @@ class BackupViewModel(
             .maxFileCount(10)
             .apply {
                 onCompleteListener { success, message, exitCode ->
-                    Log.d("Backup", "success: $success, message: $message, exitCode: $exitCode")
+                    Log.d("BackupViewModel", "success: $success, message: $message, exitCode: $exitCode")
                     if (success) restartApp(
                         Intent(
                             context,
@@ -49,7 +49,7 @@ class BackupViewModel(
             .maxFileCount(10)
             .apply {
                 onCompleteListener { success, message, exitCode ->
-                    Log.d("Backup", "success: $success, message: $message, exitCode: $exitCode")
+                    Log.d("BackupViewModel", "success: $success, message: $message, exitCode: $exitCode")
                     if (success) restartApp(
                         Intent(
                             context,

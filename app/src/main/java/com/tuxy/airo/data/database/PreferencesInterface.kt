@@ -4,6 +4,7 @@ import android.content.Context
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.datastore.preferences.core.booleanPreferencesKey
+import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.floatPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import com.tuxy.airo.dataStore
@@ -98,6 +99,12 @@ class PreferencesInterface(private val context: Context) {
             0
         } else {
             string.toInt()
+        }
+    }
+
+    suspend fun saveValue(key: String, value: String) {
+        context.dataStore.edit { preferences ->
+            preferences[stringPreferencesKey(key)] = value
         }
     }
 }
