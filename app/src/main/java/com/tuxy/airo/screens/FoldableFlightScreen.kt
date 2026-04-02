@@ -56,6 +56,8 @@ import com.tuxy.airo.screens.settings.NotificationsSettingsView
 import com.tuxy.airo.viewmodel.MainFlightViewModel
 import de.raphaelebner.roomdatabasebackup.core.RoomBackup
 import kotlinx.coroutines.launch
+import java.time.Duration
+import java.time.ZonedDateTime
 
 @OptIn(ExperimentalMaterial3AdaptiveApi::class)
 @Composable
@@ -86,6 +88,19 @@ fun FoldableFlightScreen(
             maxHorizontalPartitions = if (containerWidth > 1200) 2 else 1
         )
     )
+
+    val flightData by viewModel.flightData.collectAsState()
+    val closestFlightId = remember(flightData) {
+        if (navigator.scaffoldDirective.maxHorizontalPartitions == 1) {
+            flightData
+                .filter { Duration.between(ZonedDateTime.now(), it.scheduledDepartDate).seconds >= 0 }
+                .minByOrNull {
+                    Duration.between(it.scheduledDepartDate, ZonedDateTime.now()).seconds
+                }?.id?.toString()
+        } else {
+            null
+        }
+    }
 
     BackHandler(navigator.canNavigateBack()) {
         scope.launch {
@@ -158,7 +173,7 @@ fun FoldableFlightScreen(
                                 }
                             )
                         } else {
-                            val detailId = navigator.currentDestination?.contentKey
+                            val detailId = navigator.currentDestination?.contentKey ?: closestFlightId
                             if (detailId != null) {
                                 FlightDetailsView(
                                     id = detailId,

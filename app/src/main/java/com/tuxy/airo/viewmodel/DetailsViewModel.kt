@@ -164,7 +164,7 @@ class DetailsViewModel(
                 is Success -> {
                     val newFlight = FlightData().from(result.result[0]!!) // TODO fix nullable
 
-                    Log.d("FlightUpdate", newFlight.toString())
+                    Log.d("DetailsViewModel", newFlight.toString())
                     val deleted = flightData.value.copy()
                     flightData.value = newFlight
 

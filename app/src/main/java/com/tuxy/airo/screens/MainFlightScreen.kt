@@ -92,10 +92,6 @@ fun MainFlightView(
     val selectedTabIndex = remember { derivedStateOf { pagerState.currentPage } }
     val scope = rememberCoroutineScope()
 
-    LaunchedEffect(Unit) {
-        viewModel.startCollecting(flightDataDao)
-    }
-
     val scrollBehavior =
         TopAppBarDefaults.exitUntilCollapsedScrollBehavior(rememberTopAppBarState())
 
