@@ -12,11 +12,11 @@ import androidx.core.app.NotificationCompat
 import com.tuxy.airo.MainActivity
 import com.tuxy.airo.R
 import com.tuxy.airo.data.database.PreferencesInterface
-import com.tuxy.airo.data.flightdata_rework.CaughtException
-import com.tuxy.airo.data.flightdata_rework.FlightData
-import com.tuxy.airo.data.flightdata_rework.FlightDataBase
-import com.tuxy.airo.data.flightdata_rework.FlightDataRequest
-import com.tuxy.airo.data.flightdata_rework.Success
+import com.tuxy.airo.data.flightdata.CaughtException
+import com.tuxy.airo.data.flightdata.FlightData
+import com.tuxy.airo.data.flightdata.FlightDataBase
+import com.tuxy.airo.data.flightdata.FlightDataRequest
+import com.tuxy.airo.data.flightdata.Success
 import com.tuxy.airo.screens.ApiSettings
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers

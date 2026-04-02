@@ -65,9 +65,9 @@ import com.tuxy.airo.R
 import com.tuxy.airo.composables.BarcodeScannerSheet
 import com.tuxy.airo.composables.BoldDepartureAndDestinationText
 import com.tuxy.airo.composables.LargeTopSmallBottom
-import com.tuxy.airo.data.flightdata_rework.FlightData
-import com.tuxy.airo.data.flightdata_rework.FlightDataDao
-import com.tuxy.airo.data.flightdata_rework.IataParserData
+import com.tuxy.airo.data.flightdata.FlightData
+import com.tuxy.airo.data.flightdata.FlightDataDao
+import com.tuxy.airo.data.flightdata.IataParserData
 import com.tuxy.airo.viewmodel.TicketViewModel
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers

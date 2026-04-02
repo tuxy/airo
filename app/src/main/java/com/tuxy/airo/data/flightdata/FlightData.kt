@@ -1,11 +1,11 @@
 package com.tuxy.airo.data.flightdata
 
 import android.content.Context
-import androidx.compose.runtime.MutableState
 import androidx.room.Dao
 import androidx.room.Database
 import androidx.room.Delete
 import androidx.room.Entity
+import androidx.room.Index
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.PrimaryKey
@@ -15,16 +15,18 @@ import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
 import androidx.room.Update
 import com.tuxy.airo.data.database.Converters
-import kotlinx.coroutines.DelicateCoroutinesApi
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.flow.Flow
+import org.openapitools.client.models.FlightContract
 import java.time.Duration
 import java.time.LocalDateTime
 import java.time.ZoneOffset
 import java.time.ZonedDateTime
+import java.time.format.DateTimeFormatter
 
-@Entity(tableName = "flight_table")
+@Entity(
+    tableName = "flight_table",
+    indices = [Index(value = ["callSign", "scheduledDepartDate"], unique = true)]
+)
 data class FlightData(
     @PrimaryKey(autoGenerate = true)
     val id: Int = 0,
@@ -38,8 +40,10 @@ data class FlightData(
     val fromCountryCode: String = "---",
     val toCountryCode: String = "---",
     val fromName: String = "---",
-    val departDate: ZonedDateTime = ZonedDateTime.now(ZoneOffset.UTC),
-    val arriveDate: ZonedDateTime = ZonedDateTime.now(ZoneOffset.UTC),
+    val scheduledDepartDate: ZonedDateTime = ZonedDateTime.now(ZoneOffset.UTC),
+    val scheduledArriveDate: ZonedDateTime = ZonedDateTime.now(ZoneOffset.UTC),
+    val revisedDepartDate: ZonedDateTime? = null,
+    val revisedArriveDate: ZonedDateTime? = null,
     val duration: Duration = Duration.ofSeconds(1), // Prevents current = NaN
     val toName: String = "---",
     var ticketData: String = "",
@@ -53,12 +57,84 @@ val terminal: String = "---",
     val aircraftUri: String = "---",
     val author: String = "---",
     val authorUri: String = "---",
-    val mapOriginX: Double = 1.0,
-    val mapOriginY: Double = 1.0,
-    val mapDestinationX: Double = 1.0,
-    val mapDestinationY: Double = 1.0,
+    val mapOriginLat: Double = 1.0,
+    val mapOriginLon: Double = 1.0,
+    val mapDestinationLat: Double = 1.0,
+    val mapDestinationLon: Double = 1.0,
     val attribution: String = "---"
-)
+) {
+    internal fun parseDateTime(time: String?): ZonedDateTime? {
+        if (time == null) {
+            return null
+        }
+        val pattern = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mmXXXXX")
+        return try {
+            ZonedDateTime.parse(time, pattern)
+        } catch (e: Exception) {
+            null
+        }
+    }
+
+    fun from(response: FlightContract): FlightData {
+
+        val scheduledDepartDate = parseDateTime(response.departure.scheduledTime?.local)
+        val scheduledArriveDate = parseDateTime(response.arrival.scheduledTime?.local)
+
+        val revisedDepartDate = parseDateTime(response.departure.revisedTime?.local)
+        val revisedArriveDate = parseDateTime(response.arrival.revisedTime?.local)
+
+        return FlightData(
+            lastUpdate = LocalDateTime.now(),
+            callSign = response.number,
+
+            // Airline Info (Safe handling of null airline object)
+            airline = response.airline?.name ?: "N/A",
+            airlineIcao = response.airline?.icao ?: "N/A",
+            airlineIata = response.airline?.iata ?: "N/A",
+
+            // Departure Info
+            from = response.departure.airport.iata ?: "N/A",
+            fromName = response.departure.airport.shortName ?: response.departure.airport.name,
+            fromCountryCode = response.departure.airport.countryCode ?: "---",
+            scheduledDepartDate = scheduledDepartDate ?: ZonedDateTime.now(ZoneOffset.UTC),
+            revisedDepartDate = revisedDepartDate,
+
+            // Arrival Info
+            to = response.arrival.airport.iata ?: "N/A",
+            toName = response.arrival.airport.shortName ?: response.arrival.airport.name,
+            toCountryCode = response.arrival.airport.countryCode ?: "---",
+            scheduledArriveDate = scheduledArriveDate ?: ZonedDateTime.now(ZoneOffset.UTC),
+            revisedArriveDate = revisedArriveDate,
+
+            // Airport Details
+            gate = response.departure.gate ?: "—",
+            terminal = response.departure.terminal ?: "—",
+            checkInDesk = response.departure.checkInDesk ?: "—",
+            toGate = response.arrival.gate ?: "—",
+            toTerminal = response.arrival.terminal ?: "—",
+            toBaggageClaim = response.arrival.baggageBelt ?: "—",
+
+            // Aircraft Info
+            aircraftName = response.aircraft?.model ?: "N/A",
+            aircraftUri = response.aircraft?.image?.url ?: "",
+            author = response.aircraft?.image?.author ?: "",
+            authorUri = response.aircraft?.image?.webUrl ?: "",
+            attribution = response.aircraft?.image?.htmlAttributions?.firstOrNull() ?: "",
+
+            // Location / Map
+            mapOriginLat = response.departure.airport.location?.lat?.toDouble() ?: 1.0,
+            mapOriginLon = response.departure.airport.location?.lon?.toDouble() ?: 1.0,
+            mapDestinationLat = response.arrival.airport.location?.lat?.toDouble() ?: 1.0,
+            mapDestinationLon = response.arrival.airport.location?.lon?.toDouble() ?: 1.0,
+
+            ticketData = "", // Keeping your default
+            duration = Duration.between(
+                scheduledDepartDate,
+                scheduledArriveDate
+            )
+        )
+    }
+}
 
 @Dao
 interface FlightDataDao {
@@ -72,7 +148,7 @@ interface FlightDataDao {
     suspend fun updateFlight(flightData: FlightData)
 
     @Query("SELECT * FROM flight_table ORDER BY id ASC")
-    fun readAll(): List<FlightData>
+    fun readAll(): Flow<List<FlightData>>
 
     @Query("SELECT * FROM flight_table WHERE id=:id ")
     fun readSingle(id: String): FlightData?
@@ -80,19 +156,19 @@ interface FlightDataDao {
     /**
      * Checks if a flight with the given departure date and call sign already exists in the database.
      *
-     * @param departDate The departure date and time of the flight.
+     * @param scheduledDepartDate The departure date and time of the flight.
      * @param callSign The call sign of the flight.
      * @return The number of flights matching the criteria (0 or 1, as duplicates are ignored on insert).
      */
-    @Query("SELECT COUNT() FROM flight_table WHERE departDate=:departDate AND callSign=:callSign")
-    fun queryExisting(departDate: ZonedDateTime, callSign: String): Int
+    @Query("SELECT COUNT() FROM flight_table WHERE scheduledDepartDate=:scheduledDepartDate AND callSign=:callSign")
+    fun queryExisting(scheduledDepartDate: ZonedDateTime, callSign: String): Int
 
 //    @Query("DELETE FROM flight_table") // ONLY FOR DEVELOPMENT
 //    fun nukeTable()
 }
 
 
-@Database(entities = [FlightData::class], version = 2, exportSchema = false)
+@Database(entities = [FlightData::class], version = 3, exportSchema = false)
 @TypeConverters(Converters::class)
 abstract class FlightDataBase : RoomDatabase() {
     abstract fun flightDataDao(): FlightDataDao
@@ -101,36 +177,14 @@ abstract class FlightDataBase : RoomDatabase() {
         @Volatile
         private var Instance: FlightDataBase? = null
 
-        fun getDatabase(context: Context): FlightDataBase { // Gets database, creates if doesn't exist
+        fun getDatabase(context: Context): FlightDataBase {
             return Instance ?: synchronized(this) {
                 Room.databaseBuilder(context, FlightDataBase::class.java, "flight_database")
                     .setJournalMode(JournalMode.TRUNCATE)
+                    .fallbackToDestructiveMigration()
                     .build()
                     .also { Instance = it }
             }
         }
     }
-}
-
-/**
- * Reads a single flight data entry from the database and updates a MutableState.
- *
- * This function launches a coroutine in the GlobalScope to perform the database read operation
- * asynchronously. The result is then used to update the provided `flightData` MutableState.
- *
- * @param flightData The MutableState to be updated with the fetched flight data.
- * @param flightDataDao The DAO (Data Access Object) for accessing flight data in the database.
- * @param id The ID of the flight data entry to retrieve.
- * @return A Job representing the launched coroutine. This can be used to manage the coroutine's lifecycle (e.g., cancel it).
- */
-@OptIn(DelicateCoroutinesApi::class)
-fun singleIntoMut(
-    flightData: MutableState<FlightData>,
-    flightDataDao: FlightDataDao,
-    id: String
-): Job {
-    val job = GlobalScope.launch {
-        flightData.value = flightDataDao.readSingle(id) ?: FlightData()
-    }
-    return job
 }

@@ -71,7 +71,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.withStyle
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.graphics.shapes.RoundedPolygon
@@ -83,8 +82,8 @@ import com.tuxy.airo.composables.RouteBar
 import com.tuxy.airo.composables.addAirportMarker
 import com.tuxy.airo.composables.addFlightRoute
 import com.tuxy.airo.composables.centerOnRoute
-import com.tuxy.airo.data.flightdata_rework.FlightData
-import com.tuxy.airo.data.flightdata_rework.FlightDataDao
+import com.tuxy.airo.data.flightdata.FlightData
+import com.tuxy.airo.data.flightdata.FlightDataDao
 import com.tuxy.airo.viewmodel.DetailsViewModel
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.GlobalScope

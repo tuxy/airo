@@ -11,8 +11,8 @@ import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
 import com.tuxy.airo.R
 import com.tuxy.airo.data.database.PreferencesInterface
-import com.tuxy.airo.data.flightdata_rework.FlightData
-import com.tuxy.airo.data.flightdata_rework.FlightDataDao
+import com.tuxy.airo.data.flightdata.FlightData
+import com.tuxy.airo.data.flightdata.FlightDataDao
 import kotlinx.coroutines.flow.first
 import java.time.Duration
 import java.time.ZonedDateTime

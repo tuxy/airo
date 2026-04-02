@@ -4,8 +4,8 @@ import android.content.Context
 import android.content.res.Resources
 import androidx.compose.material3.lightColorScheme
 import com.tuxy.airo.data.database.PreferencesInterface
-import com.tuxy.airo.data.flightdata_rework.FlightData
-import com.tuxy.airo.data.flightdata_rework.FlightDataDao
+import com.tuxy.airo.data.flightdata.FlightData
+import com.tuxy.airo.data.flightdata.FlightDataDao
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.StandardTestDispatcher

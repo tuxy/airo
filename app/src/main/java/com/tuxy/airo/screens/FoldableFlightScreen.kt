@@ -49,7 +49,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.tuxy.airo.R
-import com.tuxy.airo.data.flightdata_rework.FlightDataDao
+import com.tuxy.airo.data.flightdata.FlightDataDao
 import com.tuxy.airo.screens.settings.ApiSettingsView
 import com.tuxy.airo.screens.settings.BackupSettingsView
 import com.tuxy.airo.screens.settings.NotificationsSettingsView

@@ -16,9 +16,9 @@ import com.journeyapps.barcodescanner.ScanIntentResult
 import com.journeyapps.barcodescanner.ScanOptions
 import com.tuxy.airo.R
 import com.tuxy.airo.data.database.PreferencesInterface
-import com.tuxy.airo.data.flightdata_rework.FlightData
-import com.tuxy.airo.data.flightdata_rework.FlightDataDao
-import com.tuxy.airo.data.flightdata_rework.IataParserData
+import com.tuxy.airo.data.flightdata.FlightData
+import com.tuxy.airo.data.flightdata.FlightDataDao
+import com.tuxy.airo.data.flightdata.IataParserData
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 

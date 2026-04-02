@@ -20,8 +20,8 @@ import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.preferencesDataStore
 import com.tuxy.airo.data.database.PreferencesInterface
-import com.tuxy.airo.data.flightdata_rework.FlightDataBase
-import com.tuxy.airo.data.flightdata_rework.FlightDataDao
+import com.tuxy.airo.data.flightdata.FlightDataBase
+import com.tuxy.airo.data.flightdata.FlightDataDao
 import com.tuxy.airo.ui.theme.AeroTheme
 import de.raphaelebner.roomdatabasebackup.core.RoomBackup
 import kotlinx.coroutines.DelicateCoroutinesApi
