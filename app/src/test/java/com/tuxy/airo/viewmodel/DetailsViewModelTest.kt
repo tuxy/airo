@@ -61,7 +61,8 @@ class DetailsViewModelTest {
     fun `getZoneDifference should return correct time difference`() = runTest {
         val departTime = ZonedDateTime.parse("2024-01-01T12:00:00+01:00")
         val arriveTime = ZonedDateTime.parse("2024-01-01T18:00:00+03:00")
-        viewModel.flightData.value = FlightData(scheduledDepartDate = departTime, scheduledArriveDate = arriveTime)
+        viewModel.flightData.value =
+            FlightData(scheduledDepartDate = departTime, scheduledArriveDate = arriveTime)
 
         val difference = viewModel.getZoneDifference()
 
@@ -72,7 +73,8 @@ class DetailsViewModelTest {
     fun `getZoneDifference should return empty string for same timezone`() = runTest {
         val departTime = ZonedDateTime.parse("2024-01-01T12:00:00+01:00")
         val arriveTime = ZonedDateTime.parse("2024-01-01T18:00:00+01:00")
-        viewModel.flightData.value = FlightData(scheduledDepartDate = departTime, scheduledArriveDate = arriveTime)
+        viewModel.flightData.value =
+            FlightData(scheduledDepartDate = departTime, scheduledArriveDate = arriveTime)
 
         val difference = viewModel.getZoneDifference()
 

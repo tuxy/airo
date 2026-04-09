@@ -148,10 +148,11 @@ class DateViewModel(
                     dateLocalRole = FlightDirection.Departure,
                 )
 
-                when(result) {
+                when (result) {
                     is CaughtException -> {
                         println("exception ${result.exception}")
                     }
+
                     is Error -> {
                         println("error ${result.result}")
 //                        Toast.makeText(
@@ -160,13 +161,15 @@ class DateViewModel(
 //                            Toast.LENGTH_LONG
 //                        ).show()
                     }
+
                     is Success -> {
                         println("success ${result.result}")
                         val contract = result.result.firstOrNull()
                         if (contract != null) {
                             flightDataDao.addFlight(FlightData().from(contract))
+                        } else {
+                            toast(2).show()
                         }
-                        else { toast(2).show() }
                     }
                 }
             } finally {

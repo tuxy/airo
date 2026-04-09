@@ -81,7 +81,10 @@ class MainFlightViewModel(context: Context) : ViewModel() {
             val lastFlightInGroup = lastGroup?.lastOrNull()
 
             if (lastFlightInGroup != null) {
-                val timeDiff = Duration.between(lastFlightInGroup.scheduledDepartDate, flight.scheduledDepartDate).abs()
+                val timeDiff = Duration.between(
+                    lastFlightInGroup.scheduledDepartDate,
+                    flight.scheduledDepartDate
+                ).abs()
 
                 if (timeDiff <= Duration.ofHours(24)) {
                     val updatedLastGroup = lastGroup + flight

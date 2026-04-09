@@ -56,7 +56,7 @@ openApiGenerate {
     outputDir.set("$projectDir/build/openapi")
     generatorName.set("kotlin")
     skipValidateSpec.set(true)
-    importMappings.put("OffsetDateTime","kotlin.String")
+    importMappings.put("OffsetDateTime", "kotlin.String")
 
     globalProperties.put("models", "")
     globalProperties.put("modelDocs", "false")

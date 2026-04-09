@@ -308,6 +308,7 @@ fun MainTicketView(
                                 value = viewModel.ticketString
                             )
                         }
+
                         false -> {} // Do nothing if the code cannot be processed
                     }
                 }
@@ -345,7 +346,8 @@ fun MainTicketView(
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class, DelicateCoroutinesApi::class,
+@OptIn(
+    ExperimentalMaterial3Api::class, DelicateCoroutinesApi::class,
     ExperimentalMaterial3AdaptiveApi::class
 )
 @Composable

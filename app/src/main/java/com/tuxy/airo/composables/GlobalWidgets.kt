@@ -20,8 +20,8 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
-import androidx.compose.material.icons.filled.QrCodeScanner
 import androidx.compose.material.icons.filled.Image
+import androidx.compose.material.icons.filled.QrCodeScanner
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
@@ -51,13 +51,13 @@ import androidx.navigation.NavController
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.isGranted
 import com.google.accompanist.permissions.rememberPermissionState
-import com.journeyapps.barcodescanner.ScanContract
-import com.journeyapps.barcodescanner.ScanOptions
 import com.google.zxing.BinaryBitmap
 import com.google.zxing.LuminanceSource
 import com.google.zxing.MultiFormatReader
 import com.google.zxing.RGBLuminanceSource
 import com.google.zxing.common.HybridBinarizer
+import com.journeyapps.barcodescanner.ScanContract
+import com.journeyapps.barcodescanner.ScanOptions
 import com.tuxy.airo.R
 import com.tuxy.airo.data.flightdata.FlightData
 import kotlinx.coroutines.Dispatchers
@@ -307,7 +307,11 @@ fun BarcodeScannerSheet(
             if (granted) {
                 launchBarcodeScanner(barCodeLauncher)
             } else {
-                Toast.makeText(context, context.resources.getString(R.string.allow_camera_toast), Toast.LENGTH_LONG).show()
+                Toast.makeText(
+                    context,
+                    context.resources.getString(R.string.allow_camera_toast),
+                    Toast.LENGTH_LONG
+                ).show()
             }
         }
     )

@@ -68,6 +68,7 @@ class DetailsViewModel(
             flightData.value = dao.readSingle(id) ?: FlightData()
         }
     }
+
     /**
      * Calculates the time difference between the departure and arrival timezones.
      * @return A string representing the time difference, e.g., "+02:00".
@@ -151,7 +152,11 @@ class DetailsViewModel(
             val request = FlightDataRequest()
             val result = request.getFlightOnSpecificDate(
                 searchParam = formatFlightNumber(flightData.value.callSign),
-                dateLocal = flightData.value.scheduledDepartDate.format(DateTimeFormatter.ofPattern("yyyy-MM-dd")),
+                dateLocal = flightData.value.scheduledDepartDate.format(
+                    DateTimeFormatter.ofPattern(
+                        "yyyy-MM-dd"
+                    )
+                ),
                 searchBy = FlightSearchByEnum.Number,
                 dateLocalRole = FlightDirection.Departure,
                 withAircraftImage = true,
@@ -159,7 +164,7 @@ class DetailsViewModel(
                 withFlightPlan = true,
             )
 
-            when(result) {
+            when (result) {
                 is Success -> {
                     val newFlight = FlightData().from(result.result[0]!!) // TODO fix nullable
 
@@ -175,14 +180,26 @@ class DetailsViewModel(
                     )
                     Log.d("FlightDetails", "Refreshed flight: ${newFlight.callSign}")
                 }
+
                 is Error -> {
-                    Log.e("FlightSchedulerWorker", "Failed to refresh flight: ${flightData.value.callSign} error: ${result.message}")
+                    Log.e(
+                        "FlightSchedulerWorker",
+                        "Failed to refresh flight: ${flightData.value.callSign} error: ${result.message}"
+                    )
                 }
+
                 is CaughtException -> {
-                    Log.e("FlightSchedulerWorker", "Failed to refresh flight: ${flightData.value.callSign} exception: ${result.exception}")
+                    Log.e(
+                        "FlightSchedulerWorker",
+                        "Failed to refresh flight: ${flightData.value.callSign} exception: ${result.exception}"
+                    )
                 }
+
                 else -> {
-                    Log.e("FlightSchedulerWorker", "Failed to refresh flight: ${flightData.value.callSign} unknown error")
+                    Log.e(
+                        "FlightSchedulerWorker",
+                        "Failed to refresh flight: ${flightData.value.callSign} unknown error"
+                    )
                 }
             }
 

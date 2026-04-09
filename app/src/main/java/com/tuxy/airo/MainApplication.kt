@@ -4,7 +4,6 @@ import android.app.Application
 import android.util.Log
 import androidx.work.Configuration
 import com.tuxy.airo.data.background.AlarmSchedulerHelper
-import com.tuxy.airo.data.background.FlightAlarmScheduler
 import com.tuxy.airo.data.background.NetworkCallbackHandler
 import com.tuxy.airo.data.background.NetworkChangeReceiver
 import com.tuxy.airo.data.database.PreferencesInterface
@@ -68,14 +67,18 @@ class MainApplication : Application(), Configuration.Provider {
         val intervalHours = intervalString?.toLongOrNull() ?: 12
 
         val shouldRefresh = lastRefreshString.isEmpty() ||
-            runCatching {
-                val lastRefresh = ZonedDateTime.parse(lastRefreshString)
-                val hoursSinceRefresh = Duration.between(lastRefresh, ZonedDateTime.now()).toHours()
-                hoursSinceRefresh >= intervalHours
-            }.getOrDefault(true)
+                runCatching {
+                    val lastRefresh = ZonedDateTime.parse(lastRefreshString)
+                    val hoursSinceRefresh =
+                        Duration.between(lastRefresh, ZonedDateTime.now()).toHours()
+                    hoursSinceRefresh >= intervalHours
+                }.getOrDefault(true)
 
         if (shouldRefresh) {
-            Log.d("MainApplication", "Scheduling immediate refresh (last refresh was > ${intervalHours}h ago)")
+            Log.d(
+                "MainApplication",
+                "Scheduling immediate refresh (last refresh was > ${intervalHours}h ago)"
+            )
             AlarmSchedulerHelper.scheduleImmediateRefresh(applicationContext)
         } else {
             Log.d("MainApplication", "Skipping refresh (last refresh was < ${intervalHours}h ago)")

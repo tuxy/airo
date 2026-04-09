@@ -7,6 +7,8 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.adaptive.ExperimentalMaterial3AdaptiveApi
+import androidx.compose.material3.adaptive.navigation.ThreePaneScaffoldNavigator
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
@@ -15,8 +17,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
-import androidx.compose.material3.adaptive.ExperimentalMaterial3AdaptiveApi
-import androidx.compose.material3.adaptive.navigation.ThreePaneScaffoldNavigator
 import com.ireward.htmlcompose.HtmlText
 import com.jamal.composeprefs3.ui.PrefsScreen
 import com.tuxy.airo.R
@@ -27,7 +27,11 @@ import com.tuxy.airo.screens.settings.prefs.SingleSegmentedListPref
 import com.tuxy.airo.screens.settings.prefs.SliderPref
 import com.tuxy.airo.screens.settings.prefs.TextFieldPref
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalComposeUiApi::class, ExperimentalMaterial3AdaptiveApi::class)
+@OptIn(
+    ExperimentalMaterial3Api::class,
+    ExperimentalComposeUiApi::class,
+    ExperimentalMaterial3AdaptiveApi::class
+)
 @Composable
 fun ApiSettingsView(
     paneNavigator: ThreePaneScaffoldNavigator<String>? = null

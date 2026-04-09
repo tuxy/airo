@@ -96,7 +96,8 @@ import java.time.format.DateTimeFormatter
 import kotlin.math.absoluteValue
 import kotlin.time.toKotlinDuration
 
-@OptIn(DelicateCoroutinesApi::class, ExperimentalMaterial3Api::class,
+@OptIn(
+    DelicateCoroutinesApi::class, ExperimentalMaterial3Api::class,
     ExperimentalMaterial3AdaptiveApi::class
 )
 @Composable
@@ -180,8 +181,9 @@ fun FlightDetailsView(
                             .verticalScroll(rememberScrollState())
                             .fillMaxHeight()
                     ) {
-                        val depTime = viewModel.flightData.value.revisedDepartDate ?: viewModel.flightData.value.scheduledDepartDate
-                        val dark = if(isSystemInDarkTheme()) "dark-matter" else "positron"
+                        val depTime = viewModel.flightData.value.revisedDepartDate
+                            ?: viewModel.flightData.value.scheduledDepartDate
+                        val dark = if (isSystemInDarkTheme()) "dark-matter" else "positron"
 
                         RouteBar(viewModel.flightData.value)
                         Text(
@@ -208,7 +210,10 @@ fun FlightDetailsView(
                                 styleUrl = "https://basemaps.cartocdn.com/gl/${dark}-gl-style/style.json",
                                 scrollEnabled = false,
                                 zoomEnabled = false,
-                                cameraTarget = LatLng(viewModel.flightData.value.mapOriginLat, viewModel.flightData.value.mapOriginLon),
+                                cameraTarget = LatLng(
+                                    viewModel.flightData.value.mapOriginLat,
+                                    viewModel.flightData.value.mapOriginLon
+                                ),
                                 tiltEnabled = false,
                                 rotateEnabled = false,
                                 onMapReady = { map ->
@@ -219,8 +224,18 @@ fun FlightDetailsView(
 
                                     // map.addFlightRoute(originLat, originLon, destLat, destLon)
                                     map.addFlightRoute(originLat, originLon, destLat, destLon)
-                                    map.addAirportMarker(originLat, originLon, viewModel.flightData.value.from, isOrigin = true)
-                                    map.addAirportMarker(destLat, destLon, viewModel.flightData.value.to, isOrigin = false)
+                                    map.addAirportMarker(
+                                        originLat,
+                                        originLon,
+                                        viewModel.flightData.value.from,
+                                        isOrigin = true
+                                    )
+                                    map.addAirportMarker(
+                                        destLat,
+                                        destLon,
+                                        viewModel.flightData.value.to,
+                                        isOrigin = false
+                                    )
                                     map.centerOnRoute(originLat, originLon, destLat, destLon)
                                 }
                             )
@@ -394,19 +409,35 @@ fun FlightBoard(
                 val revisedColor = if (revisedDate < scheduledDate) green else red
                 Text(
                     buildAnnotatedString {
-                        withStyle(SpanStyle(color = MaterialTheme.colorScheme.primary, fontSize = 16.sp)) {
+                        withStyle(
+                            SpanStyle(
+                                color = MaterialTheme.colorScheme.primary,
+                                fontSize = 16.sp
+                            )
+                        ) {
                             append(scheduledDate.format(DateTimeFormatter.ofPattern(timeFormat)))
                         }
-                        withStyle(SpanStyle(color = MaterialTheme.colorScheme.primary, fontSize = 16.sp)) {
+                        withStyle(
+                            SpanStyle(
+                                color = MaterialTheme.colorScheme.primary,
+                                fontSize = 16.sp
+                            )
+                        ) {
                             append(" →\n")
                         }
-                        withStyle(SpanStyle(color = revisedColor, fontSize = 24.sp, fontWeight = FontWeight.W500)) {
+                        withStyle(
+                            SpanStyle(
+                                color = revisedColor,
+                                fontSize = 24.sp,
+                                fontWeight = FontWeight.W500
+                            )
+                        ) {
                             append(revisedDate.format(DateTimeFormatter.ofPattern(timeFormat)))
                         }
                     },
                     modifier = Modifier.padding(bottom = 4.dp),
-		    lineHeight = 30.sp,
-		    textAlign = TextAlign.End,
+                    lineHeight = 30.sp,
+                    textAlign = TextAlign.End,
                     overflow = TextOverflow.Visible,
                     maxLines = 2
                 )
@@ -531,7 +562,8 @@ fun FlightStatusCard(viewModel: DetailsViewModel, context: Context) {
             LinearProgressIndicator(
                 progress = {
                     val now = ZonedDateTime.now()
-                    val depTime = viewModel.flightData.value.revisedDepartDate ?: viewModel.flightData.value.scheduledDepartDate
+                    val depTime = viewModel.flightData.value.revisedDepartDate
+                        ?: viewModel.flightData.value.scheduledDepartDate
 
                     GlobalScope.launch {
 
@@ -607,16 +639,40 @@ fun FlightInformationInteract(
         Column {
             ListItem(
                 modifier = Modifier.clickable(onClick = { onShowTicket() }),
-                headlineContent = { Text(stringResource(R.string.ticket), overflow = TextOverflow.Visible, maxLines = 1) },
-                supportingContent = { Text(flightData.callSign, overflow = TextOverflow.Visible, maxLines = 1) },
+                headlineContent = {
+                    Text(
+                        stringResource(R.string.ticket),
+                        overflow = TextOverflow.Visible,
+                        maxLines = 1
+                    )
+                },
+                supportingContent = {
+                    Text(
+                        flightData.callSign,
+                        overflow = TextOverflow.Visible,
+                        maxLines = 1
+                    )
+                },
                 colors = ListItemDefaults.colors(
                     containerColor = Color.Transparent
                 )
             )
             ListItem(
                 modifier = Modifier.clickable(onClick = { onShowAircraft() }),
-                headlineContent = { Text(stringResource(R.string.aircraft), overflow = TextOverflow.Visible, maxLines = 1) },
-                supportingContent = { Text(flightData.aircraftName, overflow = TextOverflow.Visible, maxLines = 1) },
+                headlineContent = {
+                    Text(
+                        stringResource(R.string.aircraft),
+                        overflow = TextOverflow.Visible,
+                        maxLines = 1
+                    )
+                },
+                supportingContent = {
+                    Text(
+                        flightData.aircraftName,
+                        overflow = TextOverflow.Visible,
+                        maxLines = 1
+                    )
+                },
                 colors = ListItemDefaults.colors(
                     containerColor = Color.Transparent
                 )
@@ -670,7 +726,11 @@ fun DeleteDialog(
                             viewModel.openDialog.value = false
                         },
                     ) {
-                        Text(stringResource(R.string.cancel), overflow = TextOverflow.Visible, maxLines = 1)
+                        Text(
+                            stringResource(R.string.cancel),
+                            overflow = TextOverflow.Visible,
+                            maxLines = 1
+                        )
                     }
                     TextButton(
                         onClick = {
@@ -680,7 +740,11 @@ fun DeleteDialog(
                             }
                         }
                     ) {
-                        Text(stringResource(R.string.delete), overflow = TextOverflow.Visible, maxLines = 1)
+                        Text(
+                            stringResource(R.string.delete),
+                            overflow = TextOverflow.Visible,
+                            maxLines = 1
+                        )
                     }
                 }
             }
@@ -709,7 +773,12 @@ fun CustomMapMarker() { // Only used in viewmodel
                 val roundedPolygonPath = roundedPolygon.toPath().asComposePath()
                 onDrawBehind {
                     drawPath(roundedPolygonPath, color = primary, alpha = 0.4f)
-                    drawPath(roundedPolygonPath, color = primary, alpha = 1f, style = Stroke(width = 4.0f))
+                    drawPath(
+                        roundedPolygonPath,
+                        color = primary,
+                        alpha = 1f,
+                        style = Stroke(width = 4.0f)
+                    )
                 }
             }
     )

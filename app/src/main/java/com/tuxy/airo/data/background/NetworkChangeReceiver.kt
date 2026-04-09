@@ -33,7 +33,8 @@ class NetworkChangeReceiver : BroadcastReceiver() {
          * @return true if device has internet connectivity
          */
         fun isNetworkAvailable(context: Context): Boolean {
-            val connectivityManager = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+            val connectivityManager =
+                context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
             val network = connectivityManager.activeNetwork ?: return false
             val capabilities = connectivityManager.getNetworkCapabilities(network) ?: return false
             return capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
@@ -45,8 +46,12 @@ class NetworkChangeReceiver : BroadcastReceiver() {
          * @param context Application context
          * @param callback NetworkCallback to receive events
          */
-        fun registerNetworkCallback(context: Context, callback: ConnectivityManager.NetworkCallback) {
-            val connectivityManager = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+        fun registerNetworkCallback(
+            context: Context,
+            callback: ConnectivityManager.NetworkCallback
+        ) {
+            val connectivityManager =
+                context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
             val request = NetworkRequest.Builder()
                 .addCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
                 .build()
@@ -60,8 +65,12 @@ class NetworkChangeReceiver : BroadcastReceiver() {
          * @param context Application context
          * @param callback NetworkCallback to unregister
          */
-        fun unregisterNetworkCallback(context: Context, callback: ConnectivityManager.NetworkCallback) {
-            val connectivityManager = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+        fun unregisterNetworkCallback(
+            context: Context,
+            callback: ConnectivityManager.NetworkCallback
+        ) {
+            val connectivityManager =
+                context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
             try {
                 connectivityManager.unregisterNetworkCallback(callback)
             } catch (e: Exception) {
@@ -74,7 +83,8 @@ class NetworkChangeReceiver : BroadcastReceiver() {
         Log.d(LOG_TAG, "onReceive called with action: ${intent.action}")
 
         if (intent.action == ConnectivityManager.CONNECTIVITY_ACTION) {
-            val connectivityManager = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+            val connectivityManager =
+                context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
             val networkInfo = connectivityManager.activeNetworkInfo
 
             if (networkInfo != null && networkInfo.isConnected) {
@@ -130,7 +140,8 @@ class NetworkCallbackHandler(private val context: Context) : ConnectivityManager
      */
     override fun onCapabilitiesChanged(network: Network, networkCapabilities: NetworkCapabilities) {
         super.onCapabilitiesChanged(network, networkCapabilities)
-        val hasInternet = networkCapabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
+        val hasInternet =
+            networkCapabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
         Log.d(LOG_TAG, "Network capabilities changed, hasInternet: $hasInternet")
     }
 }

@@ -30,7 +30,6 @@ import org.maplibre.android.camera.CameraPosition
 import org.maplibre.android.geometry.LatLng
 import org.maplibre.android.maps.MapLibreMap
 import org.maplibre.android.maps.MapView
-import org.maplibre.android.maps.Style
 import org.maplibre.android.maps.UiSettings
 import kotlin.math.asin
 import kotlin.math.atan2
@@ -107,7 +106,13 @@ fun MapLibreMapView(
                         Handler(Looper.getMainLooper()).postDelayed({ isMapReady = true }, 200)
                     }
                     mapHolder = mapHolder?.copy(mapLibreMap = map, isStyleLoaded = true)
-                    configureMapSettings(map.uiSettings, scrollEnabled, zoomEnabled, tiltEnabled, rotateEnabled)
+                    configureMapSettings(
+                        map.uiSettings,
+                        scrollEnabled,
+                        zoomEnabled,
+                        tiltEnabled,
+                        rotateEnabled
+                    )
                     pendingOnMapReady(map)
                 }
                 mapView
@@ -115,7 +120,9 @@ fun MapLibreMapView(
         )
 
         AnimatedVisibility(!isMapReady, exit = fadeOut(tween(300))) {
-            Box(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.surfaceVariant))
+            Box(Modifier
+                .fillMaxSize()
+                .background(MaterialTheme.colorScheme.surfaceVariant))
         }
     }
 
@@ -140,7 +147,14 @@ fun MapLibreMapView(
         }
     }
 
-    LaunchedEffect(cameraTarget, cameraZoom, scrollEnabled, zoomEnabled, tiltEnabled, rotateEnabled) {
+    LaunchedEffect(
+        cameraTarget,
+        cameraZoom,
+        scrollEnabled,
+        zoomEnabled,
+        tiltEnabled,
+        rotateEnabled
+    ) {
         mapHolder?.mapLibreMap?.let { map ->
             configureMapSettings(
                 map.uiSettings,

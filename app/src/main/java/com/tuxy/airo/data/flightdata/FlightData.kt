@@ -49,7 +49,7 @@ data class FlightData(
     var ticketData: String = "",
     val gate: String = "---",
     val toGate: String = "---",
-val terminal: String = "---",
+    val terminal: String = "---",
     val toTerminal: String = "---",
     val toBaggageClaim: String = "---",
     val checkInDesk: String = "---",

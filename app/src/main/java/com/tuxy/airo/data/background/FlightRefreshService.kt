@@ -74,11 +74,13 @@ class FlightRefreshService : Service() {
                 startForeground(NOTIFICATION_ID, createProgressNotification())
                 refreshFlights()
             }
+
             ACTION_NETWORK_CHANGE -> {
                 Log.d(LOG_TAG, "Starting network change refresh")
                 startForeground(NOTIFICATION_ID, createProgressNotification())
                 refreshFlights()
             }
+
             else -> {
                 Log.d(LOG_TAG, "Starting default refresh")
                 startForeground(NOTIFICATION_ID, createProgressNotification())
@@ -105,7 +107,8 @@ class FlightRefreshService : Service() {
             setShowBadge(false)
         }
 
-        val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        val notificationManager =
+            getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
         notificationManager.createNotificationChannel(channel)
     }
 
@@ -157,7 +160,8 @@ class FlightRefreshService : Service() {
             .setContentIntent(pendingIntent)
             .build()
 
-        val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        val notificationManager =
+            getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
         notificationManager.notify(COMPLETION_NOTIFICATION_ID, notification)
     }
 
@@ -165,16 +169,18 @@ class FlightRefreshService : Service() {
         serviceScope.launch {
             val preferencesInterface = PreferencesInterface(applicationContext)
 
-            val lastRefreshString = preferencesInterface.getValueFlowString("last_refresh_time").first()
+            val lastRefreshString =
+                preferencesInterface.getValueFlowString("last_refresh_time").first()
             val intervalString = preferencesInterface.getValueFlowString("update_interval").first()
             val intervalHours = intervalString?.toLongOrNull() ?: 12
 
             val shouldRefresh = lastRefreshString.isEmpty() ||
-                runCatching {
-                    val lastRefresh = ZonedDateTime.parse(lastRefreshString)
-                    val hoursSinceRefresh = Duration.between(lastRefresh, ZonedDateTime.now()).toHours()
-                    hoursSinceRefresh >= intervalHours
-                }.getOrDefault(true)
+                    runCatching {
+                        val lastRefresh = ZonedDateTime.parse(lastRefreshString)
+                        val hoursSinceRefresh =
+                            Duration.between(lastRefresh, ZonedDateTime.now()).toHours()
+                        hoursSinceRefresh >= intervalHours
+                    }.getOrDefault(true)
 
             if (!shouldRefresh) {
                 Log.d(LOG_TAG, "Skipping refresh (last refresh was < ${intervalHours}h ago)")
@@ -223,12 +229,13 @@ class FlightRefreshService : Service() {
                     withFlightPlan = true,
                 )
 
-                when(result) {
+                when (result) {
                     is Success -> {
                         val newFlightData = FlightData().from(result.result[0] ?: continue)
 
                         val oldTime = oldFlight.revisedDepartDate ?: oldFlight.scheduledDepartDate
-                        val newTime = newFlightData.revisedDepartDate ?: newFlightData.scheduledDepartDate
+                        val newTime =
+                            newFlightData.revisedDepartDate ?: newFlightData.scheduledDepartDate
 
                         if (oldTime != newTime) {
                             Log.d(LOG_TAG, "Flight time changed: ${oldFlight.callSign}")
@@ -240,14 +247,26 @@ class FlightRefreshService : Service() {
                         processedCount++
                         Log.d(LOG_TAG, "Processed flight: ${newFlightData.callSign}")
                     }
+
                     is Error -> {
-                        Log.e(LOG_TAG, "Failed to update flight: ${oldFlight.callSign} error: ${result.message}")
+                        Log.e(
+                            LOG_TAG,
+                            "Failed to update flight: ${oldFlight.callSign} error: ${result.message}"
+                        )
                     }
+
                     is CaughtException -> {
-                        Log.e(LOG_TAG, "Failed to update flight: ${oldFlight.callSign} exception: ${result.exception}")
+                        Log.e(
+                            LOG_TAG,
+                            "Failed to update flight: ${oldFlight.callSign} exception: ${result.exception}"
+                        )
                     }
+
                     else -> {
-                        Log.e(LOG_TAG, "Failed to update flight: ${oldFlight.callSign} unknown error")
+                        Log.e(
+                            LOG_TAG,
+                            "Failed to update flight: ${oldFlight.callSign} unknown error"
+                        )
                     }
                 }
             }

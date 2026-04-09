@@ -149,8 +149,11 @@ class FlightAlarmScheduler(val context: Context) {
 
             val title = context.getString(R.string.flight_update)
             val content =
-                "${context.getString(R.string.flight)} ${previous.callSign} ${context.getString(R.string.has_updated)} $oldTime ${context.getString(
-                    R.string.to)} $newTime"
+                "${context.getString(R.string.flight)} ${previous.callSign} ${context.getString(R.string.has_updated)} $oldTime ${
+                    context.getString(
+                        R.string.to
+                    )
+                } $newTime"
 
             val data = Data.Builder()
                 .putString(NotificationWorker.KEY_TITLE, title)

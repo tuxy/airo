@@ -1,6 +1,5 @@
 package com.tuxy.airo.screens
 
-import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -16,6 +15,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
@@ -96,17 +96,25 @@ fun MainFlightView(
         modifier = Modifier
             .fillMaxSize()
             .nestedScroll(scrollBehavior.nestedScrollConnection),
-        topBar = { MainTopBar(
-            scrollBehavior = scrollBehavior,
-            onNavigateToSettings = onNavigateToSettings,
-        ) },
+        topBar = {
+            MainTopBar(
+                scrollBehavior = scrollBehavior,
+                onNavigateToSettings = onNavigateToSettings,
+            )
+        },
         floatingActionButton = {
             ExtendedFloatingActionButton(
                 onClick = {
                     navController.navigate(Screen.NewFlightScreen.route)
                 },
                 icon = { Icon(Icons.Filled.Add, stringResource(R.string.add_flight)) },
-                text = { Text(stringResource(R.string.add_flight), overflow = TextOverflow.Visible, maxLines = 1) },
+                text = {
+                    Text(
+                        stringResource(R.string.add_flight),
+                        overflow = TextOverflow.Visible,
+                        maxLines = 1
+                    )
+                },
             )
         },
     ) { innerPadding ->
@@ -118,7 +126,9 @@ fun MainFlightView(
                 .fillMaxSize()
         ) {
             if (flightData.isEmpty()) {
-                NoFlight(Modifier.fillMaxSize().padding(96.dp))
+                NoFlight(Modifier
+                    .fillMaxSize()
+                    .padding(96.dp))
             } else {
                 TabRow(
                     selectedTabIndex.value,
@@ -157,7 +167,13 @@ fun TabRow(
                 }
             },
             enabled = true,
-            text = { Text(stringResource(R.string.upcoming_flights), overflow = TextOverflow.Visible, maxLines = 1) },
+            text = {
+                Text(
+                    stringResource(R.string.upcoming_flights),
+                    overflow = TextOverflow.Visible,
+                    maxLines = 1
+                )
+            },
         )
         Tab(
             selected = selectedTabIndex == 1,
@@ -167,7 +183,13 @@ fun TabRow(
                 }
             },
             enabled = true,
-            text = { Text(stringResource(R.string.past_flights), overflow = TextOverflow.Visible, maxLines = 1) },
+            text = {
+                Text(
+                    stringResource(R.string.past_flights),
+                    overflow = TextOverflow.Visible,
+                    maxLines = 1
+                )
+            },
         )
     }
 }
@@ -195,10 +217,13 @@ fun FlightsList(
             when (page) {
                 0 -> {
                     if (upcomingList.isEmpty()) {
-                        NoFlight(Modifier.fillMaxSize().padding(128.dp))
+                        NoFlight(Modifier
+                            .fillMaxSize()
+                            .padding(128.dp))
                     } else {
                         upcomingList.forEach { flights ->
-                            val depTime = flights[0].revisedDepartDate ?: flights[0].scheduledDepartDate
+                            val depTime =
+                                flights[0].revisedDepartDate ?: flights[0].scheduledDepartDate
                             DateHeader(depTime, flights.size)
                             if (flights.size == 1) {
                                 FlightCard(
@@ -213,12 +238,16 @@ fun FlightsList(
                         }
                     }
                 }
+
                 1 -> {
                     if (pastList.isEmpty()) {
-                        NoFlight(Modifier.fillMaxSize().padding(128.dp))
+                        NoFlight(Modifier
+                            .fillMaxSize()
+                            .padding(128.dp))
                     } else {
                         pastList.forEach { flights ->
-                            val depTime = flights[0].revisedDepartDate ?: flights[0].scheduledDepartDate
+                            val depTime =
+                                flights[0].revisedDepartDate ?: flights[0].scheduledDepartDate
                             DateHeader(depTime, flights.size)
                             if (flights.size == 1) {
                                 FlightCard(
@@ -326,7 +355,8 @@ fun FlightCard(
                 LinearProgressIndicator(
                     progress = {
                         val now = ZonedDateTime.now()
-                        val departTime = flightData.revisedDepartDate ?: flightData.scheduledDepartDate
+                        val departTime =
+                            flightData.revisedDepartDate ?: flightData.scheduledDepartDate
 
                         if (now < departTime) {
                             0.0F
@@ -495,7 +525,13 @@ fun MainTopBar(
     onNavigateToSettings: () -> Unit,
 ) {
     LargeTopAppBar(
-        title = { Text(stringResource(R.string.my_flights), overflow = TextOverflow.Visible, maxLines = 1) },
+        title = {
+            Text(
+                stringResource(R.string.my_flights),
+                overflow = TextOverflow.Visible,
+                maxLines = 1
+            )
+        },
         colors = TopAppBarDefaults.topAppBarColors(),
         actions = {
             IconButton(onClick = {

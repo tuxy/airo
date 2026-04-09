@@ -27,19 +27,18 @@ import androidx.compose.material3.ListItem
 import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.adaptive.ExperimentalMaterial3AdaptiveApi
+import androidx.compose.material3.adaptive.navigation.ThreePaneScaffoldNavigator
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.key
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.staticCompositionLocalOf
-import kotlinx.coroutines.launch
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.core.net.toUri
-import androidx.compose.material3.adaptive.ExperimentalMaterial3AdaptiveApi
-import androidx.compose.material3.adaptive.navigation.ThreePaneScaffoldNavigator
 import com.jamal.composeprefs3.ui.LocalPrefsDataStore
 import com.tuxy.airo.R
 import com.tuxy.airo.composables.LargeAppBar
@@ -47,6 +46,7 @@ import com.tuxy.airo.data.database.PreferencesInterface
 import com.tuxy.airo.dataStore
 import com.tuxy.airo.screens.settings.SettingSub
 import com.tuxy.airo.screens.settings.prefs.ButtonPref
+import kotlinx.coroutines.launch
 
 @SuppressLint("BatteryLife")
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3AdaptiveApi::class)
@@ -62,7 +62,8 @@ fun SettingsView(
     LocalPrefsDataStore = staticCompositionLocalOf { context.dataStore }
 
     val webpageString = stringResource(R.string.source_code)
-    val isIgnoringBatteryOptimizations = powerManager.isIgnoringBatteryOptimizations(context.packageName)
+    val isIgnoringBatteryOptimizations =
+        powerManager.isIgnoringBatteryOptimizations(context.packageName)
 
     val ignored = preferencesInterface.getValueBool("is_ignoring_optimisation")
 
@@ -95,7 +96,9 @@ fun SettingsView(
                 icon = Icons.Outlined.Link,
                 description = stringResource(R.string.api_settings_desc),
                 location = "",
-                onClick = if (onNavigateToSubSetting != null) {{ onNavigateToSubSetting(SettingsSubPaneTypes.Api) }} else null
+                onClick = if (onNavigateToSubSetting != null) {
+                    { onNavigateToSubSetting(SettingsSubPaneTypes.Api) }
+                } else null
             )
 //            SettingSub( // Currently unused & not ready
 //                name = stringResource(R.string.notifications),
@@ -116,7 +119,9 @@ fun SettingsView(
                 icon = Icons.Outlined.Save,
                 description = stringResource(R.string.backup_and_restore_desc),
                 location = "",
-                onClick = if (onNavigateToSubSetting != null) {{ onNavigateToSubSetting(SettingsSubPaneTypes.Backup) }} else null
+                onClick = if (onNavigateToSubSetting != null) {
+                    { onNavigateToSubSetting(SettingsSubPaneTypes.Backup) }
+                } else null
             )
             ListItem(
                 modifier = Modifier.clickable(onClick = {
@@ -154,7 +159,12 @@ fun PowerMessage(
             modifier = Modifier.padding(start = 8.dp, end = 16.dp, top = 16.dp),
             headlineContent = { Text(stringResource(R.string.remove_background_optimisation)) },
             supportingContent = { Text(stringResource(R.string.remove_background_optimisation_extra)) },
-            leadingContent = { Icon(imageVector = Icons.Outlined.Info, contentDescription = stringResource(R.string.info)) },
+            leadingContent = {
+                Icon(
+                    imageVector = Icons.Outlined.Info,
+                    contentDescription = stringResource(R.string.info)
+                )
+            },
             colors = ListItemDefaults.colors(
                 containerColor = Color.Transparent
             )

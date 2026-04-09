@@ -2,7 +2,6 @@ package com.tuxy.airo.screens
 
 import android.os.PowerManager
 import androidx.activity.compose.BackHandler
-import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -12,15 +11,12 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Airlines
 import androidx.compose.material3.Icon
-import androidx.compose.material3.LocalMinimumInteractiveComponentSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.VerticalDragHandle
 import androidx.compose.material3.adaptive.ExperimentalMaterial3AdaptiveApi
 import androidx.compose.material3.adaptive.currentWindowAdaptiveInfo
 import androidx.compose.material3.adaptive.layout.AnimatedPane
@@ -70,13 +66,11 @@ fun FoldableFlightScreen(
     val viewModelFactory = MainFlightViewModel.Factory(LocalContext.current)
     val viewModel: MainFlightViewModel = viewModel(factory = viewModelFactory)
     val scope = rememberCoroutineScope()
-    val interactionSource = remember { MutableInteractionSource() }
-    // val isDragged by interactionSource.collectIsDraggedAsState() // Future reference
 
     var currentExtraPaneType by remember { mutableStateOf(ExtraPaneTypes.Undefined) }
     var currentSettingsSubKey by remember { mutableStateOf<SettingsSubPaneTypes?>(null) }
     var isInSettingsFlow by remember { mutableStateOf(false) }
-    val pagerState = rememberPagerState(pageCount = {2})
+    val pagerState = rememberPagerState(pageCount = { 2 })
 
     LaunchedEffect(Unit) {
         viewModel.startCollecting(flightDataDao)
@@ -93,7 +87,12 @@ fun FoldableFlightScreen(
     val closestFlightId = remember(flightData) {
         if (navigator.scaffoldDirective.maxHorizontalPartitions == 1) {
             flightData
-                .filter { Duration.between(ZonedDateTime.now(), it.scheduledDepartDate).seconds >= 0 }
+                .filter {
+                    Duration.between(
+                        ZonedDateTime.now(),
+                        it.scheduledDepartDate
+                    ).seconds >= 0
+                }
                 .minByOrNull {
                     Duration.between(it.scheduledDepartDate, ZonedDateTime.now()).seconds
                 }?.id?.toString()
@@ -109,10 +108,12 @@ fun FoldableFlightScreen(
                     currentSettingsSubKey = null
                     navigator.navigateBack()
                 }
+
                 isInSettingsFlow -> {
                     isInSettingsFlow = false
                     navigator.navigateBack()
                 }
+
                 else -> navigator.navigateBack()
             }
         }
@@ -121,12 +122,9 @@ fun FoldableFlightScreen(
     val paneExpansionState = rememberPaneExpansionState(
         keyProvider = navigator.scaffoldValue,
         anchors = listOf(
-            PaneExpansionAnchor.Proportion(0f),
-            PaneExpansionAnchor.Proportion(if (containerWidth > 2200) 0.3f else 0.45f), // For tablets
             PaneExpansionAnchor.Proportion(0.5f),
         )
     )
-    if (containerWidth > 2200) paneExpansionState.setFirstPaneProportion(0.3f) else paneExpansionState.setFirstPaneProportion(0.5f)
 
     Box(modifier = Modifier.fillMaxSize()) {
         NavigableListDetailPaneScaffold(
@@ -152,7 +150,12 @@ fun FoldableFlightScreen(
                                 onNavigateToSettings = {
                                     isInSettingsFlow = true
                                     currentSettingsSubKey = null
-                                    scope.launch { navigator.navigateTo(ListDetailPaneScaffoldRole.Detail, "settings") }
+                                    scope.launch {
+                                        navigator.navigateTo(
+                                            ListDetailPaneScaffoldRole.Detail,
+                                            "settings"
+                                        )
+                                    }
                                 },
                             )
                         }
@@ -169,11 +172,17 @@ fun FoldableFlightScreen(
                                 paneNavigator = navigator,
                                 onNavigateToSubSetting = { subKey ->
                                     currentSettingsSubKey = subKey
-                                    scope.launch { navigator.navigateTo(ListDetailPaneScaffoldRole.Extra, subKey.name.lowercase()) }
+                                    scope.launch {
+                                        navigator.navigateTo(
+                                            ListDetailPaneScaffoldRole.Extra,
+                                            subKey.name.lowercase()
+                                        )
+                                    }
                                 }
                             )
                         } else {
-                            val detailId = navigator.currentDestination?.contentKey ?: closestFlightId
+                            val detailId =
+                                navigator.currentDestination?.contentKey ?: closestFlightId
                             if (detailId != null) {
                                 FlightDetailsView(
                                     id = detailId,
@@ -186,11 +195,21 @@ fun FoldableFlightScreen(
                                     },
                                     onShowTicket = {
                                         currentExtraPaneType = ExtraPaneTypes.TicketInformation
-                                        scope.launch { navigator.navigateTo(ListDetailPaneScaffoldRole.Extra, detailId) }
+                                        scope.launch {
+                                            navigator.navigateTo(
+                                                ListDetailPaneScaffoldRole.Extra,
+                                                detailId
+                                            )
+                                        }
                                     },
                                     onShowAircraft = {
                                         currentExtraPaneType = ExtraPaneTypes.AircraftInformation
-                                        scope.launch { navigator.navigateTo(ListDetailPaneScaffoldRole.Extra, detailId) }
+                                        scope.launch {
+                                            navigator.navigateTo(
+                                                ListDetailPaneScaffoldRole.Extra,
+                                                detailId
+                                            )
+                                        }
                                     }
                                 )
                             } else {
@@ -204,8 +223,16 @@ fun FoldableFlightScreen(
                 AnimatedPane {
                     when (currentSettingsSubKey) {
                         SettingsSubPaneTypes.Api -> ApiSettingsView(paneNavigator = navigator)
-                        SettingsSubPaneTypes.Backup -> BackupSettingsView(paneNavigator = navigator, backup = backup)
-                        SettingsSubPaneTypes.Notifications -> NotificationsSettingsView(paneNavigator = navigator, flightDataDao = flightDataDao)
+                        SettingsSubPaneTypes.Backup -> BackupSettingsView(
+                            paneNavigator = navigator,
+                            backup = backup
+                        )
+
+                        SettingsSubPaneTypes.Notifications -> NotificationsSettingsView(
+                            paneNavigator = navigator,
+                            flightDataDao = flightDataDao
+                        )
+
                         else -> {
                             when (currentExtraPaneType) {
                                 ExtraPaneTypes.TicketInformation -> TicketInformationView(
@@ -213,32 +240,20 @@ fun FoldableFlightScreen(
                                     id = navigator.currentDestination?.contentKey ?: "0",
                                     flightDataDao = flightDataDao,
                                 )
+
                                 ExtraPaneTypes.AircraftInformation -> AircraftInformationView(
                                     paneNavigator = navigator,
                                     id = navigator.currentDestination?.contentKey ?: "0",
                                     flightDataDao = flightDataDao
                                 )
-                                else -> { }
+
+                                else -> {}
                             }
                         }
                     }
                 }
             },
-            paneExpansionState = paneExpansionState,
-            paneExpansionDragHandle = { state ->
-                VerticalDragHandle(
-                    modifier =
-                        Modifier
-                            .paneExpansionDraggable(
-                                state,
-                                LocalMinimumInteractiveComponentSize.current,
-                                interactionSource
-
-                            )
-                            .width(2.dp),
-                    interactionSource = interactionSource
-                )
-            }
+            paneExpansionState = paneExpansionState
         )
     }
 }

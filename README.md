@@ -9,17 +9,18 @@
 
 **Now with public AiroAPI server at `https://airoapi.tuxy.stream/flights`!**
 
-> NOTE: This development of this application has utilised some form of generative LLM in its code, through either documentation or support. Take of this what you will.
+> NOTE: This development of this application has utilised some form of generative LLM in its code,
+> through either documentation or support. Take of this what you will.
 
 ## Features
 
 - Adding, removing flights using [aerodatabox's](https://aerodatabox.com/)
   api
     - Adding flights with schedules 8 months in advance
-    - ...with past flight support for archival    
+    - ...with past flight support for archival
 - Usage with AiroAPI caching server
 - Automatic refreshing of flight data and flight updates
-  - Notification support
+    - Notification support
 - Sort by upcoming and past flights, with flight grouping
 - Route map and progress
 - Aircraft information with photos
@@ -30,9 +31,13 @@
 
 ## Build
 
-Debug: `./gradlew :app:openApigenerate :app:assembleDebug`
+Debug build: 
 
-Optimized: `./gradlew :app:openApigenerate :app:assembleRelease`
+`./gradlew :app:openApigenerate; ./gradlew :app:assembleDebug`
+
+Optimized: 
+
+`./gradlew :app:openApigenerate; ./gradlew :app:assembleRelease`
 
 ## Contributing?
 
@@ -44,11 +49,13 @@ See [Contributing.md](/Contributing.md) for more information on how you can help
 *all code from libraries are to follow their respective project licenses*
 
 Previously used:
+
 - MapCompose https://github.com/p-lr/MapCompose
 - USGS Topo map https://www.usgs.gov/ (December 2024)
     - MOBAC (MOBile Atlas Creator) https://mobac.sourceforge.io/
 
 Current:
+
 - MapLibre-Native https://github.com/maplibre/maplibre-native
 - ComposedBarcodes https://github.com/simonsickle/ComposedBarcodes
 - Coil Image loading https://coil-kt.github.io/coil/

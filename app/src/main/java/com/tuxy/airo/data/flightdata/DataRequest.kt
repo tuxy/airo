@@ -68,7 +68,8 @@ class FlightDataRequest(
                     - 3. TODO Maybe they all fail, in which case the context provided will make a toast message
                  */
                 runCatching {
-                    val listType = Types.newParameterizedType(List::class.java, FlightContract::class.java)
+                    val listType =
+                        Types.newParameterizedType(List::class.java, FlightContract::class.java)
                     val jsonAdapter: JsonAdapter<List<FlightContract?>> = moshi.adapter(listType)
                     return Success(jsonAdapter.fromJson(result)!!)
                 }.getOrNull() ?: runCatching {
@@ -86,7 +87,6 @@ class FlightDataRequest(
 }
 
 
-
 class ApiClient(
     val baseUrl: String,
     val path: String,
@@ -101,7 +101,7 @@ class ApiClient(
 
                 val concatUrl = baseUrl + path
                 val url = concatUrl.toHttpUrlOrNull() // Checks for valid base url
-                        ?: throw InvalidApiUrlException("Invalid base URL")
+                    ?: throw InvalidApiUrlException("Invalid base URL")
 
                 val urlBuilder = url.newBuilder()
 
@@ -114,10 +114,12 @@ class ApiClient(
                     .headers(headers.toHeaders()) // ADds headers
                     .build()
 
-                val res = client.newCall(request).execute() // TODO Catch IOException for network errors
+                val res =
+                    client.newCall(request).execute() // TODO Catch IOException for network errors
                 if (!res.isSuccessful) throw UnexpectedResponseException("Unexpected response $res")
                 return res.body?.string() // Completes the request and returns the raw string data
             }
+
             RequestMethod.POST -> {
                 throw NotImplementedError("POST Method Not yet implemented")
             } // Not yet implemented
