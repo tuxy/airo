@@ -12,6 +12,7 @@ updates:
         update-types:
           - "major"
           - "minor"
+          - "patch"
 
   - package-ecosystem: "github-actions"
     directory: "/"
