@@ -3,5 +3,5 @@ plugins {
     alias(libs.plugins.android.application) apply false
     alias(libs.plugins.kotlin.compose) apply false
     id("com.google.devtools.ksp") version "2.3.9" apply false
-    id("org.openapi.generator") version "7.22.0"
+    id("org.openapi.generator") version "7.23.0"
 }
