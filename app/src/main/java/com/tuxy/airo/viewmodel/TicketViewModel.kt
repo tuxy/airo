@@ -99,7 +99,7 @@ class TicketViewModel(
     init {
         viewModelScope.launch(Dispatchers.IO) {
             val job = viewModelScope.launch(Dispatchers.IO) {
-                flightData.value = flightDataDao.readSingle(id) ?: FlightData()
+                flightData.value = flightDataDao.readSingle(id.toInt()) ?: FlightData()
             }
             job.join()
             parseTicketData(context)

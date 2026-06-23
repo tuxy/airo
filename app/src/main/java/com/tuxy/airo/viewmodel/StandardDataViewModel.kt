@@ -30,7 +30,7 @@ class StandardDataViewModel(flightDataDao: FlightDataDao, id: String) : ViewMode
     init {
         viewModelScope.launch(Dispatchers.IO) {
             val job = viewModelScope.launch(Dispatchers.IO) { // TODO is this really the best way?
-                flightData.value = flightDataDao.readSingle(id) ?: FlightData()
+                flightData.value = flightDataDao.readSingle(id.toInt()) ?: FlightData()
             }
             job.join()
         }

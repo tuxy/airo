@@ -18,11 +18,9 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.adaptive.ExperimentalMaterial3AdaptiveApi
-import androidx.compose.material3.adaptive.currentWindowAdaptiveInfo
 import androidx.compose.material3.adaptive.layout.AnimatedPane
 import androidx.compose.material3.adaptive.layout.ListDetailPaneScaffoldRole
 import androidx.compose.material3.adaptive.layout.PaneExpansionAnchor
-import androidx.compose.material3.adaptive.layout.calculatePaneScaffoldDirective
 import androidx.compose.material3.adaptive.layout.rememberPaneExpansionState
 import androidx.compose.material3.adaptive.navigation.NavigableListDetailPaneScaffold
 import androidx.compose.material3.adaptive.navigation.rememberListDetailPaneScaffoldNavigator
@@ -38,7 +36,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -76,12 +73,7 @@ fun FoldableFlightScreen(
         viewModel.startCollecting(flightDataDao)
     }
 
-    val containerWidth = LocalWindowInfo.current.containerSize.width
-    val navigator = rememberListDetailPaneScaffoldNavigator<String>(
-        calculatePaneScaffoldDirective(currentWindowAdaptiveInfo()).copy(
-            maxHorizontalPartitions = if (containerWidth > 1200) 2 else 1
-        )
-    )
+    val navigator = rememberListDetailPaneScaffoldNavigator<String>()
 
     val flightData by viewModel.flightData.collectAsState()
     val closestFlightId = remember(flightData) {

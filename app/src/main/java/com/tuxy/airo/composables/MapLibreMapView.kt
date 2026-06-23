@@ -249,6 +249,7 @@ fun MapLibreMap.addAirportMarker(
     code: String,
     isOrigin: Boolean
 ): org.maplibre.android.annotations.Marker? {
+    if (lat.isNaN() || lon.isNaN()) return null
     val markerOptions = MarkerOptions()
         .position(LatLng(lat, lon))
         .title(code)
@@ -274,6 +275,7 @@ fun MapLibreMap.centerOnRoute(
     destLon: Double,
     zoom: Double? = null
 ) {
+    if (originLat.isNaN() || originLon.isNaN() || destLat.isNaN() || destLon.isNaN()) return
     val centerLat = (originLat + destLat) / 2
     val centerLon = (originLon + destLon) / 2
     val calculatedZoom = zoom ?: calculateZoomForRoute(originLat, originLon, destLat, destLon)
@@ -375,6 +377,7 @@ private fun greatCirclePoints(
     lon2: Double,
     numPoints: Int = 50
 ): List<LatLng> {
+    if (lat1.isNaN() || lon1.isNaN() || lat2.isNaN() || lon2.isNaN()) return emptyList()
     val points = mutableListOf<LatLng>()
     val φ1 = Math.toRadians(lat1)
     val λ1 = Math.toRadians(lon1)

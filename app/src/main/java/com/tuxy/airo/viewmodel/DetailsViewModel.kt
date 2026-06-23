@@ -12,6 +12,7 @@ import com.tuxy.airo.R
 import com.tuxy.airo.data.background.formatFlightNumber
 import com.tuxy.airo.data.database.PreferencesInterface
 import com.tuxy.airo.data.flightdata.CaughtException
+import com.tuxy.airo.data.flightdata.Error
 import com.tuxy.airo.data.flightdata.FlightData
 import com.tuxy.airo.data.flightdata.FlightDataDao
 import com.tuxy.airo.data.flightdata.FlightDataRequest
@@ -65,7 +66,7 @@ class DetailsViewModel(
 
     fun loadFlightById(id: String, dao: FlightDataDao) {
         viewModelScope.launch(Dispatchers.IO) {
-            flightData.value = dao.readSingle(id) ?: FlightData()
+            flightData.value = dao.readSingle(id.toInt()) ?: FlightData()
         }
     }
 
@@ -166,25 +167,19 @@ class DetailsViewModel(
 
             when (result) {
                 is Success -> {
+                    val oldFlight = flightData.value
                     val newFlight = FlightData().from(result.result[0]!!) // TODO fix nullable
+                        .copy(id = oldFlight.id, ticketData = oldFlight.ticketData)
 
-                    Log.d("DetailsViewModel", newFlight.toString())
-                    val deleted = flightData.value.copy()
                     flightData.value = newFlight
-
-                    flightDataDao.deleteFlight(deleted)
-                    flightDataDao.addFlight(
-                        newFlight.copy(
-                            ticketData = flightData.value.ticketData,
-                        ) // Retain ticket information
-                    )
+                    flightDataDao.updateFlight(newFlight)
                     Log.d("FlightDetails", "Refreshed flight: ${newFlight.callSign}")
                 }
 
                 is Error -> {
                     Log.e(
                         "FlightSchedulerWorker",
-                        "Failed to refresh flight: ${flightData.value.callSign} error: ${result.message}"
+                        "Failed to refresh flight: ${flightData.value.callSign} error: ${result.result.message}"
                     )
                 }
 

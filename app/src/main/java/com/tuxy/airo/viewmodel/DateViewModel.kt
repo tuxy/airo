@@ -154,12 +154,11 @@ class DateViewModel(
                     }
 
                     is Error -> {
-                        println("error ${result.result}")
-//                        Toast.makeText(
-//                            context,
-//                            result.result.message,
-//                            Toast.LENGTH_LONG
-//                        ).show()
+                        Toast.makeText(
+                            context,
+                            result.result.message,
+                            Toast.LENGTH_LONG
+                        ).show()
                     }
 
                     is Success -> {

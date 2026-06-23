@@ -58,9 +58,9 @@ data class IataParserData(
 
     private fun getDay(string: String): LocalDate {
         return LocalDate.ofYearDay(
-            2025,
+            LocalDate.now().year,
             string.toInt()
-        ) // Year doesn't really matter, it's the day that does
+        )
     }
 
     fun getClass(char: Char, context: Context): String {

@@ -122,10 +122,10 @@ data class FlightData(
             attribution = response.aircraft?.image?.htmlAttributions?.firstOrNull() ?: "",
 
             // Location / Map
-            mapOriginLat = response.departure.airport.location?.lat?.toDouble() ?: 1.0,
-            mapOriginLon = response.departure.airport.location?.lon?.toDouble() ?: 1.0,
-            mapDestinationLat = response.arrival.airport.location?.lat?.toDouble() ?: 1.0,
-            mapDestinationLon = response.arrival.airport.location?.lon?.toDouble() ?: 1.0,
+            mapOriginLat = response.departure.airport.location?.lat?.toDouble()?.takeUnless { it.isNaN() } ?: 1.0,
+            mapOriginLon = response.departure.airport.location?.lon?.toDouble()?.takeUnless { it.isNaN() } ?: 1.0,
+            mapDestinationLat = response.arrival.airport.location?.lat?.toDouble()?.takeUnless { it.isNaN() } ?: 1.0,
+            mapDestinationLon = response.arrival.airport.location?.lon?.toDouble()?.takeUnless { it.isNaN() } ?: 1.0,
 
             ticketData = "", // Keeping your default
             duration = Duration.between(
@@ -151,7 +151,7 @@ interface FlightDataDao {
     fun readAll(): Flow<List<FlightData>>
 
     @Query("SELECT * FROM flight_table WHERE id=:id ")
-    fun readSingle(id: String): FlightData?
+    fun readSingle(id: Int): FlightData?
 
     /**
      * Checks if a flight with the given departure date and call sign already exists in the database.

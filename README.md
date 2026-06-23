@@ -50,9 +50,10 @@ See [Contributing.md](/Contributing.md) for more information on how you can help
 
 Previously used:
 
-- MapCompose https://github.com/p-lr/MapCompose
+- MapCompose https://github.com/p-lr/MapCompose (January 2026)
 - USGS Topo map https://www.usgs.gov/ (December 2024)
     - MOBAC (MOBile Atlas Creator) https://mobac.sourceforge.io/
+- Klaxon JSON Parsing https://github.com/cbeust/klaxon (January 2026)
 
 Current:
 
@@ -61,8 +62,7 @@ Current:
 - Coil Image loading https://coil-kt.github.io/coil/
 - Square libraries https://square.github.io/
     - OkHttp
-- Zxing embedded https://github.com/journeyapps/zxing-android-embedded
-- Klaxon JSON Parsing https://github.com/cbeust/klaxon
+    - moshi-kotlin
 - Compose-html https://github.com/ireward/compose-html
 - Radarbox logo's provided by Jxck-S https://github.com/Jxck-S/airline-logos
 - PreferencesCompose for app preferences https://github.com/JamalMulla/ComposePrefs3

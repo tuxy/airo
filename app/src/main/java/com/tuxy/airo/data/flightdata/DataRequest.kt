@@ -110,7 +110,7 @@ class ApiClient(
                 }
 
                 val request = Request.Builder()
-                    .url(baseUrl + path)
+                    .url(urlBuilder.build())
                     .headers(headers.toHeaders()) // ADds headers
                     .build()
 
