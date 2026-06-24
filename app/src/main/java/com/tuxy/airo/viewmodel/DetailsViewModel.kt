@@ -1,8 +1,8 @@
 package com.tuxy.airo.viewmodel
 
 import android.content.Context
-import android.util.Log
 import android.widget.Toast
+import android.util.Log
 import androidx.compose.material3.ColorScheme
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableFloatStateOf
@@ -201,13 +201,6 @@ class DetailsViewModel(
                     Log.e(
                         "FlightSchedulerWorker",
                         "Failed to refresh flight: ${flightData.value.callSign} exception: ${result.exception}"
-                    )
-                }
-
-                else -> {
-                    Log.e(
-                        "FlightSchedulerWorker",
-                        "Failed to refresh flight: ${flightData.value.callSign} unknown error"
                     )
                 }
             }
