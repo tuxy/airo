@@ -3,7 +3,6 @@ package com.tuxy.airo.screens
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.focusable
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -35,7 +34,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.semantics.isTraversalGroup
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.traversalIndex
 import androidx.compose.ui.unit.dp
@@ -91,7 +89,10 @@ fun NewFlightView(navController: NavController) {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun FlightSearch(navController: NavController) {
+fun FlightSearch(
+    navController: NavController,
+    onClose: () -> Unit = {},
+) {
     val focusRequester = remember { FocusRequester() }
     var query by rememberSaveable { mutableStateOf("") }
     var expanded by rememberSaveable { mutableStateOf(false) }
@@ -102,89 +103,90 @@ fun FlightSearch(navController: NavController) {
         focusRequester.requestFocus()
     }
 
-    Box(
+    SearchBar(
         modifier = Modifier
             .fillMaxWidth()
-            .semantics { isTraversalGroup = true }
-    ) {
-        SearchBar(
-            modifier = Modifier
-                .align(Alignment.TopCenter)
-                .semantics { traversalIndex = 0f },
-            inputField = {
-                SearchBarDefaults.InputField(
-                    query = query,
-                    onQueryChange = { query = it },
-                    onSearch = {
-                        expanded = false
-                        val flightNumber = if (selectedAirline != null) "${selectedAirline}${query}" else query
-                        navController.navigate("${Screen.DatePickerScreen.route}/${flightNumber}")
-                    },
-                    expanded = expanded,
-                    onExpandedChange = { expanded = it },
-                    placeholder = { Text(stringResource(R.string.flight_number)) },
-                    leadingIcon = if (selectedAirline != null) {
-                        {
-                            InputChip(
-                                selected = true,
-                                onClick = { selectedAirline = null },
-                                label = { Text(selectedAirline!!) },
-                                modifier = Modifier.padding(horizontal = 8.dp),
-                                trailingIcon = {
-                                    Icon(
-                                        Icons.Default.Close,
-                                        contentDescription = "Remove",
-                                        modifier = Modifier.clickable { selectedAirline = null }
-                                    )
-                                }
-                            )
-                        }
-                    } else null,
-                    modifier = Modifier.focusRequester(focusRequester)
-                )
-            },
-            expanded = expanded,
-            onExpandedChange = { expanded = it },
-        ) {
-            Column(
-                modifier = Modifier.verticalScroll(rememberScrollState())
-            ) {
-                suggestions.forEach { suggestion ->
-                    when (suggestion) {
-                        is SearchSuggestion.Airline -> {
-                            ListItem(
-                                headlineContent = { Text("${suggestion.name} (${suggestion.code})") },
-                                supportingContent = { Text(suggestion.code) },
-                                modifier = Modifier
-                                    .focusable(false)
-                                    .clickable {
-                                        selectedAirline = suggestion.code
-                                        query = ""
-                                    }
-                                    .fillMaxWidth()
-                            )
-                        }
-                        is SearchSuggestion.Flight -> {
-                            ListItem(
-                                headlineContent = { Text(suggestion.display) },
-                                supportingContent = { Text("Flight number") },
-                                modifier = Modifier
-                                    .focusable(false)
-                                    .clickable {
-                                        navController.navigate("${Screen.DatePickerScreen.route}/${suggestion.flightNumber}")
-                                    }
-                                    .fillMaxWidth()
-                            )
-                        }
+            .padding(horizontal = if (expanded) 0.dp else 16.dp)
+            .semantics { traversalIndex = 0f },
+        inputField = {
+            SearchBarDefaults.InputField(
+                query = query,
+                onQueryChange = { query = it },
+                onSearch = {
+                    expanded = false
+                    val flightNumber = if (selectedAirline != null) "${selectedAirline}${query}" else query
+                    navController.navigate("${Screen.DatePickerScreen.route}/${flightNumber}")
+                },
+                expanded = expanded,
+                onExpandedChange = {
+                    expanded = it
+                    if (!it) onClose()
+                },
+                placeholder = { Text(stringResource(R.string.flight_number)) },
+                leadingIcon = if (selectedAirline != null) {
+                    {
+                        InputChip(
+                            selected = true,
+                            onClick = { selectedAirline = null },
+                            label = { Text(selectedAirline!!) },
+                            modifier = Modifier.padding(horizontal = 8.dp),
+                            trailingIcon = {
+                                Icon(
+                                    Icons.Default.Close,
+                                    contentDescription = "Remove",
+                                    modifier = Modifier.clickable { selectedAirline = null }
+                                )
+                            }
+                        )
                     }
-                    HorizontalDivider()
+                } else null,
+                modifier = Modifier.focusRequester(focusRequester)
+            )
+        },
+        expanded = expanded,
+        onExpandedChange = {
+            expanded = it
+            if (!it) onClose()
+        },
+    ) {
+        Column(
+            modifier = Modifier.verticalScroll(rememberScrollState())
+        ) {
+            suggestions.forEach { suggestion ->
+                when (suggestion) {
+                    is SearchSuggestion.Airline -> {
+                        ListItem(
+                            headlineContent = { Text("${suggestion.name} (${suggestion.code})") },
+                            supportingContent = { Text(suggestion.code) },
+                            modifier = Modifier
+                                .focusable(false)
+                                .clickable {
+                                    selectedAirline = suggestion.code
+                                    query = ""
+                                }
+                                .fillMaxWidth()
+                        )
+                    }
+                    is SearchSuggestion.Flight -> {
+                        ListItem(
+                            headlineContent = { Text(suggestion.display) },
+                            supportingContent = { Text("Flight number") },
+                            modifier = Modifier
+                                .focusable(false)
+                                .clickable {
+                                    navController.navigate("${Screen.DatePickerScreen.route}/${suggestion.flightNumber}")
+                                }
+                                .fillMaxWidth()
+                        )
+                    }
                 }
-                if (suggestions.isEmpty() && query.isNotBlank() && selectedAirline == null) {
-                    ListItem(
-                        headlineContent = { Text("No suggestions") },
-                        modifier = Modifier.fillMaxWidth()
-                    )
-                }
+                HorizontalDivider()
+            }
+            if (suggestions.isEmpty() && query.isNotBlank() && selectedAirline == null) {
+                ListItem(
+                    headlineContent = { Text("No suggestions") },
+                    modifier = Modifier.fillMaxWidth()
+                )
             }
         }
     }

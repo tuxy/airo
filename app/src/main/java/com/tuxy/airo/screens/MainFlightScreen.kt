@@ -1,5 +1,8 @@
 package com.tuxy.airo.screens
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -45,8 +48,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -62,7 +67,6 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import coil3.compose.AsyncImage
 import com.tuxy.airo.R
-import com.tuxy.airo.Screen
 import com.tuxy.airo.composables.BoldDepartureAndDestinationText
 import com.tuxy.airo.composables.LargeTopSmallBottom
 import com.tuxy.airo.data.flightdata.FlightData
@@ -88,62 +92,85 @@ fun MainFlightView(
 ) {
     val selectedTabIndex = remember { derivedStateOf { pagerState.currentPage } }
     val scope = rememberCoroutineScope()
+    var isSearchActive by remember { mutableStateOf(false) }
 
     val scrollBehavior =
         TopAppBarDefaults.exitUntilCollapsedScrollBehavior(rememberTopAppBarState())
 
-    Scaffold(
-        modifier = Modifier
-            .fillMaxSize()
-            .nestedScroll(scrollBehavior.nestedScrollConnection),
-        topBar = {
-            MainTopBar(
-                scrollBehavior = scrollBehavior,
-                onNavigateToSettings = onNavigateToSettings,
-            )
-        },
-        floatingActionButton = {
-            ExtendedFloatingActionButton(
-                onClick = {
-                    navController.navigate(Screen.NewFlightScreen.route)
-                },
-                icon = { Icon(Icons.Filled.Add, stringResource(R.string.add_flight)) },
-                text = {
-                    Text(
-                        stringResource(R.string.add_flight),
-                        overflow = TextOverflow.Visible,
-                        maxLines = 1
+    Box(modifier = Modifier.fillMaxSize()) {
+        AnimatedVisibility(
+            visible = !isSearchActive,
+            enter = fadeIn(),
+            exit = fadeOut()
+        ) {
+            Scaffold(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .nestedScroll(scrollBehavior.nestedScrollConnection),
+                topBar = {
+                    MainTopBar(
+                        scrollBehavior = scrollBehavior,
+                        onNavigateToSettings = onNavigateToSettings,
                     )
                 },
-            )
-        },
-    ) { innerPadding ->
-        val flightData by viewModel.flightData.collectAsState()
+                floatingActionButton = {
+                    ExtendedFloatingActionButton(
+                        onClick = {
+                            isSearchActive = true
+                        },
+                        icon = { Icon(Icons.Filled.Add, stringResource(R.string.add_flight)) },
+                        text = {
+                            Text(
+                                stringResource(R.string.add_flight),
+                                overflow = TextOverflow.Visible,
+                                maxLines = 1
+                            )
+                        },
+                    )
+                },
+            ) { innerPadding ->
+                val flightData by viewModel.flightData.collectAsState()
 
-        Column(
-            modifier = Modifier
-                .padding(innerPadding)
-                .fillMaxSize()
-        ) {
-            if (flightData.isEmpty()) {
-                NoFlight(Modifier
-                    .fillMaxSize()
-                    .padding(96.dp))
-            } else {
-                TabRow(
-                    selectedTabIndex.value,
-                    pagerState,
-                    scope,
-                )
-                FlightsList(
-                    pagerState = pagerState,
-                    viewModel = viewModel,
+                Column(
                     modifier = Modifier
+                        .padding(innerPadding)
                         .fillMaxSize()
-                        .weight(1f),
-                    onFlightClick = onFlightClick
-                )
+                ) {
+                    if (flightData.isEmpty()) {
+                        NoFlight(
+                            Modifier
+                                .fillMaxSize()
+                                .padding(96.dp)
+                        )
+                    } else {
+                        TabRow(
+                            selectedTabIndex.value,
+                            pagerState,
+                            scope,
+                        )
+                        FlightsList(
+                            pagerState = pagerState,
+                            viewModel = viewModel,
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .weight(1f),
+                            onFlightClick = onFlightClick
+                        )
+                    }
+                }
             }
+        }
+
+        AnimatedVisibility(
+            visible = isSearchActive,
+            enter = fadeIn(),
+            exit = fadeOut(),
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            FlightSearch(
+                navController = navController,
+                onClose = { isSearchActive = false }
+            )
         }
     }
 }
