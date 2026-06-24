@@ -2,6 +2,7 @@ package com.tuxy.airo.viewmodel
 
 import android.content.Context
 import android.util.Log
+import android.widget.Toast
 import androidx.compose.material3.ColorScheme
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableFloatStateOf
@@ -168,12 +169,20 @@ class DetailsViewModel(
             when (result) {
                 is Success -> {
                     val oldFlight = flightData.value
-                    val newFlight = FlightData().from(result.result[0]!!) // TODO fix nullable
-                        .copy(id = oldFlight.id, ticketData = oldFlight.ticketData)
+                    val newFlight = result.result[0]?.let { FlightData().from(it) }
+                        ?.copy(id = oldFlight.id, ticketData = oldFlight.ticketData)
 
-                    flightData.value = newFlight
-                    flightDataDao.updateFlight(newFlight)
-                    Log.d("FlightDetails", "Refreshed flight: ${newFlight.callSign}")
+                    if (newFlight != null) {
+                        flightData.value = newFlight
+                        flightDataDao.updateFlight(newFlight)
+                        Log.d("FlightDetails", "Refreshed flight: ${newFlight.callSign}")
+                    } else {
+                        Toast.makeText(
+                            contextForAssets,
+                            contextForAssets.getString(R.string.refresh_no_data),
+                            Toast.LENGTH_SHORT
+                        ).show()
+                    }
                 }
 
                 is Error -> {
@@ -184,6 +193,11 @@ class DetailsViewModel(
                 }
 
                 is CaughtException -> {
+                    Toast.makeText(
+                        contextForAssets,
+                        contextForAssets.getString(R.string.refresh_network_error),
+                        Toast.LENGTH_SHORT
+                    ).show()
                     Log.e(
                         "FlightSchedulerWorker",
                         "Failed to refresh flight: ${flightData.value.callSign} exception: ${result.exception}"

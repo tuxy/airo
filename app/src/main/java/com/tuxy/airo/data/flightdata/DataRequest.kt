@@ -111,11 +111,15 @@ class ApiClient(
 
                 val request = Request.Builder()
                     .url(urlBuilder.build())
-                    .headers(headers.toHeaders()) // ADds headers
+                    .headers(headers.toHeaders()) // Adds headers
                     .build()
 
                 val res =
-                    client.newCall(request).execute() // TODO Catch IOException for network errors
+                    try {
+                        client.newCall(request).execute()
+                    } catch (e: IOException) {
+                        throw e
+                    }
                 if (!res.isSuccessful) throw UnexpectedResponseException("Unexpected response $res")
                 return res.body?.string() // Completes the request and returns the raw string data
             }
