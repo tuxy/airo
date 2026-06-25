@@ -14,6 +14,7 @@ import com.tuxy.airo.data.flightdata.FlightDataDao
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 /**
  * A ViewModel that provides standard data for a flight.
@@ -29,10 +30,10 @@ class StandardDataViewModel(flightDataDao: FlightDataDao, id: String) : ViewMode
 
     init {
         viewModelScope.launch(Dispatchers.IO) {
-            val job = viewModelScope.launch(Dispatchers.IO) {
-                flightData.value = flightDataDao.readSingle(id.toInt()) ?: FlightData()
+            val data = flightDataDao.readSingle(id.toInt()) ?: FlightData()
+            withContext(Dispatchers.Main) {
+                flightData.value = data
             }
-            job.join()
         }
     }
 

@@ -25,6 +25,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import org.openapitools.client.models.FlightDirection
 import org.openapitools.client.models.FlightSearchByEnum
 import java.time.Duration
@@ -33,6 +34,7 @@ import java.time.format.DateTimeFormatter
 import kotlin.math.absoluteValue
 import kotlin.math.floor
 import kotlin.math.sqrt
+import kotlin.time.Duration.Companion.seconds
 import kotlin.time.toKotlinDuration
 
 /**
@@ -67,7 +69,10 @@ class DetailsViewModel(
 
     fun loadFlightById(id: String, dao: FlightDataDao) {
         viewModelScope.launch(Dispatchers.IO) {
-            flightData.value = dao.readSingle(id.toInt()) ?: FlightData()
+            val data = dao.readSingle(id.toInt()) ?: FlightData()
+            withContext(Dispatchers.Main) {
+                flightData.value = data
+            }
         }
     }
 
@@ -120,7 +125,7 @@ class DetailsViewModel(
             val current = timeFromStart.toFloat() / duration.toFloat()
 
             progress.floatValue = current.absoluteValue
-            delay(10000) // Improve performance
+            delay(10.seconds) // Improve performance
         }
         return progress.floatValue
     }
@@ -139,7 +144,6 @@ class DetailsViewModel(
     /**
      * Refreshes the flight data from the API.
      * @param flightDataDao The DAO for accessing flight data.
-     * @param context The application context.
      * @param settings The API settings.
      * @param isRefreshing A mutable state to indicate if the data is being refreshed.
      */
@@ -177,11 +181,13 @@ class DetailsViewModel(
                         flightDataDao.updateFlight(newFlight)
                         Log.d("FlightDetails", "Refreshed flight: ${newFlight.callSign}")
                     } else {
-                        Toast.makeText(
-                            contextForAssets,
-                            contextForAssets.getString(R.string.refresh_no_data),
-                            Toast.LENGTH_SHORT
-                        ).show()
+                        viewModelScope.launch(Dispatchers.Main) {
+                            Toast.makeText(
+                                contextForAssets,
+                                contextForAssets.getString(R.string.refresh_no_data),
+                                Toast.LENGTH_SHORT
+                            ).show()
+                        }
                     }
                 }
 
@@ -193,11 +199,13 @@ class DetailsViewModel(
                 }
 
                 is CaughtException -> {
-                    Toast.makeText(
-                        contextForAssets,
-                        contextForAssets.getString(R.string.refresh_network_error),
-                        Toast.LENGTH_SHORT
-                    ).show()
+                    viewModelScope.launch(Dispatchers.Main) {
+                        Toast.makeText(
+                            contextForAssets,
+                            contextForAssets.getString(R.string.refresh_network_error),
+                            Toast.LENGTH_SHORT
+                        ).show()
+                    }
                     Log.e(
                         "FlightSchedulerWorker",
                         "Failed to refresh flight: ${flightData.value.callSign} exception: ${result.exception}"

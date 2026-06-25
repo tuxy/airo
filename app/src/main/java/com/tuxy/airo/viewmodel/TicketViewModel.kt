@@ -21,6 +21,7 @@ import com.tuxy.airo.data.flightdata.FlightDataDao
 import com.tuxy.airo.data.flightdata.IataParserData
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 /**
  * ViewModel for the ticket screen.
@@ -77,8 +78,9 @@ class TicketViewModel(
     fun updateData(flightDataDao: FlightDataDao, context: Context) {
         flightData.value.ticketData = ticketString
         parseTicketData(context)
+        val dataToSave = flightData.value
         viewModelScope.launch(Dispatchers.IO) {
-            flightDataDao.updateFlight(flightData.value)
+            flightDataDao.updateFlight(dataToSave)
         }
     }
 
@@ -91,17 +93,18 @@ class TicketViewModel(
         ticketString = ""
         flightData.value.ticketData = ""
         parseTicketData(context)
+        val dataToSave = flightData.value
         viewModelScope.launch(Dispatchers.IO) {
-            flightDataDao.updateFlight(flightData.value)
+            flightDataDao.updateFlight(dataToSave)
         }
     }
 
     init {
         viewModelScope.launch(Dispatchers.IO) {
-            val job = viewModelScope.launch(Dispatchers.IO) {
-                flightData.value = flightDataDao.readSingle(id.toInt()) ?: FlightData()
+            val data = flightDataDao.readSingle(id.toInt()) ?: FlightData()
+            withContext(Dispatchers.Main) {
+                flightData.value = data
             }
-            job.join()
             parseTicketData(context)
 
             ticketString = flightData.value.ticketData

@@ -43,50 +43,31 @@ class DateViewModel(
     val preferencesInterface = PreferencesInterface(context)
     var loading by mutableStateOf(false)
 
+    enum class ToastType {
+    NO_API,
+    INVALID_API_NETWORK,
+    NO_FLIGHT,
+    FLIGHT_EXISTS,
+    ERROR_UNKNOWN,
+    UPDATE_ERROR,
+    DATE_CONVERSION_ERROR,
+}
+
     /**
-     * Returns a Toast message based on the provided index.
-     * @param idx The index of the toast message to be returned.
+     * Returns a Toast message based on the provided type.
+     * @param type The ToastType enum value.
      * @return A Toast object.
      */
-    fun toast(idx: Int): Toast {
-        val toasts = arrayOf( // Toasts on error
-            Toast.makeText(
-                context,
-                context.resources.getString(R.string.no_api),
-                Toast.LENGTH_SHORT
-            ),
-            Toast.makeText(
-                context,
-                context.resources.getString(R.string.invalid_api_network),
-                Toast.LENGTH_SHORT
-            ),
-            Toast.makeText(
-                context,
-                context.resources.getString(R.string.no_flight),
-                Toast.LENGTH_SHORT
-            ),
-            Toast.makeText(
-                context,
-                context.resources.getString(R.string.flight_exists),
-                Toast.LENGTH_SHORT
-            ),
-            Toast.makeText(
-                context,
-                context.resources.getString(R.string.error_unknown),
-                Toast.LENGTH_SHORT
-            ),
-            Toast.makeText(
-                context,
-                context.resources.getString(R.string.update_error),
-                Toast.LENGTH_SHORT
-            ),
-            Toast.makeText(
-                context,
-                context.resources.getString(R.string.no_flight),
-                Toast.LENGTH_SHORT
-            )
-        )
-        return toasts[idx]
+    fun toast(type: ToastType): Toast {
+        return when (type) {
+            ToastType.NO_API -> Toast.makeText(context, context.resources.getString(R.string.no_api), Toast.LENGTH_SHORT)
+            ToastType.INVALID_API_NETWORK -> Toast.makeText(context, context.resources.getString(R.string.invalid_api_network), Toast.LENGTH_SHORT)
+            ToastType.NO_FLIGHT -> Toast.makeText(context, context.resources.getString(R.string.no_flight), Toast.LENGTH_SHORT)
+            ToastType.FLIGHT_EXISTS -> Toast.makeText(context, context.resources.getString(R.string.flight_exists), Toast.LENGTH_SHORT)
+            ToastType.ERROR_UNKNOWN -> Toast.makeText(context, context.resources.getString(R.string.error_unknown), Toast.LENGTH_SHORT)
+            ToastType.UPDATE_ERROR -> Toast.makeText(context, context.resources.getString(R.string.update_error), Toast.LENGTH_SHORT)
+            ToastType.DATE_CONVERSION_ERROR -> Toast.makeText(context, context.resources.getString(R.string.no_flight), Toast.LENGTH_SHORT)
+        }
     }
 
     /**
@@ -128,6 +109,14 @@ class DateViewModel(
             try {
                 loading = true
 
+                val dateAsString = getDateAsString(timeMillis)
+                if (dateAsString == null) {
+                    viewModelScope.launch(Dispatchers.Main) {
+                        toast(ToastType.DATE_CONVERSION_ERROR).show()
+                    }
+                    return@launch
+                }
+
                 val urlChoice = when (settings.choice) {
                     "" -> "https://airoapi.tuxy.stream/" // When datastore hasn't initialised (user hasn't picked)
                     "0" -> "https://airoapi.tuxy.stream/"
@@ -143,7 +132,7 @@ class DateViewModel(
 
                 val result = request.getFlightOnSpecificDate(
                     searchParam = formatFlightNumber(flightNumber),
-                    dateLocal = getDateAsString(timeMillis)!!.format(DateTimeFormatter.ofPattern("yyyy-MM-dd")),
+                    dateLocal = dateAsString.format(DateTimeFormatter.ofPattern("yyyy-MM-dd")),
                     searchBy = FlightSearchByEnum.Number,
                     dateLocalRole = FlightDirection.Departure,
                 )
@@ -171,7 +160,7 @@ class DateViewModel(
                             preferencesInterface.queueRecentFlights(formatFlightNumber(flightNumber).uppercase())
                         } else {
                             viewModelScope.launch(Dispatchers.Main) {
-                                toast(2).show()
+                                toast(ToastType.NO_FLIGHT).show()
                             }
                         }
                     }

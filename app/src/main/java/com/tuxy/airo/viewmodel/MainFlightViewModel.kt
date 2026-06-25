@@ -99,6 +99,11 @@ class MainFlightViewModel(context: Context) : ViewModel() {
         }
     }
 
+    override fun onCleared() {
+        super.onCleared()
+        collectingJob?.cancel()
+    }
+
     @Suppress("UNCHECKED_CAST")
     class Factory(
         private val context: Context,
