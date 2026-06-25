@@ -7,6 +7,7 @@ import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.floatPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
+import androidx.datastore.preferences.core.stringSetPreferencesKey
 import com.tuxy.airo.dataStore
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
@@ -106,5 +107,33 @@ class PreferencesInterface(private val context: Context) {
         context.dataStore.edit { preferences ->
             preferences[stringPreferencesKey(key)] = value
         }
+    }
+
+    fun getValueFlowSet(key: String): Flow<Set<String>> {
+        return context.dataStore.data.map { preferences ->
+            preferences[stringSetPreferencesKey(key)] ?: emptySet()
+        }
+    }
+
+    @Composable
+    fun getValueSet(key: String): Set<String> {
+        return getValueFlowSet(key).collectAsState(initial = emptySet()).value
+    }
+
+    suspend fun queueValue(key: String, value: String) {
+        context.dataStore.edit { preferences ->
+            val currentSet = preferences[stringSetPreferencesKey(key)] ?: emptySet()
+            preferences[stringSetPreferencesKey(key)] = currentSet + value
+        }
+    }
+
+    suspend fun dequeueValue(key: String, value: String): Set<String> {
+        var removedSet = emptySet<String>()
+        context.dataStore.edit { preferences ->
+            val currentSet = preferences[stringSetPreferencesKey(key)] ?: emptySet()
+            removedSet = currentSet - value
+            preferences[stringSetPreferencesKey(key)] = removedSet
+        }
+        return removedSet
     }
 }

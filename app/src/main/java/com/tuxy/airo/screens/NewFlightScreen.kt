@@ -37,33 +37,13 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.traversalIndex
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.tuxy.airo.R
 import com.tuxy.airo.Screen
 import com.tuxy.airo.composables.SmallAppBarLegacy
-import com.tuxy.airo.data.AirlinesData
-
-private sealed class SearchSuggestion {
-    data class Airline(val name: String, val code: String) : SearchSuggestion()
-    data class Flight(val flightNumber: String, val display: String) : SearchSuggestion()
-}
-
-private fun getSuggestions(query: String, selectedAirline: String?, airlines: Map<String, String>): List<SearchSuggestion> {
-    if (query.isBlank()) return emptyList()
-
-    return if (selectedAirline != null) {
-        if (query.all { it.isDigit() } && query.isNotEmpty()) {
-            listOf(SearchSuggestion.Flight("${selectedAirline}$query", "${selectedAirline}${query}"))
-        } else {
-            emptyList()
-        }
-    } else {
-        val lowerQuery = query.lowercase()
-        airlines.filter { (code, name) ->
-            name.lowercase().contains(lowerQuery) || code.lowercase().contains(lowerQuery)
-        }.map { SearchSuggestion.Airline(it.value, it.key) }.take(10)
-    }
-}
+import com.tuxy.airo.viewmodel.NewFlightViewModel
+import com.tuxy.airo.viewmodel.SearchSuggestion
 
 @Composable
 fun NewFlightView(navController: NavController) {
@@ -97,7 +77,8 @@ fun FlightSearch(
     var query by rememberSaveable { mutableStateOf("") }
     var expanded by rememberSaveable { mutableStateOf(false) }
     var selectedAirline by rememberSaveable { mutableStateOf<String?>(null) }
-    val suggestions = remember(query, selectedAirline) { getSuggestions(query, selectedAirline, AirlinesData.airlines) }
+    val viewModel = viewModel<NewFlightViewModel>()
+    val suggestions = remember(query, selectedAirline) { viewModel.getSuggestions(query, selectedAirline) }
 
     LaunchedEffect(Unit) {
         focusRequester.requestFocus()
