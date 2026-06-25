@@ -37,7 +37,11 @@ class MainApplication : Application(), Configuration.Provider {
         super.onCreate()
 
         GlobalScope.launch(Dispatchers.IO) {
-            runBlocking { setupStartupWork() }
+            try {
+                runBlocking { setupStartupWork() }
+            } catch (e: Exception) {
+                Log.e("MainApplication", "Startup work failed", e)
+            }
             setupRecurringWork()
             registerNetworkCallback()
         }
