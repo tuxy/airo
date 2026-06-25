@@ -1,13 +1,13 @@
 package com.tuxy.airo.data.database
 
 import android.content.Context
+import android.util.Log
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.floatPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
-import androidx.datastore.preferences.core.stringSetPreferencesKey
 import com.tuxy.airo.dataStore
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
@@ -109,31 +109,36 @@ class PreferencesInterface(private val context: Context) {
         }
     }
 
-    fun getValueFlowSet(key: String): Flow<Set<String>> {
+    private fun stringToList(value: String): List<String> {
+        return if (value.isEmpty()) emptyList() else value.split("^")
+    }
+
+    private fun listToString(list: List<String>): String {
+        return list.joinToString("^")
+    }
+
+    fun getRecentFlightsFlow(): Flow<List<String>> {
         return context.dataStore.data.map { preferences ->
-            preferences[stringSetPreferencesKey(key)] ?: emptySet()
+            stringToList(preferences[stringPreferencesKey("recent_flights")] ?: "")
         }
     }
 
     @Composable
-    fun getValueSet(key: String): Set<String> {
-        return getValueFlowSet(key).collectAsState(initial = emptySet()).value
+    fun getRecentFlights(): List<String> {
+        return getRecentFlightsFlow().collectAsState(initial = emptyList()).value
     }
 
-    suspend fun queueValue(key: String, value: String) {
+    suspend fun queueRecentFlights(flightNumber: String) {
+        var currentString = ""
         context.dataStore.edit { preferences ->
-            val currentSet = preferences[stringSetPreferencesKey(key)] ?: emptySet()
-            preferences[stringSetPreferencesKey(key)] = currentSet + value
+            val currentList = stringToList(preferences[stringPreferencesKey("recent_flights")] ?: "")
+            val updatedList = (currentList + flightNumber.uppercase()).toMutableList()
+            if (updatedList.size > 3) {
+                updatedList.removeAt(0)
+            }
+            currentString = listToString(updatedList)
+            preferences[stringPreferencesKey("recent_flights")] = currentString
         }
-    }
-
-    suspend fun dequeueValue(key: String, value: String): Set<String> {
-        var removedSet = emptySet<String>()
-        context.dataStore.edit { preferences ->
-            val currentSet = preferences[stringSetPreferencesKey(key)] ?: emptySet()
-            removedSet = currentSet - value
-            preferences[stringSetPreferencesKey(key)] = removedSet
-        }
-        return removedSet
+        Log.d("PreferencesInterface", currentString)
     }
 }

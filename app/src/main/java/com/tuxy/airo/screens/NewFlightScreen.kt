@@ -13,6 +13,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.History
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -33,6 +34,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.traversalIndex
@@ -42,9 +44,11 @@ import androidx.navigation.NavController
 import com.tuxy.airo.R
 import com.tuxy.airo.Screen
 import com.tuxy.airo.composables.SmallAppBarLegacy
+import com.tuxy.airo.data.database.PreferencesInterface
 import com.tuxy.airo.viewmodel.NewFlightViewModel
 import com.tuxy.airo.viewmodel.SearchSuggestion
 
+// This is going to be phased out
 @Composable
 fun NewFlightView(navController: NavController) {
     Scaffold(
@@ -79,6 +83,9 @@ fun FlightSearch(
     var selectedAirline by rememberSaveable { mutableStateOf<String?>(null) }
     val viewModel = viewModel<NewFlightViewModel>()
     val suggestions = remember(query, selectedAirline) { viewModel.getSuggestions(query, selectedAirline) }
+
+    val preferencesInterface = PreferencesInterface(LocalContext.current)
+    val history = preferencesInterface.getRecentFlights()
 
     LaunchedEffect(Unit) {
         focusRequester.requestFocus()
@@ -133,6 +140,23 @@ fun FlightSearch(
         Column(
             modifier = Modifier.verticalScroll(rememberScrollState())
         ) {
+            if (query == "") {
+                history.forEach { pastFlight ->
+                    ListItem(
+                        headlineContent = { Text(pastFlight) },
+                        leadingContent = {
+                            Icon(
+                                imageVector = Icons.Default.History,
+                                contentDescription = pastFlight
+                            )
+                        },
+                        modifier = Modifier
+                            .clickable {
+                                navController.navigate("${Screen.DatePickerScreen.route}/${pastFlight}")
+                            }
+                    )
+                }
+            }
             suggestions.forEach { suggestion ->
                 when (suggestion) {
                     is SearchSuggestion.Airline -> {

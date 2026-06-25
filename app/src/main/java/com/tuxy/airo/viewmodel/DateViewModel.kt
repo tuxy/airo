@@ -166,6 +166,7 @@ class DateViewModel(
                         val contract = result.result.firstOrNull()
                         if (contract != null) {
                             flightDataDao.addFlight(FlightData().from(contract))
+                            preferencesInterface.queueRecentFlights(formatFlightNumber(flightNumber).uppercase())
                         } else {
                             toast(2).show()
                         }
