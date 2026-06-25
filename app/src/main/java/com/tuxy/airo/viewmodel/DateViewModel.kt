@@ -154,11 +154,13 @@ class DateViewModel(
                     }
 
                     is Error -> {
-                        Toast.makeText(
-                            context,
-                            result.result.message,
-                            Toast.LENGTH_LONG
-                        ).show()
+                        viewModelScope.launch(Dispatchers.Main) {
+                            Toast.makeText(
+                                context,
+                                result.result.message,
+                                Toast.LENGTH_LONG
+                            ).show()
+                        }
                     }
 
                     is Success -> {
@@ -168,7 +170,9 @@ class DateViewModel(
                             flightDataDao.addFlight(FlightData().from(contract))
                             preferencesInterface.queueRecentFlights(formatFlightNumber(flightNumber).uppercase())
                         } else {
-                            toast(2).show()
+                            viewModelScope.launch(Dispatchers.Main) {
+                                toast(2).show()
+                            }
                         }
                     }
                 }
