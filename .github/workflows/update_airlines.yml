@@ -1,0 +1,51 @@
+name: Update AirlinesData.kt
+
+on:
+  schedule:
+    - cron: '0 0 1 * *' 
+  workflow_dispatch:
+
+concurrency:
+  group: airline-data-update
+  cancel-in-progress: true
+
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Generate AirlinesData.kt
+        run: python scripts/generate_airlines.py
+
+      - name: Check if there are changes
+        id: check_changes
+        run: |
+          if git diff --quiet; then
+            echo "has_changes=false" >> $GITHUB_OUTPUT
+          else
+            echo "has_changes=true" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Create PR with changes
+        if: steps.check_changes.outputs.has_changes == 'true'
+        uses: peter-evans/create-pull-request@v7
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          commit-message: 'chore: update airlines data from opentraveldata'
+          title: 'chore: update airlines data'
+          body: |
+            Auto-generated PR with best-fit airline data from [opentraveldata](https://github.com/opentraveldata/opentraveldata).
+          branch: chore/update-airlines-data
+          delete-branch: true
+
+      - name: Display changes
+        if: steps.check_changes.outputs.has_changes == 'true'
+        run: |
+          git diff --stat

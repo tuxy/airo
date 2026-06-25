@@ -157,8 +157,9 @@ class DateViewModel(
                         val contract = result.result.firstOrNull()
                         if (contract != null) {
                             flightDataDao.addFlight(FlightData().from(contract))
+                            preferencesInterface.queueRecentFlights(formatFlightNumber(flightNumber).uppercase())
                         } else {
-viewModelScope.launch(Dispatchers.Main) {
+                            viewModelScope.launch(Dispatchers.Main) {
                                 toast(ToastType.NO_FLIGHT).show()
                             }
                         }

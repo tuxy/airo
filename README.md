@@ -68,3 +68,4 @@ Current:
 - PreferencesCompose for app preferences https://github.com/JamalMulla/ComposePrefs3
 - RoomBackup for backup/restore
   functionality https://github.com/rafi0101/Android-Room-Database-Backup
+- OpenTravelData with the optd_airline_best_known_so_far.csv file https://github.com/opentraveldata/opentraveldata/

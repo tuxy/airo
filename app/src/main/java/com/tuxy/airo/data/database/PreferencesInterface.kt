@@ -1,6 +1,7 @@
 package com.tuxy.airo.data.database
 
 import android.content.Context
+import android.util.Log
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.datastore.preferences.core.booleanPreferencesKey
@@ -106,5 +107,38 @@ class PreferencesInterface(private val context: Context) {
         context.dataStore.edit { preferences ->
             preferences[stringPreferencesKey(key)] = value
         }
+    }
+
+    private fun stringToList(value: String): List<String> {
+        return if (value.isEmpty()) emptyList() else value.split("^")
+    }
+
+    private fun listToString(list: List<String>): String {
+        return list.joinToString("^")
+    }
+
+    fun getRecentFlightsFlow(): Flow<List<String>> {
+        return context.dataStore.data.map { preferences ->
+            stringToList(preferences[stringPreferencesKey("recent_flights")] ?: "")
+        }
+    }
+
+    @Composable
+    fun getRecentFlights(): List<String> {
+        return getRecentFlightsFlow().collectAsState(initial = emptyList()).value
+    }
+
+    suspend fun queueRecentFlights(flightNumber: String) {
+        var currentString = ""
+        context.dataStore.edit { preferences ->
+            val currentList = stringToList(preferences[stringPreferencesKey("recent_flights")] ?: "")
+            val updatedList = (currentList + flightNumber.uppercase()).toMutableList()
+            if (updatedList.size > 3) {
+                updatedList.removeAt(0)
+            }
+            currentString = listToString(updatedList)
+            preferences[stringPreferencesKey("recent_flights")] = currentString
+        }
+        Log.d("PreferencesInterface", currentString)
     }
 }
