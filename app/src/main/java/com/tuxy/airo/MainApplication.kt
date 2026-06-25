@@ -38,7 +38,7 @@ class MainApplication : Application(), Configuration.Provider {
 
         GlobalScope.launch(Dispatchers.IO) {
             try {
-                runBlocking { setupStartupWork() }
+                setupStartupWork()
             } catch (e: Exception) {
                 Log.e("MainApplication", "Startup work failed", e)
             }
@@ -68,7 +68,7 @@ class MainApplication : Application(), Configuration.Provider {
         val preferencesInterface = PreferencesInterface(applicationContext)
         val lastRefreshString = preferencesInterface.getValueFlowString("last_refresh_time").first()
         val intervalString = preferencesInterface.getValueFlowString("update_interval").first()
-        val intervalHours = intervalString?.toLongOrNull() ?: 12
+        val intervalHours = intervalString.toLongOrNull() ?: 12
 
         val shouldRefresh = lastRefreshString.isEmpty() ||
                 runCatching {
@@ -95,14 +95,14 @@ class MainApplication : Application(), Configuration.Provider {
      * Sets up recurring flight refresh using AlarmManager.
      *
      * Reads the update interval from preferences and schedules a periodic
-     * alarm to trigger [FlightRefreshService] at regular intervals.
+     * alarm to trigger [com.tuxy.airo.data.background.FlightRefreshService] at regular intervals.
      */
     private suspend fun setupRecurringWork() {
         Log.d("MainApplication", "Setting up recurring work with AlarmManager")
 
-        val preferencesInterface = com.tuxy.airo.data.database.PreferencesInterface(this)
+        val preferencesInterface = PreferencesInterface(this)
         val intervalString = preferencesInterface.getValueFlowString("update_interval").first()
-        val intervalHours = intervalString?.toLongOrNull() ?: 12
+        val intervalHours = intervalString.toLongOrNull() ?: 12
 
         AlarmSchedulerHelper.schedulePeriodicRefresh(applicationContext, intervalHours)
 

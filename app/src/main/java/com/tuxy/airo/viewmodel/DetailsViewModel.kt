@@ -34,6 +34,7 @@ import java.time.format.DateTimeFormatter
 import kotlin.math.absoluteValue
 import kotlin.math.floor
 import kotlin.math.sqrt
+import kotlin.time.Duration.Companion.seconds
 import kotlin.time.toKotlinDuration
 
 /**
@@ -124,7 +125,7 @@ class DetailsViewModel(
             val current = timeFromStart.toFloat() / duration.toFloat()
 
             progress.floatValue = current.absoluteValue
-            delay(10000) // Improve performance
+            delay(10.seconds) // Improve performance
         }
         return progress.floatValue
     }
@@ -143,7 +144,6 @@ class DetailsViewModel(
     /**
      * Refreshes the flight data from the API.
      * @param flightDataDao The DAO for accessing flight data.
-     * @param context The application context.
      * @param settings The API settings.
      * @param isRefreshing A mutable state to indicate if the data is being refreshed.
      */
@@ -209,13 +209,6 @@ class DetailsViewModel(
                     Log.e(
                         "FlightSchedulerWorker",
                         "Failed to refresh flight: ${flightData.value.callSign} exception: ${result.exception}"
-                    )
-                }
-
-                else -> {
-                    Log.e(
-                        "FlightSchedulerWorker",
-                        "Failed to refresh flight: ${flightData.value.callSign} unknown error"
                     )
                 }
             }
