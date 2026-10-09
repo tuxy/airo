@@ -31,8 +31,8 @@ android {
         }
     }
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_11
-        targetCompatibility = JavaVersion.VERSION_11
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
     }
     buildFeatures {
         compose = true
@@ -61,6 +61,11 @@ openApiGenerate {
     globalProperties.put("models", "")
     globalProperties.put("modelDocs", "false")
     globalProperties.put("apiDocs", "false")
+}
+
+// Ensure generated OpenAPI models are available to KSP / Kotlin compilation
+tasks.matching { it.name.startsWith("ksp") }.configureEach {
+    dependsOn("openApiGenerate")
 }
 
 dependencies {

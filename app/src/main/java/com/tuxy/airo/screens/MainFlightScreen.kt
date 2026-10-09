@@ -77,7 +77,6 @@ import kotlinx.coroutines.launch
 import java.time.Duration
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
-import kotlin.math.absoluteValue
 import kotlin.time.toKotlinDuration
 
 @OptIn(ExperimentalFoundationApi::class, ExperimentalMaterial3Api::class)
@@ -388,12 +387,10 @@ fun FlightCard(
                         if (now < departTime) {
                             0.0F
                         } else {
-                            val timeFromStart = Duration.between(now, departTime).toMillis()
-
+                            val timeFromStart = Duration.between(departTime, now).toMillis()
                             val duration = flightData.duration.toMillis()
-
-                            val current = timeFromStart.toFloat() / duration.toFloat()
-                            current.absoluteValue
+                            if (duration <= 0) 0.0F
+                            else (timeFromStart.toFloat() / duration.toFloat()).coerceIn(0.0F, 1.0F)
                         }
                     },
                     modifier = Modifier

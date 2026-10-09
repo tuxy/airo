@@ -51,8 +51,11 @@ import androidx.compose.material3.lightColorScheme
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -82,22 +85,20 @@ import com.tuxy.airo.composables.RouteBar
 import com.tuxy.airo.composables.addAirportMarker
 import com.tuxy.airo.composables.addFlightRoute
 import com.tuxy.airo.composables.centerOnRoute
+import com.tuxy.airo.composables.suggestedRouteAspectRatio
 import com.tuxy.airo.data.flightdata.FlightData
 import com.tuxy.airo.data.flightdata.FlightDataDao
 import com.tuxy.airo.viewmodel.DetailsViewModel
 import kotlinx.coroutines.DelicateCoroutinesApi
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.maplibre.android.geometry.LatLng
 import java.time.Duration
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
-import kotlin.math.absoluteValue
 import kotlin.time.toKotlinDuration
 
 @OptIn(
-    DelicateCoroutinesApi::class, ExperimentalMaterial3Api::class,
+    ExperimentalMaterial3Api::class,
     ExperimentalMaterial3AdaptiveApi::class
 )
 @Composable
@@ -114,7 +115,6 @@ fun FlightDetailsView(
     val viewModelFactory = DetailsViewModel.Factory(
         context,
         lightColorScheme(),
-        rememberCoroutineScope()
     )
 
     val viewModel: DetailsViewModel = viewModel(
@@ -137,6 +137,16 @@ fun FlightDetailsView(
     LaunchedEffect(id) {
         viewModel.loadFlightById(id, flightDataDao)
     }
+
+    // Start/stop periodic progress updates tied to the detail view lifecycle
+    LaunchedEffect(Unit) {
+        viewModel.startProgressUpdates()
+    }
+    DisposableEffect(Unit) {
+        onDispose { viewModel.stopProgressUpdates() }
+    }
+
+    val progress by viewModel.progress.collectAsState()
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),
@@ -163,7 +173,7 @@ fun FlightDetailsView(
                 }
                 LinearProgressIndicator(
                     modifier = Modifier.fillMaxWidth(),
-                    progress = { viewModel.getProgress() }
+                    progress = { progress }
                 )
                 PullToRefreshBox(
                     isRefreshing = isRefreshing.value,
@@ -206,7 +216,14 @@ fun FlightDetailsView(
                             MapLibreMapView(
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .aspectRatio(1280f / 847f),
+                                    .aspectRatio(
+                                        suggestedRouteAspectRatio(
+                                            originLat = viewModel.flightData.value.mapOriginLat,
+                                            originLon = viewModel.flightData.value.mapOriginLon,
+                                            destLat = viewModel.flightData.value.mapDestinationLat,
+                                            destLon = viewModel.flightData.value.mapDestinationLon
+                                        )
+                                    ),
                                 styleUrl = "https://basemaps.cartocdn.com/gl/${dark}-gl-style/style.json",
                                 scrollEnabled = false,
                                 zoomEnabled = false,
@@ -505,7 +522,6 @@ fun SmallCard(
     }
 }
 
-@OptIn(DelicateCoroutinesApi::class)
 @Composable
 fun FlightStatusCard(viewModel: DetailsViewModel, context: Context) {
     Card(
@@ -560,29 +576,7 @@ fun FlightStatusCard(viewModel: DetailsViewModel, context: Context) {
                 )
             }
             LinearProgressIndicator(
-                progress = {
-                    val now = ZonedDateTime.now()
-                    val depTime = viewModel.flightData.value.revisedDepartDate
-                        ?: viewModel.flightData.value.scheduledDepartDate
-
-                    GlobalScope.launch {
-
-                        val timeFromStart = Duration.between(now, depTime).toMillis()
-
-                        if (now < depTime) {
-                            viewModel.progress.floatValue = 0.0F
-                            return@launch
-                        }
-
-                        val duration = viewModel.flightData.value.duration.toMillis()
-
-                        val current = timeFromStart.toFloat() / duration.toFloat()
-
-                        viewModel.progress.floatValue = current.absoluteValue
-                        delay(10000) // Improve performance
-                    }
-                    viewModel.progress.floatValue
-                },
+                progress = { viewModel.getProgress() },
                 modifier = Modifier
                     .fillMaxWidth(),
             )

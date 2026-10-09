@@ -7,12 +7,12 @@ import com.tuxy.airo.data.background.AlarmSchedulerHelper
 import com.tuxy.airo.data.background.NetworkCallbackHandler
 import com.tuxy.airo.data.background.NetworkChangeReceiver
 import com.tuxy.airo.data.database.PreferencesInterface
-import kotlinx.coroutines.DelicateCoroutinesApi
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
 import java.time.Duration
 import java.time.ZonedDateTime
 
@@ -32,11 +32,13 @@ class MainApplication : Application(), Configuration.Provider {
 
     private var networkCallbackHandler: NetworkCallbackHandler? = null
 
-    @OptIn(DelicateCoroutinesApi::class)
+    /** Application-scoped coroutine scope, cancelled in [onTerminate]. */
+    private val applicationScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+
     override fun onCreate() {
         super.onCreate()
 
-        GlobalScope.launch(Dispatchers.IO) {
+        applicationScope.launch {
             try {
                 setupStartupWork()
             } catch (e: Exception) {
@@ -61,7 +63,6 @@ class MainApplication : Application(), Configuration.Provider {
      * 1. Cancels all existing flight alarms (clean slate)
      * 2. Schedules an immediate refresh only if last refresh was > 12 hours ago
      */
-    @OptIn(DelicateCoroutinesApi::class)
     private suspend fun setupStartupWork() {
         Log.d("MainApplication", "Running startup work")
 
@@ -123,6 +124,7 @@ class MainApplication : Application(), Configuration.Provider {
         networkCallbackHandler?.let {
             NetworkChangeReceiver.unregisterNetworkCallback(applicationContext, it)
         }
+        applicationScope.cancel()
         Log.d("MainApplication", "Application terminated")
     }
 }

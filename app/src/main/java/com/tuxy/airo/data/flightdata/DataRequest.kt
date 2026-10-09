@@ -9,6 +9,7 @@ import okhttp3.HttpUrl.Companion.toHttpUrlOrNull
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okio.IOException
+import java.util.concurrent.TimeUnit
 import org.openapitools.client.models.ErrorContract
 import org.openapitools.client.models.FlightContract
 import org.openapitools.client.models.FlightDirection
@@ -24,6 +25,34 @@ sealed interface Outcome
 data class Success(val result: List<FlightContract?>) : Outcome
 data class Error(val result: ErrorContract) : Outcome
 data class CaughtException(val exception: Exception) : Outcome
+
+/**
+ * Selects the most complete [FlightContract] from an API response.
+ *
+ * The API can return multiple entries for a single flight number, and incomplete
+ * "stub" entries (e.g. only a city name with no IATA/ICAO
+ * code, no location and no scheduled time) may appear before the fully populated
+ * entry. Blindly taking index 0 then yields a flight with no airport code, no
+ * country flag and default map coordinates.
+ *
+ * Contracts are ranked by how much of the data the app relies on is present, and
+ * the highest-scoring non-null contract is returned (ties fall back to the first).
+ */
+fun List<FlightContract?>.bestFlight(): FlightContract? =
+    mapNotNull { it }.maxByOrNull { it.completenessScore() }
+
+private fun FlightContract.completenessScore(): Int {
+    var score = 0
+    if (departure.airport.iata != null) score += 4
+    if (arrival.airport.iata != null) score += 4
+    if (departure.airport.countryCode != null) score += 2
+    if (arrival.airport.countryCode != null) score += 2
+    if (departure.airport.location != null) score += 2
+    if (arrival.airport.location != null) score += 2
+    if (departure.scheduledTime != null) score += 2
+    if (arrival.scheduledTime != null) score += 2
+    return score
+}
 
 
 class FlightDataRequest(
@@ -94,11 +123,18 @@ class ApiClient(
     val headers: Map<String, String> = emptyMap(),
     val params: Map<String, String> = emptyMap(),
 ) {
+    /** Shared OkHttp client with sensible timeouts. */
+    companion object {
+        private val httpClient = OkHttpClient.Builder()
+            .connectTimeout(15, TimeUnit.SECONDS)
+            .readTimeout(15, TimeUnit.SECONDS)
+            .writeTimeout(15, TimeUnit.SECONDS)
+            .build()
+    }
+
     fun execute(): String? { // synchronously fetches the data
         when (method) {
             RequestMethod.GET -> {
-                val client = OkHttpClient()
-
                 val concatUrl = baseUrl + path
                 val url = concatUrl.toHttpUrlOrNull() // Checks for valid base url
                     ?: throw InvalidApiUrlException("Invalid base URL")
@@ -116,7 +152,7 @@ class ApiClient(
 
                 val res =
                     try {
-                        client.newCall(request).execute()
+                        httpClient.newCall(request).execute()
                     } catch (e: IOException) {
                         throw e
                     }

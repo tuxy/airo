@@ -9,6 +9,7 @@ import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.viewModelScope
 import com.tuxy.airo.R
 import com.tuxy.airo.data.background.formatFlightNumber
 import com.tuxy.airo.data.database.PreferencesInterface
@@ -18,12 +19,15 @@ import com.tuxy.airo.data.flightdata.FlightData
 import com.tuxy.airo.data.flightdata.FlightDataDao
 import com.tuxy.airo.data.flightdata.FlightDataRequest
 import com.tuxy.airo.data.flightdata.Success
+import com.tuxy.airo.data.flightdata.bestFlight
 import com.tuxy.airo.screens.ApiSettings
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.openapitools.client.models.FlightDirection
@@ -44,36 +48,73 @@ import kotlin.time.toKotlinDuration
  * calculating flight progress, handling flight deletion, and managing the map display.
  *
  * @property preferencesInterface For accessing user preferences.
- * @property viewModelScope The coroutine scope for this ViewModel.
  * @property flightData The flight data for the current flight.
  * @property openDialog A mutable state to control the visibility of the delete confirmation dialog.
- * @property progress The current progress of the flight.
+ * @property progress The current progress of the flight (0.0 = not started, 1.0 = landed).
  * @param context The application context.
  * @param scheme The color scheme for the map.
- * @param scope The coroutine scope for this ViewModel.
  */
 @Suppress("UNCHECKED_CAST")
 class DetailsViewModel(
     context: Context,
     val preferencesInterface: PreferencesInterface,
     scheme: ColorScheme,
-    scope: CoroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 ) : ViewModel() {
     private val contextForAssets = context
-    val viewModelScope = scope
 
     var flightData = mutableStateOf(FlightData())
     var openDialog = mutableStateOf(false)
-    var progress = mutableFloatStateOf(0.0F)
-        private set
+
+    private val _progress = MutableStateFlow(0.0F)
+    val progress: StateFlow<Float> = _progress.asStateFlow()
+
+    private var progressJob: Job? = null
 
     fun loadFlightById(id: String, dao: FlightDataDao) {
         viewModelScope.launch(Dispatchers.IO) {
             val data = dao.readSingle(id.toInt()) ?: FlightData()
             withContext(Dispatchers.Main) {
                 flightData.value = data
+                // Recompute the flight progress immediately once the real flight is
+                // loaded. Without this the progress indicator shows the value derived
+                // from the placeholder FlightData() until the next 10s poll tick.
+                _progress.value = calculateProgressFraction()
             }
         }
+    }
+
+    /** Starts periodic progress updates. Called when the flight data is first loaded. */
+    fun startProgressUpdates() {
+        if (progressJob?.isActive == true) return
+        progressJob = viewModelScope.launch {
+            while (isActive) {
+                _progress.value = calculateProgressFraction()
+                delay(10.seconds)
+            }
+        }
+    }
+
+    /** Stops periodic progress updates. */
+    fun stopProgressUpdates() {
+        progressJob?.cancel()
+        progressJob = null
+    }
+
+    /**
+     * Calculates the flight's progress as a float between 0.0 and 1.0.
+     */
+    internal fun calculateProgressFraction(): Float {
+        val now = ZonedDateTime.now()
+        val departTime = flightData.value.revisedDepartDate
+            ?: flightData.value.scheduledDepartDate
+
+        if (now < departTime) return 0.0F
+
+        val timeFromStart = Duration.between(departTime, now).toMillis()
+        val duration = flightData.value.duration.toMillis()
+        if (duration <= 0) return 0.0F
+
+        return (timeFromStart.toFloat() / duration.toFloat()).coerceIn(0.0F, 1.0F)
     }
 
     /**
@@ -105,30 +146,9 @@ class DetailsViewModel(
     }
 
     /**
-     * Calculates the flight's progress as a float between 0.0 and 1.0.
-     * @return The flight's progress.
+     * Returns the flight's progress fraction. Used for the one-shot reading from UI.
      */
-    fun getProgress(): Float {
-        val now = ZonedDateTime.now()
-        val departTime = flightData.value.revisedDepartDate ?: flightData.value.scheduledDepartDate
-
-        viewModelScope.launch {
-            val timeFromStart = Duration.between(now, departTime).toMillis()
-
-            if (now < departTime) {
-                progress.floatValue = 0.0F
-                return@launch
-            }
-
-            val duration = flightData.value.duration.toMillis()
-
-            val current = timeFromStart.toFloat() / duration.toFloat()
-
-            progress.floatValue = current.absoluteValue
-            delay(10.seconds) // Improve performance
-        }
-        return progress.floatValue
-    }
+    fun getProgress(): Float = _progress.value
 
     /**
      * Deletes the current flight from the database.
@@ -159,9 +179,7 @@ class DetailsViewModel(
             val result = request.getFlightOnSpecificDate(
                 searchParam = formatFlightNumber(flightData.value.callSign),
                 dateLocal = flightData.value.scheduledDepartDate.format(
-                    DateTimeFormatter.ofPattern(
-                        "yyyy-MM-dd"
-                    )
+                    DateTimeFormatter.ofPattern("yyyy-MM-dd")
                 ),
                 searchBy = FlightSearchByEnum.Number,
                 dateLocalRole = FlightDirection.Departure,
@@ -173,7 +191,7 @@ class DetailsViewModel(
             when (result) {
                 is Success -> {
                     val oldFlight = flightData.value
-                    val newFlight = result.result[0]?.let { FlightData().from(it) }
+                    val newFlight = result.result.bestFlight()?.let { FlightData().from(it) }
                         ?.copy(id = oldFlight.id, ticketData = oldFlight.ticketData)
 
                     if (newFlight != null) {
@@ -272,7 +290,6 @@ class DetailsViewModel(
      * @param context The application context.
      * @return "Ends at" string if check-in is active, otherwise empty.
      */
-    @OptIn(DelicateCoroutinesApi::class)
     fun getEndTime(context: Context): String {
         val status = getStatus(context)
 
@@ -294,13 +311,14 @@ class DetailsViewModel(
             flightData.value.revisedDepartDate ?: flightData.value.scheduledDepartDate
         )
         val seconds = duration.seconds
+        val currentProgress = _progress.value
 
         if (seconds >= 3600) { // More than or equal to 1 hour until departure
             return context.getString(R.string.check_in) // Check-in
         } else { // Less than 1 hour until departure or already departed
-            if (progress.floatValue in 0.9F..<1.0F) {
+            if (currentProgress in 0.9F..<1.0F) {
                 return context.getString(R.string.landing) // About to land
-            } else if (progress.floatValue >= 1.0F) {
+            } else if (currentProgress >= 1.0F) {
                 return context.getString(R.string.landed) // Already landed
             }
             return context.getString(R.string.flying) // Still flying
@@ -334,10 +352,9 @@ class DetailsViewModel(
     class Factory(
         private val context: Context,
         private val scheme: ColorScheme,
-        private val scope: CoroutineScope
     ) : ViewModelProvider.NewInstanceFactory() {
         override fun <T : ViewModel> create(modelClass: Class<T>): T {
-            return DetailsViewModel(context, PreferencesInterface(context), scheme, scope) as T
+            return DetailsViewModel(context, PreferencesInterface(context), scheme) as T
         }
     }
 }

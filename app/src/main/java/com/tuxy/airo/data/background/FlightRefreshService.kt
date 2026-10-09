@@ -17,6 +17,7 @@ import com.tuxy.airo.data.flightdata.FlightData
 import com.tuxy.airo.data.flightdata.FlightDataBase
 import com.tuxy.airo.data.flightdata.FlightDataRequest
 import com.tuxy.airo.data.flightdata.Success
+import com.tuxy.airo.data.flightdata.bestFlight
 import com.tuxy.airo.screens.ApiSettings
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -231,7 +232,8 @@ class FlightRefreshService : Service() {
 
                 when (result) {
                     is Success -> {
-                        val newFlightData = FlightData().from(result.result[0] ?: continue)
+                        val contract = result.result.bestFlight() ?: continue
+                        val newFlightData = FlightData().from(contract)
 
                         val oldTime = oldFlight.revisedDepartDate ?: oldFlight.scheduledDepartDate
                         val newTime =
@@ -242,10 +244,14 @@ class FlightRefreshService : Service() {
                             flightAlarmScheduler.setAlarmOnChange(oldFlight, newFlightData)
                         }
 
-                        flightDataDao.deleteFlight(oldFlight)
-                        flightDataDao.addFlight(newFlightData)
+                        // Preserve the original id and ticket data when updating
+                        val updatedFlight = newFlightData.copy(
+                            id = oldFlight.id,
+                            ticketData = oldFlight.ticketData
+                        )
+                        flightDataDao.updateFlight(updatedFlight)
                         processedCount++
-                        Log.d(LOG_TAG, "Processed flight: ${newFlightData.callSign}")
+                        Log.d(LOG_TAG, "Processed flight: ${updatedFlight.callSign}")
                     }
 
                     is Error -> {

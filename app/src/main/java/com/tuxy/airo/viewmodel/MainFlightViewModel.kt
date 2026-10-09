@@ -21,10 +21,6 @@ class MainFlightViewModel(context: Context) : ViewModel() {
     private val _flightData = MutableStateFlow<List<FlightData>>(emptyList())
     val flightData: StateFlow<List<FlightData>> = _flightData.asStateFlow()
 
-    private val _flights = MutableStateFlow<Map<Long, FlightData>>(emptyMap())
-    val flights: StateFlow<Map<Long, FlightData>> = _flights.asStateFlow()
-
-    // Why mix states and flows? Why? Because I don't know.
     private val _flightsUpcomingList = MutableStateFlow<List<List<FlightData>>>(emptyList())
     val flightsUpcomingList: StateFlow<List<List<FlightData>>> = _flightsUpcomingList.asStateFlow()
 
@@ -48,20 +44,13 @@ class MainFlightViewModel(context: Context) : ViewModel() {
         val newFlights = newFlightData.associateBy { flight ->
             flight.scheduledArriveDate.toEpochSecond()
         }.toSortedMap()
-        _flights.value = newFlights
 
         val nowInEpochSeconds = ZonedDateTime.now().toEpochSecond()
 
         val flightsUpcoming = newFlights
-            .filterKeys {
-                it > nowInEpochSeconds
-            }
-            .toSortedMap(compareBy { it })
+            .filterKeys { it > nowInEpochSeconds }
         val flightsPast = newFlights
-            .filterKeys {
-                it <= nowInEpochSeconds
-            }
-            .toSortedMap(compareBy { it })
+            .filterKeys { it <= nowInEpochSeconds }
 
         _flightsUpcomingList.value = groupFlightsByProximity(flightsUpcoming)
         _flightsPastList.value = groupFlightsByProximity(flightsPast).reversed()
@@ -70,13 +59,9 @@ class MainFlightViewModel(context: Context) : ViewModel() {
     fun groupFlightsByProximity(
         flights: Map<Long, FlightData>
     ): List<List<FlightData>> {
-        var list = emptyList<FlightData>()
+        val sortedFlights = flights.values.toList()
 
-        for ((_, value) in flights) {
-            list = list + value
-        }
-
-        return list.fold(initial = emptyList()) { current: List<List<FlightData>>, flight: FlightData ->
+        return sortedFlights.fold(initial = emptyList()) { current: List<List<FlightData>>, flight: FlightData ->
             val lastGroup = current.lastOrNull()
             val lastFlightInGroup = lastGroup?.lastOrNull()
 

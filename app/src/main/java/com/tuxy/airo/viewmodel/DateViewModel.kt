@@ -17,6 +17,7 @@ import com.tuxy.airo.data.flightdata.FlightData
 import com.tuxy.airo.data.flightdata.FlightDataDao
 import com.tuxy.airo.data.flightdata.FlightDataRequest
 import com.tuxy.airo.data.flightdata.Success
+import com.tuxy.airo.data.flightdata.bestFlight
 import com.tuxy.airo.screens.ApiSettings
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
@@ -85,15 +86,6 @@ class DateViewModel(
      * @param string The flight number string to be formatted.
      * @return The formatted flight number.
      */
-    fun formatFlightNumber(string: String): String {
-        // Using " " or "-" as a space in between the carrier and flight number will be split either way
-        val splitString = string.split("[- ]".toRegex())
-        if (splitString.size == 2) {
-            return "${splitString[0]}${splitString[1]}"
-        }
-        return string
-    }
-
     /**
      * Adds a flight to the database.
      */
@@ -131,7 +123,7 @@ class DateViewModel(
                 )
 
                 val result = request.getFlightOnSpecificDate(
-                    searchParam = formatFlightNumber(flightNumber),
+                    searchParam = com.tuxy.airo.data.background.formatFlightNumber(flightNumber),
                     dateLocal = dateAsString.format(DateTimeFormatter.ofPattern("yyyy-MM-dd")),
                     searchBy = FlightSearchByEnum.Number,
                     dateLocalRole = FlightDirection.Departure,
@@ -154,10 +146,10 @@ class DateViewModel(
 
                     is Success -> {
                         println("success ${result.result}")
-                        val contract = result.result.firstOrNull()
+                        val contract = result.result.bestFlight()
                         if (contract != null) {
                             flightDataDao.addFlight(FlightData().from(contract))
-                            preferencesInterface.queueRecentFlights(formatFlightNumber(flightNumber).uppercase())
+                            preferencesInterface.queueRecentFlights(com.tuxy.airo.data.background.formatFlightNumber(flightNumber).uppercase())
                         } else {
                             viewModelScope.launch(Dispatchers.Main) {
                                 toast(ToastType.NO_FLIGHT).show()
@@ -168,8 +160,11 @@ class DateViewModel(
             } finally {
                 loading = false
                 viewModelScope.launch(Dispatchers.Main) {
-                    navController.navigateUp()
-                    navController.navigateUp()
+                    // Pop back to the main flights screen (two screens back: DatePicker -> NewFlight -> Main)
+                    navController.popBackStack(
+                        route = com.tuxy.airo.Screen.MainFlightsScreen.route,
+                        inclusive = false
+                    )
                 }
             }
         }

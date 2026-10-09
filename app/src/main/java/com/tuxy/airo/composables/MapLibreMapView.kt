@@ -28,6 +28,7 @@ import org.maplibre.android.annotations.MarkerOptions
 import org.maplibre.android.annotations.PolylineOptions
 import org.maplibre.android.camera.CameraPosition
 import org.maplibre.android.geometry.LatLng
+import org.maplibre.android.geometry.LatLngBounds
 import org.maplibre.android.maps.MapLibreMap
 import org.maplibre.android.maps.MapView
 import org.maplibre.android.maps.UiSettings
@@ -258,31 +259,128 @@ fun MapLibreMap.addAirportMarker(
 }
 
 /**
- * Moves the camera to center on the flight route, with zoom calculated
- * based on the distance between airports.
+ * Moves the camera to fit the flight route in view.
+ *
+ * Rather than averaging the endpoint coordinates and guessing a zoom from the
+ * angular distance (which ignores the map's aspect ratio and Mercator latitude
+ * distortion, and can clip the route so only its middle is visible), this builds
+ * a [LatLngBounds] from the actual great-circle arc and asks MapLibre for the
+ * camera that fits those bounds with padding. MapLibre then accounts for the
+ * real viewport size, so the whole route is always visible.
  *
  * @param originLat Latitude of departure airport
  * @param originLon Longitude of departure airport
  * @param destLat Latitude of arrival airport
  * @param destLon Longitude of arrival airport
- * @param zoom Optional explicit zoom level. If null, calculates automatically
- *             based on great-circle distance between points
+ * @param zoom Optional explicit zoom level. If provided, the camera is centered
+ *             on the route's bounds center at this fixed zoom instead of fitting
+ * @param paddingPx Padding (in pixels) applied on every side when fitting the route
  */
 fun MapLibreMap.centerOnRoute(
     originLat: Double,
     originLon: Double,
     destLat: Double,
     destLon: Double,
-    zoom: Double? = null
+    zoom: Double? = null,
+    paddingPx: Int = 64
 ) {
     if (originLat.isNaN() || originLon.isNaN() || destLat.isNaN() || destLon.isNaN()) return
-    val centerLat = (originLat + destLat) / 2
-    val centerLon = (originLon + destLon) / 2
-    val calculatedZoom = zoom ?: calculateZoomForRoute(originLat, originLon, destLat, destLon)
-    cameraPosition = CameraPosition.Builder()
-        .target(LatLng(centerLat, centerLon))
-        .zoom(calculatedZoom)
-        .build()
+
+    val points = greatCirclePoints(originLat, originLon, destLat, destLon)
+    val bounds = routeBounds(points)
+
+    if (zoom != null) {
+        // Explicit zoom requested: just center on the route's bounds center.
+        val center = bounds?.center ?: LatLng((originLat + destLat) / 2, (originLon + destLon) / 2)
+        cameraPosition = CameraPosition.Builder()
+            .target(center)
+            .zoom(zoom)
+            .build()
+        return
+    }
+
+    // Fit the whole route using the viewport-aware camera for the bounds.
+    val fitted = bounds?.let {
+        getCameraForLatLngBounds(
+            it,
+            intArrayOf(paddingPx, paddingPx, paddingPx, paddingPx)
+        )
+    }
+
+    if (fitted != null) {
+        cameraPosition = fitted
+    } else {
+        // Fallback: previous heuristic if bounds/camera could not be computed.
+        val centerLat = (originLat + destLat) / 2
+        val centerLon = (originLon + destLon) / 2
+        cameraPosition = CameraPosition.Builder()
+            .target(LatLng(centerLat, centerLon))
+            .zoom(calculateZoomForRoute(originLat, originLon, destLat, destLon))
+            .build()
+    }
+}
+
+/**
+ * Builds a [LatLngBounds] that contains every point of a route.
+ *
+ * [greatCirclePoints] has already "unwrapped" the longitudes into a continuous,
+ * monotonic sequence (each point within 180\u00b0 of the previous one) so that
+ * antimeridian-crossing routes — e.g. SFO \u2192 SIN across the Pacific — form the
+ * short arc instead of spanning the whole globe. As a result a naive min/max
+ * (which is all [LatLngBounds.fromLatLngs] does) yields the correct span, with
+ * longitudes possibly outside [-180, 180], which [LatLngBounds] supports.
+ *
+ * Returns null for empty input.
+ */
+private fun routeBounds(points: List<LatLng>): LatLngBounds? {
+    if (points.isEmpty()) return null
+    return LatLngBounds.fromLatLngs(points)
+}
+
+/**
+ * Suggests a width:height aspect ratio for the map container so that a route's
+ * bounds fit as snugly as possible.
+ *
+ * Long, mostly east-west routes (e.g. SFO \u2192 SIN across the Pacific) have a wide
+ * bounds. Giving the map a shorter (more letterboxed) aspect ratio lets the whole
+ * route fill the view, so the camera doesn't have to zoom out as far to keep the
+ * route on screen and shows less area beyond it. Short routes keep the default
+ * landscape ratio.
+ *
+ * Latitude is Mercator-corrected (~1/cos(lat)) so high-latitude arcs aren't
+ * under-estimated. The result is clamped to [minRatio, maxRatio].
+ *
+ * @return a width:height ratio to feed into `Modifier.aspectRatio(...)`
+ */
+fun suggestedRouteAspectRatio(
+    originLat: Double,
+    originLon: Double,
+    destLat: Double,
+    destLon: Double,
+    defaultRatio: Float = 1280f / 847f,
+    minRatio: Float = 1280f / 847f,
+    maxRatio: Float = 2.5f
+): Float {
+    if (originLat.isNaN() || originLon.isNaN() || destLat.isNaN() || destLon.isNaN()) {
+        return defaultRatio
+    }
+
+    val bounds = routeBounds(greatCirclePoints(originLat, originLon, destLat, destLon))
+        ?: return defaultRatio
+
+    val lonSpan = bounds.longitudeSpan
+    val latSpan = bounds.latitudeSpan
+    if (lonSpan <= 0.0 || latSpan.isNaN()) return defaultRatio
+
+    val midLat = Math.toRadians((bounds.latitudeNorth + bounds.latitudeSouth) / 2)
+    // Mercator stretches vertical distance by ~1/cos(lat); approximate so the
+    // ratio reflects what the map actually shows.
+    val projectedLatSpan = latSpan / cos(midLat).coerceAtLeast(0.1)
+
+    if (projectedLatSpan <= 0.0) return maxRatio
+
+    val ratio = (lonSpan / projectedLatSpan).toFloat()
+    return ratio.coerceIn(minRatio, maxRatio)
 }
 
 /**
@@ -390,6 +488,15 @@ private fun greatCirclePoints(
         )
     )
 
+    // Spherical interpolation divides by sin(d). When the endpoints coincide
+    // (d == 0) — e.g. a flight with no location data, where both airports default
+    // to the same LatLng — this is 0/0 = NaN and would poison every point. There is
+    // no arc to draw in that case, so return the single shared point instead.
+    if (d.isNaN() || d < 1e-9) {
+        return listOf(LatLng(lat1, lon1))
+    }
+
+    var prevLon = lon1
     for (i in 0..numPoints) {
         val f = i.toDouble() / numPoints
         val A = sin((1 - f) * d) / sin(d)
@@ -397,9 +504,21 @@ private fun greatCirclePoints(
         val x = A * cos(φ1) * cos(λ1) + B * cos(φ2) * cos(λ2)
         val y = A * cos(φ1) * sin(λ1) + B * cos(φ2) * sin(λ2)
         val z = A * sin(φ1) + B * sin(φ2)
-        val φ = atan2(z, sqrt(x * x + y * y))
-        val λ = atan2(y, x)
-        points.add(LatLng(Math.toDegrees(φ), Math.toDegrees(λ)))
+        val φ = Math.toDegrees(atan2(z, sqrt(x * x + y * y)))
+        var lon = Math.toDegrees(atan2(y, x))
+
+        // Guard against any residual non-finite values so LatLng never throws.
+        if (φ.isNaN() || φ.isInfinite() || lon.isNaN() || lon.isInfinite()) continue
+
+        // atan2 returns longitudes in [-180, 180], so an antimeridian-crossing
+        // route (e.g. SFO -> SIN) would jump 179 -> -179 and MapLibre would draw
+        // that segment the long way around the globe. Unwrap each point to stay
+        // within 180 of the previous one, producing a continuous polyline.
+        while (lon - prevLon > 180) lon -= 360
+        while (lon - prevLon < -180) lon += 360
+        prevLon = lon
+
+        points.add(LatLng(φ, lon))
     }
     return points
 }

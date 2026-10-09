@@ -2,6 +2,7 @@ package com.tuxy.airo.viewmodel
 
 import android.content.Context
 import android.content.res.Resources
+import com.tuxy.airo.data.background.formatFlightNumber
 import junit.framework.TestCase.assertEquals
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -68,7 +69,7 @@ class DateViewModelTest {
     @Test
     fun formatFlightNumberReturnsInitial() {
         // Test splitting of flight numbers in search
-        assertEquals("UA1", viewModel.formatFlightNumber("UA-1"))
-        assertEquals("UA1", viewModel.formatFlightNumber("UA 1"))
+        assertEquals("UA1", formatFlightNumber("UA-1"))
+        assertEquals("UA1", formatFlightNumber("UA 1"))
     }
 }

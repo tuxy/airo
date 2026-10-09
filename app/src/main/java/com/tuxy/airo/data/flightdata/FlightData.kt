@@ -78,7 +78,9 @@ data class FlightData(
     fun from(response: FlightContract): FlightData {
 
         val scheduledDepartDate = parseDateTime(response.departure.scheduledTime?.local)
+            ?: ZonedDateTime.now(ZoneOffset.UTC)
         val scheduledArriveDate = parseDateTime(response.arrival.scheduledTime?.local)
+            ?: ZonedDateTime.now(ZoneOffset.UTC)
 
         val revisedDepartDate = parseDateTime(response.departure.revisedTime?.local)
         val revisedArriveDate = parseDateTime(response.arrival.revisedTime?.local)
@@ -96,14 +98,14 @@ data class FlightData(
             from = response.departure.airport.iata ?: "N/A",
             fromName = response.departure.airport.shortName ?: response.departure.airport.name,
             fromCountryCode = response.departure.airport.countryCode ?: "---",
-            scheduledDepartDate = scheduledDepartDate ?: ZonedDateTime.now(ZoneOffset.UTC),
+            scheduledDepartDate = scheduledDepartDate,
             revisedDepartDate = revisedDepartDate,
 
             // Arrival Info
             to = response.arrival.airport.iata ?: "N/A",
             toName = response.arrival.airport.shortName ?: response.arrival.airport.name,
             toCountryCode = response.arrival.airport.countryCode ?: "---",
-            scheduledArriveDate = scheduledArriveDate ?: ZonedDateTime.now(ZoneOffset.UTC),
+            scheduledArriveDate = scheduledArriveDate,
             revisedArriveDate = revisedArriveDate,
 
             // Airport Details
@@ -128,10 +130,9 @@ data class FlightData(
             mapDestinationLon = response.arrival.airport.location?.lon?.toDouble()?.takeUnless { it.isNaN() } ?: 1.0,
 
             ticketData = "", // Keeping your default
-            duration = Duration.between(
-                scheduledDepartDate,
-                scheduledArriveDate
-            )
+            duration = Duration.between(scheduledDepartDate, scheduledArriveDate)
+                .takeUnless { it.isZero || it.isNegative }
+                ?: Duration.ofSeconds(1) // Prevents current = NaN
         )
     }
 }

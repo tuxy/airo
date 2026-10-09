@@ -18,7 +18,6 @@ import org.junit.Before
 import org.junit.Test
 import org.mockito.kotlin.mock
 import java.time.ZonedDateTime
-import kotlin.math.absoluteValue
 
 @ExperimentalCoroutinesApi
 class DetailsViewModelTest {
@@ -44,7 +43,6 @@ class DetailsViewModelTest {
             context = mockContext,
             preferencesInterface = mockPreferencesInterface,
             scheme = lightColorScheme(),
-            scope = kotlinx.coroutines.CoroutineScope(testDispatcher)
         )
     }
 
@@ -93,10 +91,17 @@ class DetailsViewModelTest {
         val duration = java.time.Duration.ofHours(2)
         viewModel.flightData.value = FlightData(revisedDepartDate = departTime, duration = duration)
 
-        viewModel.getProgress()
-        testDispatcher.scheduler.advanceUntilIdle()
+        val progress = viewModel.calculateProgressFraction()
+        assertEquals(0.5f, progress, 0.01f)
+    }
 
-        assertEquals(0.5f, viewModel.progress.floatValue, 0.01f)
+    @Test
+    fun `getProgress should be zero before departure`() {
+        val departTime = ZonedDateTime.now().plusHours(1)
+        viewModel.flightData.value = FlightData(revisedDepartDate = departTime)
+
+        val progress = viewModel.calculateProgressFraction()
+        assertEquals(0.0f, progress, 0.01f)
     }
 
     @Test

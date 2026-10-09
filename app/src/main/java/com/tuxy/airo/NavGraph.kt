@@ -12,6 +12,7 @@ import com.tuxy.airo.motion.materialSharedAxisXOut
 import com.tuxy.airo.screens.DatePickerView
 import com.tuxy.airo.screens.FoldableFlightScreen
 import com.tuxy.airo.screens.NewFlightView
+import com.tuxy.airo.screens.SettingsView
 import de.raphaelebner.roomdatabasebackup.core.RoomBackup
 
 private const val INITIAL_OFFSET_FACTOR = 0.10f
@@ -42,10 +43,7 @@ fun SetupNavGraph(
             )
         }
         composable(route = Screen.SettingsScreen.route) {
-            FoldableFlightScreen(
-                navController = navController,
-                flightDataDao = flightDataDao,
-                backup = backup,
+            SettingsView(
                 powerManager = powerManager,
             )
         }

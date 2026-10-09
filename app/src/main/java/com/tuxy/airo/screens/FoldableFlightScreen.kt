@@ -85,8 +85,12 @@ fun FoldableFlightScreen(
                         it.scheduledDepartDate
                     ).seconds >= 0
                 }
+                // Duration.between(departure, now) is negative for future flights and
+                // *more* negative the further away the flight is, so minBy would pick the
+                // furthest one. Measure now -> departure instead so the smallest (i.e.
+                // soonest) positive value wins.
                 .minByOrNull {
-                    Duration.between(it.scheduledDepartDate, ZonedDateTime.now()).seconds
+                    Duration.between(ZonedDateTime.now(), it.scheduledDepartDate).seconds
                 }?.id?.toString()
         } else {
             null
@@ -156,8 +160,12 @@ fun FoldableFlightScreen(
             },
             detailPane = {
                 AnimatedPane {
-                    val flightData by viewModel.flightData.collectAsState()
-                    key(flightData, isInSettingsFlow) {
+                    // Key on the *specific* flight id (plus the settings flag) rather than
+                    // the whole flight list. Otherwise any background update to any flight
+                    // recomposes/rebuilds this pane — including tearing down and recreating
+                    // the heavy MapLibre view.
+                    val detailId = navigator.currentDestination?.contentKey ?: closestFlightId
+                    key(detailId, isInSettingsFlow) {
                         if (isInSettingsFlow) {
                             SettingsView(
                                 powerManager = powerManager,
@@ -173,8 +181,6 @@ fun FoldableFlightScreen(
                                 }
                             )
                         } else {
-                            val detailId =
-                                navigator.currentDestination?.contentKey ?: closestFlightId
                             if (detailId != null) {
                                 FlightDetailsView(
                                     id = detailId,
