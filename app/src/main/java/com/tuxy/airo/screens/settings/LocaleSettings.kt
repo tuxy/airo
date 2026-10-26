@@ -13,7 +13,7 @@ import androidx.compose.ui.res.stringResource
 import com.jamal.composeprefs3.ui.PrefsScreen
 import com.tuxy.airo.R
 import com.tuxy.airo.composables.LargeAppBar
-import com.tuxy.airo.dataStore
+import com.tuxy.airo.data.settings.dataStore
 import com.tuxy.airo.screens.settings.prefs.SwitchPref
 
 @OptIn(ExperimentalMaterial3AdaptiveApi::class)

@@ -1,0 +1,322 @@
+{
+  "formatVersion": 1,
+  "database": {
+    "version": 4,
+    "identityHash": "12a5caf66ca89c188e074816fc84d680",
+    "entities": [
+      {
+        "tableName": "flight_table",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `lastUpdate` TEXT NOT NULL, `callSign` TEXT NOT NULL, `airline` TEXT NOT NULL, `airlineIcao` TEXT NOT NULL, `airlineIata` TEXT NOT NULL, `from` TEXT NOT NULL, `to` TEXT NOT NULL, `fromCountryCode` TEXT NOT NULL, `toCountryCode` TEXT NOT NULL, `fromName` TEXT NOT NULL, `scheduledDepartDate` TEXT NOT NULL, `scheduledArriveDate` TEXT NOT NULL, `revisedDepartDate` TEXT, `revisedArriveDate` TEXT, `duration` INTEGER NOT NULL, `toName` TEXT NOT NULL, `ticketData` TEXT NOT NULL, `gate` TEXT NOT NULL, `toGate` TEXT NOT NULL, `terminal` TEXT NOT NULL, `toTerminal` TEXT NOT NULL, `toBaggageClaim` TEXT NOT NULL, `checkInDesk` TEXT NOT NULL, `aircraftName` TEXT NOT NULL, `aircraftUri` TEXT NOT NULL, `author` TEXT NOT NULL, `authorUri` TEXT NOT NULL, `mapOriginLat` REAL NOT NULL, `mapOriginLon` REAL NOT NULL, `mapDestinationLat` REAL NOT NULL, `mapDestinationLon` REAL NOT NULL, `attribution` TEXT NOT NULL, `status` TEXT NOT NULL DEFAULT '', `lastUpdatedUtc` TEXT, `departureRunwayTime` TEXT, `arrivalRunwayTime` TEXT, `departurePredictedTime` TEXT, `arrivalPredictedTime` TEXT, `liveLat` REAL, `liveLon` REAL, `liveAltitudeM` REAL, `liveGroundSpeedKmh` REAL, `liveTrackDeg` REAL, `liveReportedAtUtc` TEXT, `greatCircleDistanceKm` REAL, `aircraftReg` TEXT, `fromTimeZoneId` TEXT, `toTimeZoneId` TEXT, `hasLocation` INTEGER NOT NULL DEFAULT 0)",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "lastUpdate",
+            "columnName": "lastUpdate",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "callSign",
+            "columnName": "callSign",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "airline",
+            "columnName": "airline",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "airlineIcao",
+            "columnName": "airlineIcao",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "airlineIata",
+            "columnName": "airlineIata",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "from",
+            "columnName": "from",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "to",
+            "columnName": "to",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "fromCountryCode",
+            "columnName": "fromCountryCode",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "toCountryCode",
+            "columnName": "toCountryCode",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "fromName",
+            "columnName": "fromName",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "scheduledDepartDate",
+            "columnName": "scheduledDepartDate",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "scheduledArriveDate",
+            "columnName": "scheduledArriveDate",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "revisedDepartDate",
+            "columnName": "revisedDepartDate",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "revisedArriveDate",
+            "columnName": "revisedArriveDate",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "duration",
+            "columnName": "duration",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "toName",
+            "columnName": "toName",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "ticketData",
+            "columnName": "ticketData",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "gate",
+            "columnName": "gate",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "toGate",
+            "columnName": "toGate",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "terminal",
+            "columnName": "terminal",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "toTerminal",
+            "columnName": "toTerminal",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "toBaggageClaim",
+            "columnName": "toBaggageClaim",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "checkInDesk",
+            "columnName": "checkInDesk",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "aircraftName",
+            "columnName": "aircraftName",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "aircraftUri",
+            "columnName": "aircraftUri",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "author",
+            "columnName": "author",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "authorUri",
+            "columnName": "authorUri",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "mapOriginLat",
+            "columnName": "mapOriginLat",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "mapOriginLon",
+            "columnName": "mapOriginLon",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "mapDestinationLat",
+            "columnName": "mapDestinationLat",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "mapDestinationLon",
+            "columnName": "mapDestinationLon",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "attribution",
+            "columnName": "attribution",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "status",
+            "columnName": "status",
+            "affinity": "TEXT",
+            "notNull": true,
+            "defaultValue": "''"
+          },
+          {
+            "fieldPath": "lastUpdatedUtc",
+            "columnName": "lastUpdatedUtc",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "departureRunwayTime",
+            "columnName": "departureRunwayTime",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "arrivalRunwayTime",
+            "columnName": "arrivalRunwayTime",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "departurePredictedTime",
+            "columnName": "departurePredictedTime",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "arrivalPredictedTime",
+            "columnName": "arrivalPredictedTime",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "liveLat",
+            "columnName": "liveLat",
+            "affinity": "REAL"
+          },
+          {
+            "fieldPath": "liveLon",
+            "columnName": "liveLon",
+            "affinity": "REAL"
+          },
+          {
+            "fieldPath": "liveAltitudeM",
+            "columnName": "liveAltitudeM",
+            "affinity": "REAL"
+          },
+          {
+            "fieldPath": "liveGroundSpeedKmh",
+            "columnName": "liveGroundSpeedKmh",
+            "affinity": "REAL"
+          },
+          {
+            "fieldPath": "liveTrackDeg",
+            "columnName": "liveTrackDeg",
+            "affinity": "REAL"
+          },
+          {
+            "fieldPath": "liveReportedAtUtc",
+            "columnName": "liveReportedAtUtc",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "greatCircleDistanceKm",
+            "columnName": "greatCircleDistanceKm",
+            "affinity": "REAL"
+          },
+          {
+            "fieldPath": "aircraftReg",
+            "columnName": "aircraftReg",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "fromTimeZoneId",
+            "columnName": "fromTimeZoneId",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "toTimeZoneId",
+            "columnName": "toTimeZoneId",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "hasLocation",
+            "columnName": "hasLocation",
+            "affinity": "INTEGER",
+            "notNull": true,
+            "defaultValue": "0"
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": true,
+          "columnNames": [
+            "id"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_flight_table_callSign_scheduledDepartDate",
+            "unique": true,
+            "columnNames": [
+              "callSign",
+              "scheduledDepartDate"
+            ],
+            "orders": [],
+            "createSql": "CREATE UNIQUE INDEX IF NOT EXISTS `index_flight_table_callSign_scheduledDepartDate` ON `${TABLE_NAME}` (`callSign`, `scheduledDepartDate`)"
+          }
+        ]
+      }
+    ],
+    "setupQueries": [
+      "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '12a5caf66ca89c188e074816fc84d680')"
+    ]
+  }
+}

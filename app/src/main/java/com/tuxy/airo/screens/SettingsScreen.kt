@@ -31,7 +31,9 @@ import androidx.compose.material3.adaptive.ExperimentalMaterial3AdaptiveApi
 import androidx.compose.material3.adaptive.navigation.ThreePaneScaffoldNavigator
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -42,8 +44,8 @@ import androidx.core.net.toUri
 import com.jamal.composeprefs3.ui.LocalPrefsDataStore
 import com.tuxy.airo.R
 import com.tuxy.airo.composables.LargeAppBar
-import com.tuxy.airo.data.database.PreferencesInterface
-import com.tuxy.airo.dataStore
+import com.tuxy.airo.data.settings.AppPreferences
+import com.tuxy.airo.data.settings.dataStore
 import com.tuxy.airo.screens.settings.SettingSub
 import com.tuxy.airo.screens.settings.prefs.ButtonPref
 import kotlinx.coroutines.launch
@@ -53,18 +55,18 @@ import kotlinx.coroutines.launch
 @Composable
 fun SettingsView(
     powerManager: PowerManager,
+    preferences: AppPreferences,
     paneNavigator: ThreePaneScaffoldNavigator<String>? = null,
     onNavigateToSubSetting: ((SettingsSubPaneTypes) -> Unit)? = null,
 ) {
     val context = LocalContext.current
     val activity = LocalActivity.current
-    val preferencesInterface = PreferencesInterface(context)
 
     val webpageString = stringResource(R.string.source_code)
     val isIgnoringBatteryOptimizations =
         powerManager.isIgnoringBatteryOptimizations(context.packageName)
 
-    val ignored = preferencesInterface.getValueBool("is_ignoring_optimisation")
+    val ignored by preferences.batteryPromptDismissed.collectAsStateWithLifecycle(false)
 
     val intent = Intent()
     intent.setAction(android.provider.Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS)

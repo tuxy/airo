@@ -1,22 +1,28 @@
 package com.tuxy.airo.viewmodel
 
-import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
-import com.tuxy.airo.data.database.PreferencesInterface
 import com.tuxy.airo.data.flightdata.FlightData
-import com.tuxy.airo.data.flightdata.FlightDataDao
+import com.tuxy.airo.data.repository.FlightRepository
+import com.tuxy.airo.data.settings.AppPreferences
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.time.Duration
 import java.time.ZonedDateTime
 
-class MainFlightViewModel(context: Context) : ViewModel() {
-    val preferencesInterface = PreferencesInterface(context)
+class MainFlightViewModel(
+    private val repository: FlightRepository,
+    preferences: AppPreferences,
+) : ViewModel() {
 
     private val _flightData = MutableStateFlow<List<FlightData>>(emptyList())
     val flightData: StateFlow<List<FlightData>> = _flightData.asStateFlow()
@@ -27,61 +33,61 @@ class MainFlightViewModel(context: Context) : ViewModel() {
     private val _flightsPastList = MutableStateFlow<List<List<FlightData>>>(emptyList())
     val flightsPastList: StateFlow<List<List<FlightData>>> = _flightsPastList.asStateFlow()
 
+    val timeFormat: StateFlow<String> = preferences.timeFormat
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), "hh:mm a")
+
+    val recentFlights: StateFlow<List<String>> = preferences.recentFlights
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
+
     private var collectingJob: Job? = null
 
-    fun startCollecting(flightDataDao: FlightDataDao) {
+    fun startCollecting() {
         if (collectingJob?.isActive == true) return
 
         collectingJob = viewModelScope.launch {
-            flightDataDao.readAll().collect { newFlightData ->
+            repository.observeFlights().collect { newFlightData ->
                 _flightData.value = newFlightData
                 processFlights(newFlightData)
             }
         }
     }
 
-    private fun processFlights(newFlightData: List<FlightData>) {
-        val newFlights = newFlightData.associateBy { flight ->
-            flight.scheduledArriveDate.toEpochSecond()
-        }.toSortedMap()
+    private suspend fun processFlights(newFlightData: List<FlightData>) {
+        withContext(Dispatchers.Default) {
+            val now = ZonedDateTime.now()
+            val sorted = newFlightData.sortedBy { it.effectiveArriveDate.toInstant() }
 
-        val nowInEpochSeconds = ZonedDateTime.now().toEpochSecond()
+            val upcoming = sorted.filter { it.effectiveArriveDate.isAfter(now) }
+            val past = sorted.filter { !it.effectiveArriveDate.isAfter(now) }.reversed()
 
-        val flightsUpcoming = newFlights
-            .filterKeys { it > nowInEpochSeconds }
-        val flightsPast = newFlights
-            .filterKeys { it <= nowInEpochSeconds }
-
-        _flightsUpcomingList.value = groupFlightsByProximity(flightsUpcoming)
-        _flightsPastList.value = groupFlightsByProximity(flightsPast).reversed()
+            _flightsUpcomingList.value = groupFlightsByProximity(upcoming)
+            _flightsPastList.value = groupFlightsByProximity(past)
+        }
     }
 
-    fun groupFlightsByProximity(
-        flights: Map<Long, FlightData>
-    ): List<List<FlightData>> {
-        val sortedFlights = flights.values.toList()
+    /**
+     * Groups consecutive flights whose departures are no more than 24 h apart.
+     * Uses a single pass and the effective (revised when available) times.
+     */
+    fun groupFlightsByProximity(flights: List<FlightData>): List<List<FlightData>> {
+        if (flights.isEmpty()) return emptyList()
 
-        return sortedFlights.fold(initial = emptyList()) { current: List<List<FlightData>>, flight: FlightData ->
-            val lastGroup = current.lastOrNull()
-            val lastFlightInGroup = lastGroup?.lastOrNull()
-
-            if (lastFlightInGroup != null) {
-                val timeDiff = Duration.between(
-                    lastFlightInGroup.scheduledDepartDate,
-                    flight.scheduledDepartDate
-                ).abs()
-
-                if (timeDiff <= Duration.ofHours(24)) {
-                    val updatedLastGroup = lastGroup + flight
-
-                    current.dropLast(1) + listOf(updatedLastGroup)
-                } else {
-                    current + listOf(listOf(flight))
-                }
+        val groups = mutableListOf<MutableList<FlightData>>()
+        for (flight in flights) {
+            val currentGroup = groups.lastOrNull()
+            val previous = currentGroup?.lastOrNull()
+            val closeEnough = previous != null &&
+                Duration.between(
+                    previous.effectiveDepartDate,
+                    flight.effectiveDepartDate,
+                ).abs() <= GROUPING_WINDOW
+            if (closeEnough) {
+                currentGroup.add(flight)
             } else {
-                current + listOf(listOf(flight))
+                groups.add(mutableListOf(flight))
             }
         }
+        return groups.map { it.toList() }
     }
 
     override fun onCleared() {
@@ -89,12 +95,17 @@ class MainFlightViewModel(context: Context) : ViewModel() {
         collectingJob?.cancel()
     }
 
-    @Suppress("UNCHECKED_CAST")
     class Factory(
-        private val context: Context,
-    ) : ViewModelProvider.NewInstanceFactory() {
+        private val repository: FlightRepository,
+        private val preferences: AppPreferences,
+    ) : ViewModelProvider.Factory {
+        @Suppress("UNCHECKED_CAST")
         override fun <T : ViewModel> create(modelClass: Class<T>): T {
-            return MainFlightViewModel(context) as T
+            return MainFlightViewModel(repository, preferences) as T
         }
+    }
+
+    private companion object {
+        val GROUPING_WINDOW: Duration = Duration.ofHours(24)
     }
 }

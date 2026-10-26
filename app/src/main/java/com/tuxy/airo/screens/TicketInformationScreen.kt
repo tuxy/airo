@@ -41,6 +41,9 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.adaptive.ExperimentalMaterial3AdaptiveApi
 import androidx.compose.material3.adaptive.navigation.ThreePaneScaffoldNavigator
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.getValue
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -66,7 +69,7 @@ import com.tuxy.airo.composables.BarcodeScannerSheet
 import com.tuxy.airo.composables.BoldDepartureAndDestinationText
 import com.tuxy.airo.composables.LargeTopSmallBottom
 import com.tuxy.airo.data.flightdata.FlightData
-import com.tuxy.airo.data.flightdata.FlightDataDao
+import com.tuxy.airo.di.AppContainer
 import com.tuxy.airo.data.flightdata.IataParserData
 import com.tuxy.airo.viewmodel.TicketViewModel
 import kotlinx.coroutines.DelicateCoroutinesApi
@@ -80,14 +83,29 @@ import java.time.format.DateTimeFormatter
 fun TicketInformationView(
     paneNavigator: ThreePaneScaffoldNavigator<String>,
     id: String,
-    flightDataDao: FlightDataDao
+    container: AppContainer,
 ) {
-    val viewModelFactory = TicketViewModel.Factory(flightDataDao, id, LocalContext.current)
+    val viewModelFactory = TicketViewModel.Factory(
+        repository = container.repository,
+        preferences = container.preferences,
+        id = id,
+        context = LocalContext.current,
+    )
     val viewModel: TicketViewModel = viewModel(
         factory = viewModelFactory,
         key = id
     )
     val context = LocalContext.current
+    val activity = context as? android.app.Activity
+
+    // Boarding passes and PNRs must not appear in Recents thumbnails or
+    // screenshots.
+    DisposableEffect(activity) {
+        activity?.window?.addFlags(android.view.WindowManager.LayoutParams.FLAG_SECURE)
+        onDispose {
+            activity?.window?.clearFlags(android.view.WindowManager.LayoutParams.FLAG_SECURE)
+        }
+    }
 
     val scope = rememberCoroutineScope()
 
@@ -98,7 +116,7 @@ fun TicketInformationView(
         onResult = { result ->
             result?.let { text ->
                 viewModel.ticketString = text
-                viewModel.updateData(flightDataDao, context)
+                viewModel.updateData()
             }
             showScanner = false
         }
@@ -150,10 +168,9 @@ fun TicketInformationView(
             Column(modifier = Modifier.padding(innerPadding)) {
                 if (viewModel.openDialog.value) {
                     DeleteTicketDialog(
-                        viewModel.openDialog,
-                        paneNavigator,
-                        viewModel,
-                        flightDataDao
+                        openDialog = viewModel.openDialog,
+                        paneNavigator = paneNavigator,
+                        viewModel = viewModel,
                     )
                 }
                 AnimatedVisibility(!viewModel.ticketData.eTicketIndicator) {
@@ -211,7 +228,7 @@ fun MainTicketView(
     viewModel: TicketViewModel
 ) {
     val clipboard = LocalClipboard.current
-    val timeFormat = viewModel.preferencesInterface.getValueTimeFormatComposable("24_time")
+    val timeFormat by viewModel.timeFormat.collectAsStateWithLifecycle()
     val scope = rememberCoroutineScope()
 
     Column(
@@ -355,14 +372,12 @@ fun DeleteTicketDialog(
     openDialog: MutableState<Boolean>,
     paneNavigator: ThreePaneScaffoldNavigator<String>,
     viewModel: TicketViewModel,
-    flightDataDao: FlightDataDao
 ) {
     BasicAlertDialog(
         onDismissRequest = {
             openDialog.value = false
         }
     ) {
-        val context = LocalContext.current
         val scope = rememberCoroutineScope()
 
         Surface(
@@ -393,7 +408,7 @@ fun DeleteTicketDialog(
                         onClick = {
                             scope.launch {
                                 withContext(Dispatchers.IO) {
-                                    viewModel.deleteData(flightDataDao, context)
+                                    viewModel.deleteData()
                                 }
                                 paneNavigator.navigateBack()
                             }

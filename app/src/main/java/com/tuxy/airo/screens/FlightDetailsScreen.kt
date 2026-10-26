@@ -54,10 +54,19 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LocalLifecycleOwner
+import androidx.lifecycle.repeatOnLifecycle
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.isActive
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -76,8 +85,6 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.graphics.shapes.RoundedPolygon
-import androidx.graphics.shapes.toPath
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.tuxy.airo.R
 import com.tuxy.airo.composables.MapLibreMapView
@@ -87,7 +94,7 @@ import com.tuxy.airo.composables.addFlightRoute
 import com.tuxy.airo.composables.centerOnRoute
 import com.tuxy.airo.composables.suggestedRouteAspectRatio
 import com.tuxy.airo.data.flightdata.FlightData
-import com.tuxy.airo.data.flightdata.FlightDataDao
+import com.tuxy.airo.di.AppContainer
 import com.tuxy.airo.viewmodel.DetailsViewModel
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.launch
@@ -104,7 +111,7 @@ import kotlin.time.toKotlinDuration
 @Composable
 fun FlightDetailsView(
     id: String,
-    flightDataDao: FlightDataDao,
+    container: AppContainer,
     paneNavigator: ThreePaneScaffoldNavigator<String>,
     onFlightDelete: () -> Unit,
     onShowTicket: () -> Unit,
@@ -113,8 +120,9 @@ fun FlightDetailsView(
     val context = LocalContext.current
 
     val viewModelFactory = DetailsViewModel.Factory(
-        context,
-        lightColorScheme(),
+        context = context,
+        repository = container.repository,
+        preferences = container.preferences,
     )
 
     val viewModel: DetailsViewModel = viewModel(
@@ -122,34 +130,43 @@ fun FlightDetailsView(
         key = id
     )
 
-    val timeFormat = viewModel.preferencesInterface.getValueTimeFormatComposable("24_time")
-
-    val settings = ApiSettings(
-        viewModel.preferencesInterface.getValue("selected_api"),
-        viewModel.preferencesInterface.getValue("endpoint_adb"),
-        viewModel.preferencesInterface.getValue("endpoint_adb_key"),
-        viewModel.preferencesInterface.getValue("endpoint_airoapi"),
-    )
+    val timeFormat by viewModel.timeFormat.collectAsStateWithLifecycle()
 
     val refreshState = rememberPullToRefreshState()
-    val isRefreshing = remember { mutableStateOf(false) }
+    val isRefreshing by viewModel.isRefreshing.collectAsStateWithLifecycle()
+    val refreshMessage by viewModel.refreshMessage.collectAsStateWithLifecycle()
+    val snackbarHostState = remember { SnackbarHostState() }
 
     LaunchedEffect(id) {
-        viewModel.loadFlightById(id, flightDataDao)
+        viewModel.loadFlightById(id)
     }
 
-    // Start/stop periodic progress updates tied to the detail view lifecycle
-    LaunchedEffect(Unit) {
-        viewModel.startProgressUpdates()
-    }
-    DisposableEffect(Unit) {
-        onDispose { viewModel.stopProgressUpdates() }
+    // Tick only while the screen is actually started; the old 10 s loop kept
+    // running with the display off and never refreshed the status text.
+    var tick by remember { mutableLongStateOf(0L) }
+    val lifecycleOwner = LocalLifecycleOwner.current
+    LaunchedEffect(lifecycleOwner) {
+        lifecycleOwner.lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) {
+            while (isActive) {
+                viewModel.tickProgress()
+                tick = System.currentTimeMillis()
+                delay(60_000)
+            }
+        }
     }
 
-    val progress by viewModel.progress.collectAsState()
+    LaunchedEffect(refreshMessage) {
+        refreshMessage?.let {
+            snackbarHostState.showSnackbar(it)
+            viewModel.clearRefreshMessage()
+        }
+    }
+
+    val progress by viewModel.progress.collectAsStateWithLifecycle()
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),
+        snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             SmallAppBarWithDelete(
                 "${viewModel.flightData.value.from} to ${viewModel.flightData.value.to}",
@@ -166,9 +183,8 @@ fun FlightDetailsView(
             Column {
                 if (viewModel.openDialog.value) {
                     DeleteDialog(
-                        flightDataDao,
-                        viewModel,
-                        onFlightDelete
+                        viewModel = viewModel,
+                        onFlightDelete = onFlightDelete
                     )
                 }
                 LinearProgressIndicator(
@@ -176,15 +192,9 @@ fun FlightDetailsView(
                     progress = { progress }
                 )
                 PullToRefreshBox(
-                    isRefreshing = isRefreshing.value,
+                    isRefreshing = isRefreshing,
                     state = refreshState,
-                    onRefresh = {
-                        viewModel.refreshData(
-                            flightDataDao,
-                            settings,
-                            isRefreshing
-                        )
-                    }
+                    onRefresh = { viewModel.refreshData() }
                 ) {
                     Column(
                         Modifier
@@ -204,6 +214,7 @@ fun FlightDetailsView(
                             maxLines = 1
                         )
                         FlightBoardCard(viewModel, timeFormat)
+                        if (viewModel.flightData.value.hasLocation) {
                         Card(
                             modifier = Modifier
                                 .padding(
@@ -233,6 +244,10 @@ fun FlightDetailsView(
                                 ),
                                 tiltEnabled = false,
                                 rotateEnabled = false,
+                                redrawKey = viewModel.flightData.value.lastUpdatedUtc,
+                                liveLat = viewModel.flightData.value.liveLat,
+                                liveLon = viewModel.flightData.value.liveLon,
+                                liveTrackDeg = viewModel.flightData.value.liveTrackDeg,
                                 onMapReady = { map ->
                                     val originLat = viewModel.flightData.value.mapOriginLat
                                     val originLon = viewModel.flightData.value.mapOriginLon
@@ -257,7 +272,8 @@ fun FlightDetailsView(
                                 }
                             )
                         }
-                        FlightStatusCard(viewModel, context)
+                        }
+                        FlightStatusCard(viewModel, tick)
                         FlightInformationInteract(
                             viewModel.flightData.value,
                             onShowTicket,
@@ -321,7 +337,7 @@ fun FlightBoardCard(
                 )
                 Spacer(Modifier.padding(4.dp))
                 Text(
-                    flightData.duration.toKotlinDuration().toComponents { hours, minutes, _, _ ->
+                    flightData.effectiveDuration.toKotlinDuration().toComponents { hours, minutes, _, _ ->
                         if (hours < 1) {
                             return@toComponents "${minutes}m"
                         } else {
@@ -523,7 +539,8 @@ fun SmallCard(
 }
 
 @Composable
-fun FlightStatusCard(viewModel: DetailsViewModel, context: Context) {
+fun FlightStatusCard(viewModel: DetailsViewModel, tick: Long) {
+    val now = remember(tick) { ZonedDateTime.now() }
     Card(
         modifier = Modifier
             .padding(16.dp)
@@ -547,7 +564,7 @@ fun FlightStatusCard(viewModel: DetailsViewModel, context: Context) {
                     maxLines = 1
                 )
                 Text(
-                    viewModel.getEndTime(context),
+                    viewModel.getEndTime(now),
                     fontWeight = FontWeight.Normal,
                     fontSize = 12.sp,
                     overflow = TextOverflow.Visible,
@@ -561,14 +578,14 @@ fun FlightStatusCard(viewModel: DetailsViewModel, context: Context) {
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Text(
-                    viewModel.getStatus(context),
+                    viewModel.getStatus(now),
                     fontWeight = FontWeight.W500,
                     fontSize = 16.sp,
                     overflow = TextOverflow.Visible,
                     maxLines = 1
                 )
                 Text(
-                    viewModel.getDuration(context),
+                    viewModel.getDuration(now),
                     fontWeight = FontWeight.W500,
                     fontSize = 16.sp,
                     overflow = TextOverflow.Visible,
@@ -685,9 +702,8 @@ fun FlightInformationInteract(
 @OptIn(ExperimentalMaterial3Api::class, DelicateCoroutinesApi::class)
 @Composable
 fun DeleteDialog(
-    flightDataDao: FlightDataDao,
     viewModel: DetailsViewModel,
-    onFlightDelete: () -> Unit
+    onFlightDelete: () -> Unit,
 ) {
     val scope = rememberCoroutineScope()
 
@@ -729,7 +745,7 @@ fun DeleteDialog(
                     TextButton(
                         onClick = {
                             scope.launch {
-                                viewModel.deleteFlight(flightDataDao)
+                                viewModel.deleteFlight()
                                 onFlightDelete()
                             }
                         }
@@ -746,34 +762,3 @@ fun DeleteDialog(
     }
 }
 
-@Composable
-fun getColor(): Color { // ...don't ask
-    return lightColorScheme().primary
-}
-
-@Composable
-fun CustomMapMarker() { // Only used in viewmodel
-    val primary = lightColorScheme().primary
-
-    Box(
-        modifier = Modifier
-            .drawWithCache {
-                val roundedPolygon = RoundedPolygon(
-                    numVertices = 20,
-                    radius = 22f,
-                    centerX = size.width / 2,
-                    centerY = size.height / 2
-                )
-                val roundedPolygonPath = roundedPolygon.toPath().asComposePath()
-                onDrawBehind {
-                    drawPath(roundedPolygonPath, color = primary, alpha = 0.4f)
-                    drawPath(
-                        roundedPolygonPath,
-                        color = primary,
-                        alpha = 1f,
-                        style = Stroke(width = 4.0f)
-                    )
-                }
-            }
-    )
-}

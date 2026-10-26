@@ -42,7 +42,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.tuxy.airo.R
-import com.tuxy.airo.data.flightdata.FlightDataDao
+import com.tuxy.airo.di.AppContainer
 import com.tuxy.airo.screens.settings.ApiSettingsView
 import com.tuxy.airo.screens.settings.BackupSettingsView
 import com.tuxy.airo.screens.settings.NotificationsSettingsView
@@ -56,11 +56,11 @@ import java.time.ZonedDateTime
 @Composable
 fun FoldableFlightScreen(
     navController: NavController,
-    flightDataDao: FlightDataDao,
+    container: AppContainer,
     backup: RoomBackup,
     powerManager: PowerManager,
 ) {
-    val viewModelFactory = MainFlightViewModel.Factory(LocalContext.current)
+    val viewModelFactory = MainFlightViewModel.Factory(container.repository, container.preferences)
     val viewModel: MainFlightViewModel = viewModel(factory = viewModelFactory)
     val scope = rememberCoroutineScope()
 
@@ -70,28 +70,21 @@ fun FoldableFlightScreen(
     val pagerState = rememberPagerState(pageCount = { 2 })
 
     LaunchedEffect(Unit) {
-        viewModel.startCollecting(flightDataDao)
+        viewModel.startCollecting()
     }
 
     val navigator = rememberListDetailPaneScaffoldNavigator<String>()
 
     val flightData by viewModel.flightData.collectAsState()
-    val closestFlightId = remember(flightData) {
+    val closestFlightId = remember(flightData, navigator.scaffoldDirective) {
         if (navigator.scaffoldDirective.maxHorizontalPartitions == 1) {
             flightData
-                .filter {
-                    Duration.between(
-                        ZonedDateTime.now(),
-                        it.scheduledDepartDate
-                    ).seconds >= 0
-                }
+                .filter { it.effectiveDepartDate.isAfter(ZonedDateTime.now()) }
                 // Duration.between(departure, now) is negative for future flights and
                 // *more* negative the further away the flight is, so minBy would pick the
                 // furthest one. Measure now -> departure instead so the smallest (i.e.
                 // soonest) positive value wins.
-                .minByOrNull {
-                    Duration.between(ZonedDateTime.now(), it.scheduledDepartDate).seconds
-                }?.id?.toString()
+                .minByOrNull { it.effectiveDepartDate.toInstant() }?.id?.toString()
         } else {
             null
         }
@@ -133,7 +126,6 @@ fun FoldableFlightScreen(
                         ) {
                             MainFlightView(
                                 navController = navController,
-                                flightDataDao = flightDataDao,
                                 viewModel = viewModel,
                                 pagerState = pagerState,
                                 onFlightClick = { id ->
@@ -169,6 +161,7 @@ fun FoldableFlightScreen(
                         if (isInSettingsFlow) {
                             SettingsView(
                                 powerManager = powerManager,
+                                preferences = container.preferences,
                                 paneNavigator = navigator,
                                 onNavigateToSubSetting = { subKey ->
                                     currentSettingsSubKey = subKey
@@ -184,7 +177,7 @@ fun FoldableFlightScreen(
                             if (detailId != null) {
                                 FlightDetailsView(
                                     id = detailId,
-                                    flightDataDao = flightDataDao,
+                                    container = container,
                                     paneNavigator = navigator,
                                     onFlightDelete = {
                                         scope.launch {
@@ -220,7 +213,10 @@ fun FoldableFlightScreen(
             extraPane = {
                 AnimatedPane {
                     when (currentSettingsSubKey) {
-                        SettingsSubPaneTypes.Api -> ApiSettingsView(paneNavigator = navigator)
+                        SettingsSubPaneTypes.Api -> ApiSettingsView(
+                            preferences = container.preferences,
+                            paneNavigator = navigator
+                        )
                         SettingsSubPaneTypes.Backup -> BackupSettingsView(
                             paneNavigator = navigator,
                             backup = backup
@@ -228,7 +224,7 @@ fun FoldableFlightScreen(
 
                         SettingsSubPaneTypes.Notifications -> NotificationsSettingsView(
                             paneNavigator = navigator,
-                            flightDataDao = flightDataDao
+                            preferences = container.preferences
                         )
 
                         else -> {
@@ -236,13 +232,13 @@ fun FoldableFlightScreen(
                                 ExtraPaneTypes.TicketInformation -> TicketInformationView(
                                     paneNavigator = navigator,
                                     id = navigator.currentDestination?.contentKey ?: "0",
-                                    flightDataDao = flightDataDao,
+                                    container = container,
                                 )
 
                                 ExtraPaneTypes.AircraftInformation -> AircraftInformationView(
                                     paneNavigator = navigator,
                                     id = navigator.currentDestination?.contentKey ?: "0",
-                                    flightDataDao = flightDataDao
+                                    container = container
                                 )
 
                                 else -> {}

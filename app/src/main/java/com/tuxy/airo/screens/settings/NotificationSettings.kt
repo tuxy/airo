@@ -10,27 +10,21 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.jamal.composeprefs3.ui.PrefsScreen
 import com.tuxy.airo.R
 import com.tuxy.airo.composables.LargeAppBar
-import com.tuxy.airo.data.database.PreferencesInterface
-import com.tuxy.airo.data.flightdata.FlightDataDao
-import com.tuxy.airo.dataStore
+import com.tuxy.airo.data.settings.AppPreferences
+import com.tuxy.airo.data.background.FlightWorkScheduler
+import com.tuxy.airo.data.settings.dataStore
 import com.tuxy.airo.screens.settings.prefs.SwitchPref
-import com.tuxy.airo.viewmodel.settings.NotificationViewModel
 
 @OptIn(ExperimentalMaterial3AdaptiveApi::class)
 @Composable
 fun NotificationsSettingsView(
+    preferences: AppPreferences,
     paneNavigator: ThreePaneScaffoldNavigator<String>? = null,
-    flightDataDao: FlightDataDao
 ) {
     val context = LocalContext.current
-    val option = PreferencesInterface(context).getValueBool("enable_alerts")
-
-    val viewModelFactory = NotificationViewModel.Factory(context, flightDataDao)
-    val viewModel: NotificationViewModel = viewModel(factory = viewModelFactory)
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),
@@ -46,7 +40,9 @@ fun NotificationsSettingsView(
                         title = stringResource(R.string.enable_flight_alerts),
                         defaultChecked = true,
                         enabled = true,
-                        onCheckedChange = { viewModel.check(option) }
+                        onCheckedChange = {
+                            FlightWorkScheduler.enqueueRescheduleReminders(context)
+                        }
                     )
                 }
             }

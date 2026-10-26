@@ -15,6 +15,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -37,6 +38,7 @@ import kotlin.math.atan2
 import kotlin.math.cos
 import kotlin.math.pow
 import kotlin.math.sin
+import kotlin.math.roundToInt
 import kotlin.math.sqrt
 
 /* I'll be honest, this entire composable and class was vibe-coded. 
@@ -83,15 +85,19 @@ fun MapLibreMapView(
     zoomEnabled: Boolean = false,
     tiltEnabled: Boolean = false,
     rotateEnabled: Boolean = false,
-    onMapReady: (MapLibreMap) -> Unit = {}
+    redrawKey: Any? = null,
+    liveLat: Double? = null,
+    liveLon: Double? = null,
+    liveTrackDeg: Double? = null,
+    onMapReady: (MapLibreMap) -> Unit = {},
 ) {
     val lifecycleOwner = LocalLifecycleOwner.current
+    val currentOnMapReady by rememberUpdatedState(onMapReady)
 
     var mapHolder by remember {
         mutableStateOf<MapViewHolder?>(null)
     }
 
-    var pendingOnMapReady by remember { mutableStateOf<(MapLibreMap) -> Unit>({}) }
     var isMapReady by remember { mutableStateOf(false) }
 
     Box(modifier = modifier, contentAlignment = Alignment.Center) {
@@ -104,7 +110,7 @@ fun MapLibreMapView(
 
                 mapView.getMapAsync { map ->
                     map.setStyle(styleUrl) {
-                        Handler(Looper.getMainLooper()).postDelayed({ isMapReady = true }, 200)
+                        isMapReady = true
                     }
                     mapHolder = mapHolder?.copy(mapLibreMap = map, isStyleLoaded = true)
                     configureMapSettings(
@@ -114,9 +120,12 @@ fun MapLibreMapView(
                         tiltEnabled,
                         rotateEnabled
                     )
-                    pendingOnMapReady(map)
                 }
                 mapView
+            },
+            onRelease = { view ->
+                view.onStop()
+                view.onDestroy()
             }
         )
 
@@ -127,8 +136,17 @@ fun MapLibreMapView(
         }
     }
 
-    LaunchedEffect(Unit) {
-        pendingOnMapReady = onMapReady
+    // Draw overlays once the style is ready and again whenever the flight data
+    // changes (refresh, live position). Without the key the map kept the route
+    // drawn from the placeholder data that existed before the flight loaded.
+    LaunchedEffect(redrawKey, isMapReady, liveLat, liveLon) {
+        if (!isMapReady) return@LaunchedEffect
+        val map = mapHolder?.mapLibreMap ?: return@LaunchedEffect
+        map.clear()
+        currentOnMapReady(map)
+        if (liveLat != null && liveLon != null) {
+            map.addAircraftMarker(liveLat, liveLon, liveTrackDeg)
+        }
     }
 
     DisposableEffect(lifecycleOwner) {
@@ -138,7 +156,6 @@ fun MapLibreMapView(
                 Lifecycle.Event.ON_RESUME -> mapHolder?.mapView?.onResume()
                 Lifecycle.Event.ON_PAUSE -> mapHolder?.mapView?.onPause()
                 Lifecycle.Event.ON_STOP -> mapHolder?.mapView?.onStop()
-                Lifecycle.Event.ON_DESTROY -> mapHolder?.mapView?.onDestroy()
                 else -> {}
             }
         }
@@ -256,6 +273,25 @@ fun MapLibreMap.addAirportMarker(
         .title(code)
         .snippet(if (isOrigin) "Departure airport" else "Arrival airport")
     return addMarker(markerOptions)
+}
+
+/**
+ * Adds a marker for the aircraft's current reported position.
+ * The API only provides a snapshot, not a track history.
+ */
+fun MapLibreMap.addAircraftMarker(
+    lat: Double,
+    lon: Double,
+    trackDeg: Double? = null,
+): org.maplibre.android.annotations.Marker? {
+    if (lat.isNaN() || lon.isNaN()) return null
+    val options = MarkerOptions()
+        .position(LatLng(lat, lon))
+        .title("Live position")
+    if (trackDeg != null) {
+        options.snippet("Track ${trackDeg.roundToInt()}°")
+    }
+    return addMarker(options)
 }
 
 /**
