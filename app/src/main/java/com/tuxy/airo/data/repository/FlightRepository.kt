@@ -97,10 +97,7 @@ class FlightRepository(
                 }
             }
 
-            is ApiResult.HttpError -> {
-                if (result.code == 404) AddFlightResult.NoFlight
-                else AddFlightResult.Failed(result.message)
-            }
+            is ApiResult.HttpError -> AddFlightResult.Failed(result.message)
 
             is ApiResult.NetworkError -> AddFlightResult.Failed(result.message)
             is ApiResult.ParseError -> AddFlightResult.Failed(result.message)

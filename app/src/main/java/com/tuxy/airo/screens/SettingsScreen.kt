@@ -34,7 +34,6 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
@@ -48,7 +47,6 @@ import com.tuxy.airo.data.settings.AppPreferences
 import com.tuxy.airo.data.settings.dataStore
 import com.tuxy.airo.screens.settings.SettingSub
 import com.tuxy.airo.screens.settings.prefs.ButtonPref
-import kotlinx.coroutines.launch
 
 @SuppressLint("BatteryLife")
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3AdaptiveApi::class)
@@ -91,7 +89,6 @@ fun SettingsView(
                         PowerMessage(
                             activity = activity,
                             intent = intent,
-                            paneNavigator = paneNavigator
                         )
                     }
                 }
@@ -151,10 +148,7 @@ fun SettingsView(
 fun PowerMessage(
     activity: Activity?,
     intent: Intent,
-    paneNavigator: ThreePaneScaffoldNavigator<String>? = null
 ) {
-    val scope = rememberCoroutineScope()
-
     ElevatedCard(
         modifier = Modifier
             .fillMaxWidth()
@@ -186,10 +180,10 @@ fun PowerMessage(
                 modifier = Modifier.padding(end = 8.dp)
             )
             Button(onClick = {
+                // Do not pop the settings pane here. The system settings screen
+                // is a separate task; popping the pane behind it used to leave
+                // the app in a state where Back had no destination.
                 activity?.startActivity(intent)
-                paneNavigator?.let {
-                    scope.launch { it.navigateBack() }
-                }
             }) {
                 Text(stringResource(R.string.allow))
             }

@@ -52,6 +52,8 @@ import kotlinx.coroutines.launch
 import java.time.Duration
 import java.time.ZonedDateTime
 
+private const val SETTINGS_DESTINATION = "settings"
+
 @OptIn(ExperimentalMaterial3AdaptiveApi::class)
 @Composable
 fun FoldableFlightScreen(
@@ -66,7 +68,6 @@ fun FoldableFlightScreen(
 
     var currentExtraPaneType by remember { mutableStateOf(ExtraPaneTypes.Undefined) }
     var currentSettingsSubKey by remember { mutableStateOf<SettingsSubPaneTypes?>(null) }
-    var isInSettingsFlow by remember { mutableStateOf(false) }
     val pagerState = rememberPagerState(pageCount = { 2 })
 
     LaunchedEffect(Unit) {
@@ -74,6 +75,11 @@ fun FoldableFlightScreen(
     }
 
     val navigator = rememberListDetailPaneScaffoldNavigator<String>()
+    // Derive the settings pane from the navigator instead of keeping a second
+    // boolean in sync with it. The old flag stayed true when the system
+    // settings intent was launched from a pane that had already been popped,
+    // leaving Back with no history and trapping the user in the app.
+    val isInSettingsFlow = navigator.currentDestination?.contentKey == SETTINGS_DESTINATION
 
     val flightData by viewModel.flightData.collectAsState()
     val closestFlightId = remember(flightData, navigator.scaffoldDirective) {
@@ -90,16 +96,11 @@ fun FoldableFlightScreen(
         }
     }
 
-    BackHandler(navigator.canNavigateBack()) {
+    BackHandler(navigator.canNavigateBack() || currentSettingsSubKey != null) {
         scope.launch {
             when {
                 currentSettingsSubKey != null -> {
                     currentSettingsSubKey = null
-                    navigator.navigateBack()
-                }
-
-                isInSettingsFlow -> {
-                    isInSettingsFlow = false
                     navigator.navigateBack()
                 }
 
@@ -129,19 +130,17 @@ fun FoldableFlightScreen(
                                 viewModel = viewModel,
                                 pagerState = pagerState,
                                 onFlightClick = { id ->
-                                    isInSettingsFlow = false
                                     currentSettingsSubKey = null
                                     scope.launch {
                                         navigator.navigateTo(ListDetailPaneScaffoldRole.Detail, id)
                                     }
                                 },
                                 onNavigateToSettings = {
-                                    isInSettingsFlow = true
                                     currentSettingsSubKey = null
                                     scope.launch {
                                         navigator.navigateTo(
                                             ListDetailPaneScaffoldRole.Detail,
-                                            "settings"
+                                            SETTINGS_DESTINATION
                                         )
                                     }
                                 },

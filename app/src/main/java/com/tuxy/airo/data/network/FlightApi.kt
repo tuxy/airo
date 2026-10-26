@@ -1,5 +1,6 @@
 package com.tuxy.airo.data.network
 
+import android.util.Log
 import com.squareup.moshi.JsonAdapter
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.Types
@@ -82,6 +83,8 @@ class FlightApi(
                 "The configured API endpoint is not a valid URL."
             )
 
+        Log.d(TAG, "GET $url")
+
         val request = Request.Builder()
             .url(url)
             .header("Accept", "application/json")
@@ -98,10 +101,14 @@ class FlightApi(
                     if (outcome.code == 204 || outcome.body.isBlank()) {
                         return@withContext ApiResult.Success(emptyList())
                     }
-                    return@withContext parseFlights(outcome.body)
+                    return@withContext parseFlights(outcome.body, url.toString())
                 }
 
                 is ExecOutcome.Http -> {
+                    Log.w(
+                        TAG,
+                        "HTTP ${outcome.code} from $url: ${outcome.body.take(300)}",
+                    )
                     val apiError = ApiResult.HttpError(
                         code = outcome.code,
                         message = parseError(outcome.body) ?: defaultMessage(outcome.code),
@@ -113,6 +120,7 @@ class FlightApi(
                 }
 
                 is ExecOutcome.Network -> {
+                    Log.w(TAG, "Network error from $url", outcome.exception)
                     lastError = ApiResult.NetworkError(
                         message = outcome.exception.message ?: "Network request failed",
                         cause = outcome.exception,
@@ -140,11 +148,15 @@ class FlightApi(
         ExecOutcome.Network(e)
     }
 
-    private fun parseFlights(body: String): ApiResult<List<FlightContract>> = runCatching {
+    private fun parseFlights(
+        body: String,
+        url: String,
+    ): ApiResult<List<FlightContract>> = runCatching {
         flightListAdapter.fromJson(body) ?: emptyList()
     }.fold(
         onSuccess = { ApiResult.Success(it.filterNotNull()) },
         onFailure = {
+            Log.w(TAG, "Could not parse response from $url: ${body.take(300)}", it)
             ApiResult.ParseError(
                 message = "The server returned an unexpected flight response.",
                 cause = it,
@@ -158,7 +170,7 @@ class FlightApi(
 
     private fun defaultMessage(code: Int): String = when (code) {
         401, 403 -> "The API key was rejected. Check Settings → API."
-        404 -> "No flight was found for that number and date."
+        404 -> "The flight service endpoint was not found (HTTP 404). Check Settings → API."
         429 -> "The API rate limit was reached. Try again later."
         in 500..599 -> "The flight service is temporarily unavailable."
         else -> "The flight service returned an error ($code)."
@@ -176,6 +188,7 @@ class FlightApi(
     }
 
     companion object {
+        private const val TAG = "FlightApi"
         private const val MAX_ATTEMPTS = 3
         private const val BASE_BACKOFF_MILLIS = 400L
         private const val MAX_BACKOFF_MILLIS = 4_000L
