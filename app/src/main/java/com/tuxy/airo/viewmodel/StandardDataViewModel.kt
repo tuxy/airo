@@ -10,64 +10,51 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.tuxy.airo.R
 import com.tuxy.airo.data.flightdata.FlightData
-import com.tuxy.airo.data.flightdata.FlightDataDao
-import kotlinx.coroutines.DelicateCoroutinesApi
+import com.tuxy.airo.data.repository.FlightRepository
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
-/**
- * A ViewModel that provides standard data for a flight.
- *
- * @property flightData The flight data for the current flight.
- * @param flightDataDao The DAO for accessing flight data.
- * @param id The ID of the flight.
- */
-@OptIn(DelicateCoroutinesApi::class)
-@Suppress("UNCHECKED_CAST")
-class StandardDataViewModel(flightDataDao: FlightDataDao, id: String) : ViewModel() {
+class StandardDataViewModel(
+    private val repository: FlightRepository,
+    id: String,
+) : ViewModel() {
+
     var flightData = mutableStateOf(FlightData())
 
     init {
+        val numericId = id.toIntOrNull()
         viewModelScope.launch(Dispatchers.IO) {
-            val data = flightDataDao.readSingle(id.toInt()) ?: FlightData()
+            val data = numericId?.let { repository.getFlight(it) } ?: FlightData()
             withContext(Dispatchers.Main) {
                 flightData.value = data
             }
         }
     }
 
-    /**
-     * Opens a webpage in a custom tab.
-     * @param context The application context.
-     * @param url The URL of the webpage to open.
-     */
     fun openWebpage(context: Context, url: String) {
         try {
             val intent = CustomTabsIntent.Builder()
-                .setShowTitle(true) //
+                .setShowTitle(true)
                 .setUrlBarHidingEnabled(true)
                 .build()
             intent.launchUrl(context, url.toUri())
         } catch (e: Exception) {
-            e.printStackTrace()
             Toast.makeText(
                 context,
                 context.resources.getString(R.string.not_avail),
-                Toast.LENGTH_SHORT
+                Toast.LENGTH_SHORT,
             ).show()
         }
     }
 
-    /**
-     * Factory for creating [StandardDataViewModel] instances.
-     */
     class Factory(
-        private val flightDataDao: FlightDataDao,
+        private val repository: FlightRepository,
         private val id: String,
-    ) : ViewModelProvider.NewInstanceFactory() {
+    ) : ViewModelProvider.Factory {
+        @Suppress("UNCHECKED_CAST")
         override fun <T : ViewModel> create(modelClass: Class<T>): T {
-            return StandardDataViewModel(flightDataDao, id) as T
+            return StandardDataViewModel(repository, id) as T
         }
     }
 }

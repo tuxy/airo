@@ -13,67 +13,88 @@ import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.tuxy.airo.R
+import com.tuxy.airo.Screen
 import com.tuxy.airo.composables.SmallAppBarLegacy
-import com.tuxy.airo.data.flightdata.FlightDataDao
+import com.tuxy.airo.data.repository.FlightRepository
+import com.tuxy.airo.viewmodel.AddFlightState
 import com.tuxy.airo.viewmodel.DateViewModel
-import kotlinx.coroutines.DelicateCoroutinesApi
 
-data class ApiSettings(
-    val choice: String,
-    val adbEndpoint: String?,
-    val adbKey: String?,
-    val server: String?,
-)
-
-@OptIn(ExperimentalMaterial3Api::class, DelicateCoroutinesApi::class)
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DatePickerView(
     navController: NavController,
     flightNumber: String,
-    flightDataDao: FlightDataDao,
+    repository: FlightRepository,
 ) {
-    val context = LocalContext.current
-
     val datePickerState = rememberDatePickerState(initialDisplayMode = DisplayMode.Picker)
-    val viewModelFactory = DateViewModel.Factory(context)
-    val viewModel: DateViewModel = viewModel(factory = viewModelFactory)
-
-    val timeMillis = datePickerState.selectedDateMillis ?: 0
-
-    // Server settings
-    val settings = ApiSettings(
-        viewModel.preferencesInterface.getValue("selected_api"),
-        viewModel.preferencesInterface.getValue("endpoint_adb"),
-        viewModel.preferencesInterface.getValue("endpoint_adb_key"),
-        viewModel.preferencesInterface.getValue("endpoint_airoapi"),
+    val viewModel: DateViewModel = viewModel(
+        factory = DateViewModel.Factory(repository),
     )
+    val state by viewModel.state.collectAsStateWithLifecycle()
+
+    val selectedDateMillis = datePickerState.selectedDateMillis
+    val snackbarHostState = remember { SnackbarHostState() }
+
+    val duplicateMessage = stringResource(R.string.flight_exists)
+    val noFlightMessage = stringResource(R.string.no_flight)
+    val pickDateMessage = stringResource(R.string.pick_date_first)
+
+    LaunchedEffect(state) {
+        when (val current = state) {
+            AddFlightState.Success -> {
+                viewModel.resetState()
+                navController.popBackStack(
+                    route = Screen.MainFlightsScreen.route,
+                    inclusive = false,
+                )
+            }
+
+            AddFlightState.Duplicate -> {
+                snackbarHostState.showSnackbar(duplicateMessage)
+                viewModel.resetState()
+            }
+
+            AddFlightState.NoFlight -> {
+                snackbarHostState.showSnackbar(noFlightMessage)
+                viewModel.resetState()
+            }
+
+            is AddFlightState.Error -> {
+                snackbarHostState.showSnackbar(current.message.ifBlank { pickDateMessage })
+                viewModel.resetState()
+            }
+
+            AddFlightState.Idle,
+            AddFlightState.Loading -> Unit
+        }
+    }
 
     Scaffold(
         topBar = { SmallAppBarLegacy("", navController) },
+        snackbarHost = { SnackbarHost(snackbarHostState) },
         floatingActionButton = {
             ExtendedFloatingActionButton(
                 modifier = Modifier.testTag("add_flight"),
                 onClick = {
-                    viewModel.addFlight(
-                        navController,
-                        flightNumber,
-                        timeMillis,
-                        flightDataDao,
-                        settings
-                    )
-                    viewModel.loading = true
+                    viewModel.addFlight(flightNumber, selectedDateMillis)
                 },
                 icon = { Icon(Icons.Filled.Check, stringResource(R.string.empty)) },
                 text = { Text(stringResource(R.string.add_flight)) },
@@ -83,7 +104,7 @@ fun DatePickerView(
         Column(
             modifier = Modifier.padding(innerPadding)
         ) {
-            if (viewModel.loading) {
+            if (state is AddFlightState.Loading) {
                 LinearProgressIndicator(
                     modifier = Modifier.fillMaxWidth()
                 )

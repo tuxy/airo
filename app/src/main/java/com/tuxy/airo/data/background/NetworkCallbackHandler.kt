@@ -1,33 +1,24 @@
 package com.tuxy.airo.data.background
 
 import android.content.Context
-import android.content.Intent
 import android.net.ConnectivityManager
 import android.net.Network
 import android.net.NetworkCapabilities
 import android.util.Log
 
 /**
- * Network callback handler for detecting connectivity changes on N+.
+ * Enqueues a one-time refresh when connectivity becomes available.
  *
- * DOES NOT USE THE OLD BROADCAST: Uses the modern [ConnectivityManager.NetworkCallback] API
- * which doesn't require manifest declaration.
- *
- * @param context Application context for starting services
+ * It must not start a foreground service: `onAvailable` can run while the app
+ * is backgrounded, and Android 12+ forbids starting an FGS from the background.
+ * WorkManager handles the network constraint and process lifetime for us.
  */
 class NetworkCallbackHandler(private val context: Context) : ConnectivityManager.NetworkCallback() {
 
-    companion object {
-        private const val LOG_TAG = "NetworkCallbackHandler"
-    }
-
     override fun onAvailable(network: Network) {
         super.onAvailable(network)
-        Log.d(LOG_TAG, "Network available, starting FlightRefreshService")
-        val serviceIntent = Intent(context, FlightRefreshService::class.java).apply {
-            action = FlightRefreshService.ACTION_NETWORK_CHANGE
-        }
-        context.startForegroundService(serviceIntent)
+        Log.d(LOG_TAG, "Network available; enqueueing a one-time refresh")
+        FlightWorkScheduler.enqueueOneTime(context)
     }
 
     override fun onLost(network: Network) {
@@ -35,10 +26,17 @@ class NetworkCallbackHandler(private val context: Context) : ConnectivityManager
         Log.d(LOG_TAG, "Network lost")
     }
 
-    override fun onCapabilitiesChanged(network: Network, networkCapabilities: NetworkCapabilities) {
+    override fun onCapabilitiesChanged(
+        network: Network,
+        networkCapabilities: NetworkCapabilities,
+    ) {
         super.onCapabilitiesChanged(network, networkCapabilities)
         val hasInternet =
             networkCapabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
         Log.d(LOG_TAG, "Network capabilities changed, hasInternet: $hasInternet")
+    }
+
+    private companion object {
+        const val LOG_TAG = "NetworkCallbackHandler"
     }
 }

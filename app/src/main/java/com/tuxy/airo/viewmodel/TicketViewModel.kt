@@ -3,7 +3,6 @@ package com.tuxy.airo.viewmodel
 import android.Manifest
 import android.content.Context
 import android.content.pm.PackageManager
-import android.widget.Toast
 import androidx.activity.compose.ManagedActivityResultLauncher
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -15,141 +14,107 @@ import androidx.lifecycle.viewModelScope
 import com.journeyapps.barcodescanner.ScanIntentResult
 import com.journeyapps.barcodescanner.ScanOptions
 import com.tuxy.airo.R
-import com.tuxy.airo.data.database.PreferencesInterface
 import com.tuxy.airo.data.flightdata.FlightData
-import com.tuxy.airo.data.flightdata.FlightDataDao
 import com.tuxy.airo.data.flightdata.IataParserData
+import com.tuxy.airo.data.repository.FlightRepository
+import com.tuxy.airo.data.settings.AppPreferences
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
-/**
- * ViewModel for the ticket screen.
- *
- * This ViewModel is responsible for handling the ticket data, including parsing IATA barcode data,
- * handling camera permissions, and updating the database with the ticket information.
- *
- * @property preferencesInterface For accessing user preferences.
- * @property flightData The flight data for the current flight.
- * @property ticketData The parsed IATA ticket data.
- * @property ticketString The raw string from the ticket barcode.
- * @property toast The toast message to be displayed when camera permission is denied.
- * @property hasCameraPermission A mutable state to indicate if camera permission has been granted.
- * @property openDialog A mutable state to control the visibility of the delete confirmation dialog.
- * @param flightDataDao The DAO for accessing flight data.
- * @param id The ID of the flight.
- * @param context The application context.
- */
-@Suppress("UNCHECKED_CAST", "OPT_IN_USAGE")
 class TicketViewModel(
-    flightDataDao: FlightDataDao,
-    id: String,
-    context: Context,
+    private val repository: FlightRepository,
+    preferences: AppPreferences,
+    private val id: String,
+    private val context: Context,
 ) : ViewModel() {
-    val preferencesInterface = PreferencesInterface(context)
 
     var flightData = mutableStateOf(FlightData())
     var ticketData by mutableStateOf(IataParserData())
-    var ticketString by mutableStateOf(flightData.value.ticketData) // This is needed to monitor for changes
-    val toast = Toast.makeText(
-        context,
-        context.resources.getString(R.string.allow_camera_toast),
-        Toast.LENGTH_LONG
-    )!!
+    var ticketString by mutableStateOf("")
 
     var hasCameraPermission by mutableStateOf(
         ContextCompat.checkSelfPermission(
             context,
-            Manifest.permission.CAMERA
+            Manifest.permission.CAMERA,
         ) == PackageManager.PERMISSION_GRANTED
     )
 
     var openDialog = mutableStateOf(false)
 
-    private fun parseTicketData(context: Context) {
+    val timeFormat: StateFlow<String> = preferences.timeFormat
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), "hh:mm a")
+
+    init {
+        load()
+    }
+
+    private fun load() {
+        val numericId = id.toIntOrNull() ?: return
+        viewModelScope.launch(Dispatchers.IO) {
+            val data = repository.getFlight(numericId) ?: FlightData()
+            withContext(Dispatchers.Main) {
+                flightData.value = data
+                ticketString = data.ticketData
+                parseTicketData()
+            }
+        }
+    }
+
+    private fun parseTicketData() {
         ticketData = IataParserData().parseData(flightData.value.ticketData, context)
     }
 
-    /**
-     * Updates the ticket data in the database.
-     * @param flightDataDao The DAO for accessing flight data.
-     * @param context The application context.
-     */
-    fun updateData(flightDataDao: FlightDataDao, context: Context) {
-        flightData.value.ticketData = ticketString
-        parseTicketData(context)
-        val dataToSave = flightData.value
+    fun updateData() {
+        val updated = flightData.value.copy(ticketData = ticketString)
+        flightData.value = updated
+        parseTicketData()
         viewModelScope.launch(Dispatchers.IO) {
-            flightDataDao.updateFlight(dataToSave)
+            repository.updateTicket(updated)
         }
     }
 
-    /**
-     * Deletes the ticket data from the database.
-     * @param flightDataDao The DAO for accessing flight data.
-     * @param context The application context.
-     */
-    fun deleteData(flightDataDao: FlightDataDao, context: Context) {
+    fun deleteData() {
         ticketString = ""
-        flightData.value.ticketData = ""
-        parseTicketData(context)
-        val dataToSave = flightData.value
+        val updated = flightData.value.copy(ticketData = "")
+        flightData.value = updated
+        parseTicketData()
         viewModelScope.launch(Dispatchers.IO) {
-            flightDataDao.updateFlight(dataToSave)
+            repository.updateTicket(updated)
         }
     }
 
-    init {
-        viewModelScope.launch(Dispatchers.IO) {
-            val data = flightDataDao.readSingle(id.toInt()) ?: FlightData()
-            withContext(Dispatchers.Main) {
-                flightData.value = data
-            }
-            parseTicketData(context)
+    fun isDataPopulated(): Boolean = ticketString.isNotEmpty()
 
-            ticketString = flightData.value.ticketData
-        }
-    }
-
-    /**
-     * Checks if the ticket data is populated.
-     * @return True if ticket data exists, false otherwise.
-     */
-    fun isDataPopulated(): Boolean {
-        return ticketString != ""
-    }
-
-    /**
-     * Shows the camera for scanning a barcode.
-     * @param barCodeLauncher The activity result launcher for the barcode scanner.
-     * @param context The application context.
-     */
     fun showCamera(
         barCodeLauncher: ManagedActivityResultLauncher<ScanOptions, ScanIntentResult>,
-        context: Context
     ) {
         val options = ScanOptions()
-        options.setDesiredBarcodeFormats(
-            ScanOptions.ALL_CODE_TYPES
-        )
+        options.setDesiredBarcodeFormats(ScanOptions.ALL_CODE_TYPES)
         options.setPrompt(context.resources.getString(R.string.scan_promt))
         options.setCameraId(0)
         options.setBeepEnabled(false)
         options.setOrientationLocked(false)
-
         barCodeLauncher.launch(options)
     }
 
-    /**
-     * Factory for creating [TicketViewModel] instances.
-     */
     class Factory(
-        private val flightDataDao: FlightDataDao,
+        private val repository: FlightRepository,
+        private val preferences: AppPreferences,
         private val id: String,
-        private val context: Context
-    ) : ViewModelProvider.NewInstanceFactory() {
+        private val context: Context,
+    ) : ViewModelProvider.Factory {
+        @Suppress("UNCHECKED_CAST")
         override fun <T : ViewModel> create(modelClass: Class<T>): T {
-            return TicketViewModel(flightDataDao, id, context) as T
+            return TicketViewModel(
+                repository = repository,
+                preferences = preferences,
+                id = id,
+                context = context.applicationContext,
+            ) as T
         }
     }
 }

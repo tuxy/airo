@@ -6,69 +6,62 @@ import androidx.compose.runtime.Composable
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
-import com.tuxy.airo.data.flightdata.FlightDataDao
+import com.tuxy.airo.di.AppContainer
 import com.tuxy.airo.motion.materialSharedAxisXIn
 import com.tuxy.airo.motion.materialSharedAxisXOut
 import com.tuxy.airo.screens.DatePickerView
 import com.tuxy.airo.screens.FoldableFlightScreen
-import com.tuxy.airo.screens.NewFlightView
 import de.raphaelebner.roomdatabasebackup.core.RoomBackup
 
 private const val INITIAL_OFFSET_FACTOR = 0.10f
+private const val FLIGHT_NUMBER_ARG = "flight_number"
 
 @OptIn(ExperimentalMaterial3AdaptiveApi::class)
 @Composable
 fun SetupNavGraph(
-    // Transitions taken from Read You's repository
     navController: NavHostController,
-    flightDataDao: FlightDataDao,
+    container: AppContainer,
     backup: RoomBackup,
-    powerManager: PowerManager
+    powerManager: PowerManager,
 ) {
     NavHost(
         navController = navController,
         startDestination = Screen.MainFlightsScreen.route,
-        enterTransition = { materialSharedAxisXIn(initialOffsetX = { (it * INITIAL_OFFSET_FACTOR).toInt() }) },
-        exitTransition = { materialSharedAxisXOut(targetOffsetX = { -(it * INITIAL_OFFSET_FACTOR).toInt() }) },
-        popEnterTransition = { materialSharedAxisXIn(initialOffsetX = { -(it * INITIAL_OFFSET_FACTOR).toInt() }) },
-        popExitTransition = { materialSharedAxisXOut(targetOffsetX = { (it * INITIAL_OFFSET_FACTOR).toInt() }) },
+        enterTransition = {
+            materialSharedAxisXIn(initialOffsetX = { (it * INITIAL_OFFSET_FACTOR).toInt() })
+        },
+        exitTransition = {
+            materialSharedAxisXOut(targetOffsetX = { -(it * INITIAL_OFFSET_FACTOR).toInt() })
+        },
+        popEnterTransition = {
+            materialSharedAxisXIn(initialOffsetX = { -(it * INITIAL_OFFSET_FACTOR).toInt() })
+        },
+        popExitTransition = {
+            materialSharedAxisXOut(targetOffsetX = { (it * INITIAL_OFFSET_FACTOR).toInt() })
+        },
     ) {
         composable(route = Screen.MainFlightsScreen.route) {
             FoldableFlightScreen(
                 navController = navController,
-                flightDataDao = flightDataDao,
-                backup = backup,
-                powerManager = powerManager,
-            )
-        }
-        composable(route = Screen.SettingsScreen.route) {
-            FoldableFlightScreen(
-                navController = navController,
-                flightDataDao = flightDataDao,
+                container = container,
                 backup = backup,
                 powerManager = powerManager,
             )
         }
 
-        // Passing flight id into FlightDetails
-        composable(route = "${Screen.FlightDetailsScreen.route}/{id}") {
-            FoldableFlightScreen(
-                navController = navController,
-                flightDataDao = flightDataDao,
-                backup = backup,
-                powerManager = powerManager,
-            )
-        }
-
-        composable(route = Screen.NewFlightScreen.route) { NewFlightView(navController) }
-
-        // DatePickerView with flight_number passed into
-        composable(route = "${Screen.DatePickerScreen.route}/{flight_number}") { backStackEntry ->
-            DatePickerView(
-                navController,
-                backStackEntry.arguments?.getString("flight_number").toString(),
-                flightDataDao,
-            )
+        composable(route = "${Screen.DatePickerScreen.route}/{$FLIGHT_NUMBER_ARG}") { backStackEntry ->
+            val flightNumber = backStackEntry.arguments?.getString(FLIGHT_NUMBER_ARG)
+            if (flightNumber.isNullOrBlank()) {
+                // Malformed deep link: return to the list instead of querying the
+                // API for the literal string "null".
+                navController.popBackStack()
+            } else {
+                DatePickerView(
+                    navController = navController,
+                    flightNumber = flightNumber,
+                    repository = container.repository,
+                )
+            }
         }
     }
 }

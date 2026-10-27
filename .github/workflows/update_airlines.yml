@@ -2,12 +2,20 @@ name: Update AirlinesData.kt
 
 on:
   schedule:
-    - cron: '0 0 1 * *' 
+    - cron: '0 0 1 * *'
   workflow_dispatch:
+  pull_request:
+    paths:
+      - 'scripts/generate_airlines.py'
+      - 'app/src/main/java/com/tuxy/airo/data/AirlinesData.kt'
 
 concurrency:
   group: airline-data-update
   cancel-in-progress: true
+
+permissions:
+  contents: write
+  pull-requests: write
 
 jobs:
   generate:
@@ -47,5 +55,4 @@ jobs:
 
       - name: Display changes
         if: steps.check_changes.outputs.has_changes == 'true'
-        run: |
-          git diff --stat
+        run: git diff --stat

@@ -6,24 +6,31 @@ import android.content.Intent
 import android.util.Log
 
 /**
- * BroadcastReceiver that reschedules flight refresh alarms after device boot.
+ * Re-creates the reminder schedule after a reboot or an app update.
  *
- * When the device restarts, all scheduled alarms are cleared. This receiver
- * listens for [Intent.ACTION_BOOT_COMPLETED] and reschedules the periodic
- * flight refresh using [AlarmSchedulerHelper].
- *
- * @see AlarmSchedulerHelper for the scheduling logic
+ * The periodic refresh itself is owned by WorkManager and survives reboots, so
+ * this receiver only has to restore exact alarms (which the system clears) and
+ * enqueue a prompt refresh.
  */
 class BootReceiver : BroadcastReceiver() {
 
-    companion object {
-        private const val LOG_TAG = "BootReceiver"
+    override fun onReceive(context: Context, intent: Intent) {
+        val action = intent.action ?: return
+        if (action !in HANDLED_ACTIONS) return
+
+        Log.d(LOG_TAG, "Received $action; restoring reminders and enqueueing refresh")
+        FlightWorkScheduler.enqueueRescheduleReminders(context)
+        FlightWorkScheduler.enqueueOneTime(context, delaySeconds = BOOT_REFRESH_DELAY_SECONDS)
     }
 
-    override fun onReceive(context: Context, intent: Intent) {
-        if (intent.action == Intent.ACTION_BOOT_COMPLETED) {
-            Log.d(LOG_TAG, "Boot completed, rescheduling flight refresh alarms")
-            AlarmSchedulerHelper.schedulePeriodicRefresh(context)
-        }
+    private companion object {
+        const val LOG_TAG = "BootReceiver"
+        const val BOOT_REFRESH_DELAY_SECONDS = 60L
+        val HANDLED_ACTIONS = setOf(
+            Intent.ACTION_BOOT_COMPLETED,
+            Intent.ACTION_MY_PACKAGE_REPLACED,
+            Intent.ACTION_TIME_CHANGED,
+            Intent.ACTION_TIMEZONE_CHANGED,
+        )
     }
 }

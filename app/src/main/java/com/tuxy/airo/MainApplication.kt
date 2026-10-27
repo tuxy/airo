@@ -3,50 +3,75 @@ package com.tuxy.airo
 import android.app.Application
 import android.util.Log
 import androidx.work.Configuration
-import com.tuxy.airo.data.background.AlarmSchedulerHelper
+import com.tuxy.airo.data.background.FlightNotifications
+import com.tuxy.airo.data.background.FlightWorkScheduler
 import com.tuxy.airo.data.background.NetworkCallbackHandler
 import com.tuxy.airo.data.background.NetworkChangeReceiver
-import com.tuxy.airo.data.database.PreferencesInterface
-import kotlinx.coroutines.DelicateCoroutinesApi
+import com.tuxy.airo.data.settings.AppPreferences
+import com.tuxy.airo.di.AppContainer
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
 import java.time.Duration
-import java.time.ZonedDateTime
+import java.time.Instant
 
 /**
- * Main application class that initializes app-wide components.
+ * Owns the process-wide dependency container and the background schedule.
  *
- * Responsible for:
- * - Scheduling periodic flight refreshes using AlarmManager
- * - Performing immediate refresh on first launch
- * - Registering network change callbacks for real-time refresh triggers
- * - Cleaning up network callbacks on termination
- *
- * @see AlarmSchedulerHelper for periodic scheduling logic
- * @see NetworkCallbackHandler for network-based refresh triggers
+ * There is exactly one refresh pipeline now: WorkManager. The application
+ * observes the typed update interval and re-enqueues the unique periodic
+ * worker when it changes. Network changes only enqueue a unique one-time
+ * worker, so the app can never try to start a foreground service from the
+ * background (which crashes on Android 12+).
  */
 class MainApplication : Application(), Configuration.Provider {
 
+    lateinit var container: AppContainer
+        private set
+
+    private val applicationScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     private var networkCallbackHandler: NetworkCallbackHandler? = null
 
-    @OptIn(DelicateCoroutinesApi::class)
     override fun onCreate() {
         super.onCreate()
 
-        GlobalScope.launch(Dispatchers.IO) {
-            try {
-                setupStartupWork()
-            } catch (e: Exception) {
-                Log.e("MainApplication", "Startup work failed", e)
-            }
-            setupRecurringWork()
-            registerNetworkCallback()
+        container = AppContainer(this)
+        FlightNotifications.ensureChannels(this)
+
+        applicationScope.launch {
+            container.preferences.updateIntervalHours
+                .distinctUntilChanged()
+                .collect { hours ->
+                    FlightWorkScheduler.enqueuePeriodic(this@MainApplication, hours)
+                }
         }
 
-        Log.d("MainApplication", "Application created and initialized")
+        // Kick a refresh shortly after launch only when the data is stale. This
+        // runs in WorkManager, so it never competes with the first frame and
+        // never starts a foreground service from the background.
+        applicationScope.launch {
+            try {
+                val intervalHours =
+                    container.preferences.updateIntervalHours.first()
+                val last = container.repository.lastRefreshInstant()
+                val stale = last == null ||
+                    Duration.between(last, Instant.now()).toHours() >= intervalHours
+                if (stale) {
+                    FlightWorkScheduler.enqueueOneTime(
+                        this@MainApplication,
+                        delaySeconds = STARTUP_REFRESH_DELAY_SECONDS,
+                    )
+                }
+            } catch (e: Exception) {
+                Log.e(LOG_TAG, "Startup refresh check failed", e)
+            }
+        }
+
+        registerNetworkCallback()
     }
 
     override val workManagerConfiguration: Configuration
@@ -54,68 +79,12 @@ class MainApplication : Application(), Configuration.Provider {
             .setMinimumLoggingLevel(Log.INFO)
             .build()
 
-    /**
-     * Performs startup work when the application first launches.
-     *
-     * Tasks:
-     * 1. Cancels all existing flight alarms (clean slate)
-     * 2. Schedules an immediate refresh only if last refresh was > 12 hours ago
-     */
-    @OptIn(DelicateCoroutinesApi::class)
-    private suspend fun setupStartupWork() {
-        Log.d("MainApplication", "Running startup work")
-
-        val preferencesInterface = PreferencesInterface(applicationContext)
-        val lastRefreshString = preferencesInterface.getValueFlowString("last_refresh_time").first()
-        val intervalString = preferencesInterface.getValueFlowString("update_interval").first()
-        val intervalHours = intervalString.toLongOrNull() ?: 12
-
-        val shouldRefresh = lastRefreshString.isEmpty() ||
-                runCatching {
-                    val lastRefresh = ZonedDateTime.parse(lastRefreshString)
-                    val hoursSinceRefresh =
-                        Duration.between(lastRefresh, ZonedDateTime.now()).toHours()
-                    hoursSinceRefresh >= intervalHours
-                }.getOrDefault(true)
-
-        if (shouldRefresh) {
-            Log.d(
-                "MainApplication",
-                "Scheduling immediate refresh (last refresh was > ${intervalHours}h ago)"
-            )
-            AlarmSchedulerHelper.scheduleImmediateRefresh(applicationContext)
-        } else {
-            Log.d("MainApplication", "Skipping refresh (last refresh was < ${intervalHours}h ago)")
-        }
-
-        Log.d("MainApplication", "Startup work complete")
-    }
-
-    /**
-     * Sets up recurring flight refresh using AlarmManager.
-     *
-     * Reads the update interval from preferences and schedules a periodic
-     * alarm to trigger [com.tuxy.airo.data.background.FlightRefreshService] at regular intervals.
-     */
-    private suspend fun setupRecurringWork() {
-        Log.d("MainApplication", "Setting up recurring work with AlarmManager")
-
-        val preferencesInterface = PreferencesInterface(this)
-        val intervalString = preferencesInterface.getValueFlowString("update_interval").first()
-        val intervalHours = intervalString.toLongOrNull() ?: 12
-
-        AlarmSchedulerHelper.schedulePeriodicRefresh(applicationContext, intervalHours)
-
-        Log.d("MainApplication", "Recurring work scheduled with ${intervalHours}hour interval")
-    }
-
-    /**
-     * Registers network callback to trigger refreshes when network becomes available.
-     */
     private fun registerNetworkCallback() {
-        Log.d("MainApplication", "Registering network callback")
         networkCallbackHandler = NetworkCallbackHandler(applicationContext)
-        NetworkChangeReceiver.registerNetworkCallback(applicationContext, networkCallbackHandler!!)
+        NetworkChangeReceiver.registerNetworkCallback(
+            applicationContext,
+            networkCallbackHandler!!,
+        )
     }
 
     override fun onTerminate() {
@@ -123,6 +92,11 @@ class MainApplication : Application(), Configuration.Provider {
         networkCallbackHandler?.let {
             NetworkChangeReceiver.unregisterNetworkCallback(applicationContext, it)
         }
-        Log.d("MainApplication", "Application terminated")
+        applicationScope.cancel()
+    }
+
+    private companion object {
+        const val LOG_TAG = "MainApplication"
+        const val STARTUP_REFRESH_DELAY_SECONDS = 60L
     }
 }

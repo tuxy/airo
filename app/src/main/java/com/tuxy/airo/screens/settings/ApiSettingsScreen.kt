@@ -10,6 +10,8 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.adaptive.ExperimentalMaterial3AdaptiveApi
 import androidx.compose.material3.adaptive.navigation.ThreePaneScaffoldNavigator
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -21,8 +23,8 @@ import com.ireward.htmlcompose.HtmlText
 import com.jamal.composeprefs3.ui.PrefsScreen
 import com.tuxy.airo.R
 import com.tuxy.airo.composables.LargeAppBar
-import com.tuxy.airo.data.database.PreferencesInterface
-import com.tuxy.airo.dataStore
+import com.tuxy.airo.data.settings.AppPreferences
+import com.tuxy.airo.data.settings.dataStore
 import com.tuxy.airo.screens.settings.prefs.SingleSegmentedListPref
 import com.tuxy.airo.screens.settings.prefs.SliderPref
 import com.tuxy.airo.screens.settings.prefs.TextFieldPref
@@ -34,9 +36,10 @@ import com.tuxy.airo.screens.settings.prefs.TextFieldPref
 )
 @Composable
 fun ApiSettingsView(
-    paneNavigator: ThreePaneScaffoldNavigator<String>? = null
+    preferences: AppPreferences,
+    paneNavigator: ThreePaneScaffoldNavigator<String>? = null,
 ) {
-    val preferencesInterface = PreferencesInterface(LocalContext.current)
+    val selectedApi by preferences.selectedApi.collectAsStateWithLifecycle("0")
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),
@@ -45,7 +48,7 @@ fun ApiSettingsView(
         Column(
             modifier = Modifier.padding(innerPadding)
         ) {
-            val selectedIndex = preferencesInterface.getValueAsInt("selected_api")
+            val selectedIndex = selectedApi.toIntOrNull() ?: 0
 
             PrefsScreen(
                 dataStore = LocalContext.current.dataStore,

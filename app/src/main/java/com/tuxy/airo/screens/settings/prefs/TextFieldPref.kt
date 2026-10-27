@@ -1,6 +1,5 @@
 package com.tuxy.airo.screens.settings.prefs
 
-import android.annotation.SuppressLint
 import android.util.Log
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -8,8 +7,11 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
@@ -19,17 +21,17 @@ import androidx.datastore.preferences.core.stringPreferencesKey
 import com.jamal.composeprefs3.ui.LocalPrefsDataStore
 import kotlinx.coroutines.launch
 
-var currentValue by mutableStateOf("")
-
 /**
  * Composable function that displays a text field preference.
+ *
+ * Each instance manages its own local state, initialised from DataStore on first composition
+ * and flushed back on every change.
  *
  * @param key The key to use for storing the preference value in DataStore.
  * @param title The title to display for the preference.
  * @param modifier The modifier to apply to the text field.
  * @param enabled Whether the text field should be enabled or disabled.
  */
-@SuppressLint("UnrememberedMutableState")
 @Composable
 fun TextFieldPref(
     key: String,
@@ -41,6 +43,13 @@ fun TextFieldPref(
     val scope = rememberCoroutineScope()
 
     val datastore = LocalPrefsDataStore.current
+    val prefs by remember { datastore.data }.collectAsState(initial = null)
+
+    var value by remember { mutableStateOf("") }
+
+    LaunchedEffect(Unit) {
+        prefs?.get(selectionKey)?.also { value = it }
+    }
 
     fun edit(current: String) = run {
         scope.launch {
@@ -63,10 +72,10 @@ fun TextFieldPref(
             .fillMaxWidth(),
         shape = RoundedCornerShape(15.dp),
         enabled = enabled,
-        value = currentValue,
+        value = value,
         label = { Text(title) },
         onValueChange = {
-            currentValue = it
+            value = it
             edit(it)
         },
         singleLine = true,

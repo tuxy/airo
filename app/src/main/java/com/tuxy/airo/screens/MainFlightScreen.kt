@@ -17,16 +17,16 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.PagerState
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.FlightTakeoff
 import androidx.compose.material.icons.filled.Settings
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.material3.Card
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -45,7 +45,6 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.TopAppBarScrollBehavior
 import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -70,21 +69,18 @@ import com.tuxy.airo.R
 import com.tuxy.airo.composables.BoldDepartureAndDestinationText
 import com.tuxy.airo.composables.LargeTopSmallBottom
 import com.tuxy.airo.data.flightdata.FlightData
-import com.tuxy.airo.data.flightdata.FlightDataDao
 import com.tuxy.airo.viewmodel.MainFlightViewModel
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import java.time.Duration
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
-import kotlin.math.absoluteValue
 import kotlin.time.toKotlinDuration
 
 @OptIn(ExperimentalFoundationApi::class, ExperimentalMaterial3Api::class)
 @Composable
 fun MainFlightView(
     navController: NavController,
-    flightDataDao: FlightDataDao,
     viewModel: MainFlightViewModel,
     pagerState: PagerState,
     onFlightClick: (String) -> Unit,
@@ -93,6 +89,7 @@ fun MainFlightView(
     val selectedTabIndex = remember { derivedStateOf { pagerState.currentPage } }
     val scope = rememberCoroutineScope()
     var isSearchActive by remember { mutableStateOf(false) }
+    val recentFlights by viewModel.recentFlights.collectAsStateWithLifecycle()
 
     val scrollBehavior =
         TopAppBarDefaults.exitUntilCollapsedScrollBehavior(rememberTopAppBarState())
@@ -129,7 +126,7 @@ fun MainFlightView(
                     )
                 },
             ) { innerPadding ->
-                val flightData by viewModel.flightData.collectAsState()
+                val flightData by viewModel.flightData.collectAsStateWithLifecycle()
 
                 Column(
                     modifier = Modifier
@@ -169,6 +166,7 @@ fun MainFlightView(
         ) {
             FlightSearch(
                 navController = navController,
+                recentFlights = recentFlights,
                 onClose = { isSearchActive = false }
             )
         }
@@ -228,69 +226,52 @@ fun FlightsList(
     modifier: Modifier = Modifier,
     onFlightClick: (String) -> Unit
 ) {
-    val upcomingList by viewModel.flightsUpcomingList.collectAsState()
-    val pastList by viewModel.flightsPastList.collectAsState()
+    val upcomingList by viewModel.flightsUpcomingList.collectAsStateWithLifecycle()
+    val pastList by viewModel.flightsPastList.collectAsStateWithLifecycle()
+    val timeFormat by viewModel.timeFormat.collectAsStateWithLifecycle()
 
     HorizontalPager(
         state = pagerState,
         modifier = modifier
     ) { page ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .verticalScroll(rememberScrollState())
-        ) {
-            Spacer(Modifier.height(16.dp))
-            when (page) {
-                0 -> {
-                    if (upcomingList.isEmpty()) {
-                        NoFlight(Modifier
-                            .fillMaxSize()
-                            .padding(128.dp))
+        val groups = if (page == 0) upcomingList else pastList
+        if (groups.isEmpty()) {
+            NoFlight(
+                Modifier
+                    .fillMaxSize()
+                    .padding(128.dp)
+            )
+        } else {
+            LazyColumn(
+                modifier = Modifier.fillMaxSize()
+            ) {
+                item { Spacer(Modifier.height(16.dp)) }
+                groups.forEach { flights ->
+                    val first = flights.first()
+                    item(key = "header-${first.id}") {
+                        DateHeader(first.effectiveDepartDate, flights.size)
+                    }
+                    if (flights.size == 1) {
+                        item(key = "flight-${first.id}") {
+                            FlightCard(
+                                flightData = first,
+                                timeFormat = timeFormat,
+                                onFlightClick = onFlightClick,
+                                modifier = Modifier.padding(vertical = 8.dp, horizontal = 16.dp)
+                            )
+                        }
                     } else {
-                        upcomingList.forEach { flights ->
-                            val depTime =
-                                flights[0].revisedDepartDate ?: flights[0].scheduledDepartDate
-                            DateHeader(depTime, flights.size)
-                            if (flights.size == 1) {
-                                FlightCard(
-                                    flights[0],
-                                    viewModel,
-                                    onFlightClick,
-                                    Modifier.padding(vertical = 8.dp, horizontal = 16.dp)
-                                )
-                            } else {
-                                FlightGroupCard(flights, viewModel, onFlightClick)
-                            }
+                        item(key = "group-${first.id}") {
+                            FlightGroupCard(
+                                flights = flights,
+                                timeFormat = timeFormat,
+                                onFlightClick = onFlightClick
+                            )
                         }
                     }
                 }
-
-                1 -> {
-                    if (pastList.isEmpty()) {
-                        NoFlight(Modifier
-                            .fillMaxSize()
-                            .padding(128.dp))
-                    } else {
-                        pastList.forEach { flights ->
-                            val depTime =
-                                flights[0].revisedDepartDate ?: flights[0].scheduledDepartDate
-                            DateHeader(depTime, flights.size)
-                            if (flights.size == 1) {
-                                FlightCard(
-                                    flights[0],
-                                    viewModel,
-                                    onFlightClick,
-                                    Modifier.padding(vertical = 8.dp, horizontal = 16.dp)
-                                )
-                            } else {
-                                FlightGroupCard(flights, viewModel, onFlightClick)
-                            }
-                        }
-                    }
-                }
+                item { Spacer(Modifier.height(56.dp)) }
             }
-            Spacer(Modifier.height(56.dp))
         }
     }
 }
@@ -329,11 +310,10 @@ fun NoFlight(
 @Composable
 fun FlightCard(
     flightData: FlightData,
-    viewModel: MainFlightViewModel,
+    timeFormat: String,
     onFlightClick: (String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val timeFormat = viewModel.preferencesInterface.getValueTimeFormatComposable("24_time")
 
     Column(
         modifier = modifier
@@ -382,18 +362,15 @@ fun FlightCard(
                 LinearProgressIndicator(
                     progress = {
                         val now = ZonedDateTime.now()
-                        val departTime =
-                            flightData.revisedDepartDate ?: flightData.scheduledDepartDate
+                        val departTime = flightData.effectiveDepartDate
 
                         if (now < departTime) {
                             0.0F
                         } else {
-                            val timeFromStart = Duration.between(now, departTime).toMillis()
-
-                            val duration = flightData.duration.toMillis()
-
-                            val current = timeFromStart.toFloat() / duration.toFloat()
-                            current.absoluteValue
+                            val timeFromStart = Duration.between(departTime, now).toMillis()
+                            val duration = flightData.effectiveDuration.toMillis()
+                            if (duration <= 0) 0.0F
+                            else (timeFromStart.toFloat() / duration.toFloat()).coerceIn(0.0F, 1.0F)
                         }
                     },
                     modifier = Modifier
@@ -501,15 +478,15 @@ fun TransferChip(
 }
 
 fun calculateLayover(currentFlight: FlightData, nextFlight: FlightData): Duration {
-    val arrivalTime = currentFlight.revisedArriveDate ?: currentFlight.scheduledArriveDate
-    val departureTime = nextFlight.revisedDepartDate ?: nextFlight.scheduledDepartDate
+    val arrivalTime = currentFlight.effectiveArriveDate
+    val departureTime = nextFlight.effectiveDepartDate
     return Duration.between(arrivalTime, departureTime)
 }
 
 @Composable
 fun FlightGroupCard(
     flights: List<FlightData>,
-    viewModel: MainFlightViewModel,
+    timeFormat: String,
     onFlightClick: (String) -> Unit,
 ) {
     Column(
@@ -526,7 +503,7 @@ fun FlightGroupCard(
                 flights.forEachIndexed { index, flight ->
                     FlightCard(
                         flight,
-                        viewModel,
+                        timeFormat,
                         onFlightClick,
                         modifier = Modifier.padding(4.dp)
                     )

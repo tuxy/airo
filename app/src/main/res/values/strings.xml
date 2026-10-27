@@ -110,4 +110,6 @@
     <string name="select_flight">Select a flight to view details</string>
     <string name="refresh_network_error">Network error. Please check your connection.</string>
     <string name="refresh_no_data">No flight data available</string>
+    <string name="pick_date_first">Pick a date first</string>
+    <string name="flight_updates_summary">%1$d flights changed</string>
 </resources>

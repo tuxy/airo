@@ -107,4 +107,6 @@
     <string name="flight_refresh_complete_desc">Đã cập nhật %1$d chuyến bay</string>
     <string name="refresh_network_error">Lỗi mạng. Vui lòng kiểm tra kết nối.</string>
     <string name="refresh_no_data">Không có dữ liệu chuyến bay</string>
+    <string name="pick_date_first">Vui lòng chọn ngày trước</string>
+    <string name="flight_updates_summary">%1$d chuyến bay đã thay đổi</string>
 </resources>

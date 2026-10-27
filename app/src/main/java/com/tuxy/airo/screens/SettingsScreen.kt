@@ -30,9 +30,17 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.adaptive.ExperimentalMaterial3AdaptiveApi
 import androidx.compose.material3.adaptive.navigation.ThreePaneScaffoldNavigator
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.staticCompositionLocalOf
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
@@ -42,64 +50,82 @@ import androidx.core.net.toUri
 import com.jamal.composeprefs3.ui.LocalPrefsDataStore
 import com.tuxy.airo.R
 import com.tuxy.airo.composables.LargeAppBar
-import com.tuxy.airo.data.database.PreferencesInterface
-import com.tuxy.airo.dataStore
+import com.tuxy.airo.data.settings.AppPreferences
+import com.tuxy.airo.data.settings.dataStore
 import com.tuxy.airo.screens.settings.SettingSub
 import com.tuxy.airo.screens.settings.prefs.ButtonPref
-import kotlinx.coroutines.launch
 
 @SuppressLint("BatteryLife")
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3AdaptiveApi::class)
 @Composable
 fun SettingsView(
     powerManager: PowerManager,
+    preferences: AppPreferences,
     paneNavigator: ThreePaneScaffoldNavigator<String>? = null,
     onNavigateToSubSetting: ((SettingsSubPaneTypes) -> Unit)? = null,
 ) {
     val context = LocalContext.current
-    val activity = LocalActivity.current as Activity
-    val preferencesInterface = PreferencesInterface(context)
-    LocalPrefsDataStore = staticCompositionLocalOf { context.dataStore }
+    val activity = LocalActivity.current
 
     val webpageString = stringResource(R.string.source_code)
-    val isIgnoringBatteryOptimizations =
-        powerManager.isIgnoringBatteryOptimizations(context.packageName)
 
-    val ignored = preferencesInterface.getValueBool("is_ignoring_optimisation")
+    // Re-read the exemption when the app resumes. The system dialog runs in
+    // another activity, so without this the card stayed visible until the user
+    // left and re-entered Settings.
+    var isIgnoringBatteryOptimizations by remember {
+        mutableStateOf(powerManager.isIgnoringBatteryOptimizations(context.packageName))
+    }
+    val lifecycleOwner = LocalLifecycleOwner.current
+    DisposableEffect(lifecycleOwner) {
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_RESUME) {
+                isIgnoringBatteryOptimizations =
+                    powerManager.isIgnoringBatteryOptimizations(context.packageName)
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose {
+            lifecycleOwner.lifecycle.removeObserver(observer)
+        }
+    }
+
+    val ignored by preferences.batteryPromptDismissed.collectAsStateWithLifecycle(false)
 
     val intent = Intent()
     intent.setAction(android.provider.Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS)
     intent.setData(("package:" + context.packageName).toUri())
 
-    Scaffold(
-        modifier = Modifier.fillMaxSize(),
-        topBar = {
-            if (paneNavigator != null) {
-                LargeAppBar(stringResource(R.string.settings), paneNavigator)
-            }
-        },
-    ) { innerPadding ->
-        Column(
-            modifier = Modifier.padding(innerPadding)
-        ) {
-            key(ignored, isIgnoringBatteryOptimizations) {
-                if (!(isIgnoringBatteryOptimizations || ignored)) {
-                    PowerMessage(
-                        activity = activity,
-                        intent = intent,
-                        paneNavigator = paneNavigator
-                    )
+    // Provide the preference DataStore through the library's composition local
+    // instead of reassigning the (globally lateinit) local on every recomposition.
+    CompositionLocalProvider(LocalPrefsDataStore provides context.dataStore) {
+        Scaffold(
+            modifier = Modifier.fillMaxSize(),
+            topBar = {
+                if (paneNavigator != null) {
+                    LargeAppBar(stringResource(R.string.settings), paneNavigator)
                 }
-            }
-            SettingSub(
-                name = stringResource(R.string.api_settings),
-                icon = Icons.Outlined.Link,
-                description = stringResource(R.string.api_settings_desc),
-                location = "",
-                onClick = if (onNavigateToSubSetting != null) {
-                    { onNavigateToSubSetting(SettingsSubPaneTypes.Api) }
-                } else null
-            )
+            },
+        ) { innerPadding ->
+            Column(
+                modifier = Modifier.padding(innerPadding)
+            ) {
+                key(ignored, isIgnoringBatteryOptimizations) {
+                    if (!(isIgnoringBatteryOptimizations || ignored)) {
+                        PowerMessage(
+                            activity = activity,
+                            intent = intent,
+                        )
+                    }
+                }
+                SettingSub(
+                    name = stringResource(R.string.api_settings),
+                    icon = Icons.Outlined.Link,
+                    description = stringResource(R.string.api_settings_desc),
+                    location = "",
+                    onClick = if (onNavigateToSubSetting != null) {
+                        { onNavigateToSubSetting(SettingsSubPaneTypes.Api) }
+                    } else null
+                )
 //            SettingSub( // Currently unused & not ready
 //                name = stringResource(R.string.notifications),
 //                icon = Icons.Outlined.Notifications,
@@ -114,28 +140,29 @@ fun SettingsView(
 //                location = "",
 //                onClick = if (onNavigateToSubSetting != null) {{ onNavigateToSubSetting("locale") }} else null
 //            )
-            SettingSub(
-                name = stringResource(R.string.backup_and_restore),
-                icon = Icons.Outlined.Save,
-                description = stringResource(R.string.backup_and_restore_desc),
-                location = "",
-                onClick = if (onNavigateToSubSetting != null) {
-                    { onNavigateToSubSetting(SettingsSubPaneTypes.Backup) }
-                } else null
-            )
-            ListItem(
-                modifier = Modifier.clickable(onClick = {
-                    openWebpage(context, webpageString)
-                }),
-                headlineContent = { Text(stringResource(R.string.about)) },
-                supportingContent = { Text(stringResource(R.string.source_and_license)) },
-                leadingContent = {
-                    Icon(
-                        imageVector = Icons.Outlined.Info,
-                        contentDescription = stringResource(R.string.about)
-                    )
-                }
-            )
+                SettingSub(
+                    name = stringResource(R.string.backup_and_restore),
+                    icon = Icons.Outlined.Save,
+                    description = stringResource(R.string.backup_and_restore_desc),
+                    location = "",
+                    onClick = if (onNavigateToSubSetting != null) {
+                        { onNavigateToSubSetting(SettingsSubPaneTypes.Backup) }
+                    } else null
+                )
+                ListItem(
+                    modifier = Modifier.clickable(onClick = {
+                        openWebpage(context, webpageString)
+                    }),
+                    headlineContent = { Text(stringResource(R.string.about)) },
+                    supportingContent = { Text(stringResource(R.string.source_and_license)) },
+                    leadingContent = {
+                        Icon(
+                            imageVector = Icons.Outlined.Info,
+                            contentDescription = stringResource(R.string.about)
+                        )
+                    }
+                )
+            }
         }
     }
 }
@@ -144,12 +171,9 @@ fun SettingsView(
 @OptIn(ExperimentalMaterial3AdaptiveApi::class)
 @Composable
 fun PowerMessage(
-    activity: Activity,
+    activity: Activity?,
     intent: Intent,
-    paneNavigator: ThreePaneScaffoldNavigator<String>? = null
 ) {
-    val scope = rememberCoroutineScope()
-
     ElevatedCard(
         modifier = Modifier
             .fillMaxWidth()
@@ -181,10 +205,10 @@ fun PowerMessage(
                 modifier = Modifier.padding(end = 8.dp)
             )
             Button(onClick = {
-                activity.startActivity(intent)
-                paneNavigator?.let {
-                    scope.launch { it.navigateBack() }
-                }
+                // Do not pop the settings pane here. The system settings screen
+                // is a separate task; popping the pane behind it used to leave
+                // the app in a state where Back had no destination.
+                activity?.startActivity(intent)
             }) {
                 Text(stringResource(R.string.allow))
             }

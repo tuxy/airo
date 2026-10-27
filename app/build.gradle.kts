@@ -14,25 +14,45 @@ android {
         minSdk = 26
         //noinspection EditedTargetSdkVersion,OldTargetApi
         targetSdk = 35
-        versionCode = 1
-        versionName = "1.0"
+        versionCode = providers.gradleProperty("versionCode").orNull?.toIntOrNull() ?: 1
+        versionName = providers.gradleProperty("versionName").orNull ?: "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
+    signingConfigs {
+        create("release") {
+            val storePath = providers.environmentVariable("RELEASE_STORE_FILE").orNull
+            if (!storePath.isNullOrBlank()) {
+                storeFile = rootProject.file(storePath)
+                storePassword = providers.environmentVariable("RELEASE_STORE_PASSWORD").orNull
+                keyAlias = providers.environmentVariable("RELEASE_KEY_ALIAS").orNull
+                keyPassword = providers.environmentVariable("RELEASE_KEY_PASSWORD").orNull
+            }
+        }
+    }
+
     buildTypes {
         release {
-            isMinifyEnabled = false
+            isMinifyEnabled = true
+            isShrinkResources = true
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
-            signingConfig = signingConfigs.getByName("debug")
+            // Local builds fall back to the debug key; CI must provide the
+            // release keystore through the RELEASE_* environment variables.
+            signingConfig = signingConfigs.findByName("release")
+                ?.takeIf { it.storeFile != null }
+                ?: signingConfigs.getByName("debug")
+            ndk {
+                abiFilters += listOf("arm64-v8a", "armeabi-v7a")
+            }
         }
     }
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_11
-        targetCompatibility = JavaVersion.VERSION_11
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
     }
     buildFeatures {
         compose = true
@@ -42,6 +62,9 @@ android {
         unitTests.all {
             it.jvmArgs("-XX:+EnableDynamicAgentLoading")
         }
+    }
+    ksp {
+        arg("room.schemaLocation", "$projectDir/schemas")
     }
     sourceSets {
         getByName("main") {
@@ -63,12 +86,13 @@ openApiGenerate {
     globalProperties.put("apiDocs", "false")
 }
 
+// Ensure generated OpenAPI models are available to KSP / Kotlin compilation
+tasks.matching { it.name.startsWith("ksp") }.configureEach {
+    dependsOn("openApiGenerate")
+}
+
 dependencies {
     implementation(libs.androidx.navigation.compose)
-    implementation(libs.androidx.navigation.fragment)
-    implementation(libs.androidx.navigation.ui)
-    implementation(libs.androidx.navigation.dynamic.features.fragment)
-    implementation(libs.kotlinx.serialization.json)
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.activity.compose)
     implementation(platform(libs.androidx.compose.bom))
@@ -80,6 +104,8 @@ dependencies {
     implementation(libs.coil.network.okhttp)
     implementation(libs.kotlinx.datetime)
     implementation(libs.androidx.activity.ktx)
+    implementation(libs.androidx.lifecycle.runtime.compose)
+    implementation(libs.androidx.lifecycle.runtime.ktx)
 
     implementation(libs.androidx.compose.adaptive)
     implementation(libs.androidx.compose.adaptive.layout)
@@ -87,7 +113,6 @@ dependencies {
 
     // more icons
     implementation(libs.androidx.material.icons.extended)
-    implementation(libs.androidx.monitor)
 
     // room
     ksp(libs.androidx.room.compiler)
@@ -95,15 +120,12 @@ dependencies {
     implementation(libs.androidx.room.ktx)
 
     // klaxon
-    implementation(libs.klaxon)
     implementation(libs.moshi.kotlin)
 
     // datastore
     implementation(libs.androidx.datastore.preferences)
 
     // map-compose & other map utils
-    implementation(libs.mapcompose)
-    implementation(libs.androidx.graphics.shapes)
     implementation(libs.maplibre.android.sdk)
 
     // browser
@@ -111,10 +133,6 @@ dependencies {
     implementation(libs.compose.html)
 
     // camera & qr
-    implementation(libs.androidx.camera.view)
-    implementation(libs.androidx.camera.camera2)
-    implementation(libs.androidx.camera.lifecycle)
-    implementation(libs.androidx.camera.extensions)
     implementation(libs.zxing.android.embedded)
     implementation(libs.composed.barcodes)
     implementation(libs.core)

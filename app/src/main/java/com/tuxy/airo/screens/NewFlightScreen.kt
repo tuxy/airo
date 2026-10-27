@@ -34,7 +34,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.traversalIndex
@@ -44,7 +43,6 @@ import androidx.navigation.NavController
 import com.tuxy.airo.R
 import com.tuxy.airo.Screen
 import com.tuxy.airo.composables.SmallAppBarLegacy
-import com.tuxy.airo.data.database.PreferencesInterface
 import com.tuxy.airo.viewmodel.NewFlightViewModel
 import com.tuxy.airo.viewmodel.SearchSuggestion
 
@@ -75,6 +73,7 @@ fun NewFlightView(navController: NavController) {
 @Composable
 fun FlightSearch(
     navController: NavController,
+    recentFlights: List<String> = emptyList(),
     onClose: () -> Unit = {},
 ) {
     val focusRequester = remember { FocusRequester() }
@@ -84,8 +83,7 @@ fun FlightSearch(
     val viewModel = viewModel<NewFlightViewModel>()
     val suggestions = remember(query, selectedAirline) { viewModel.getSuggestions(query, selectedAirline) }
 
-    val preferencesInterface = PreferencesInterface(LocalContext.current)
-    val history = preferencesInterface.getRecentFlights()
+    val history = recentFlights
 
     LaunchedEffect(Unit) {
         focusRequester.requestFocus()
