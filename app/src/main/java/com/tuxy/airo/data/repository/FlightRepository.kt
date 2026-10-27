@@ -295,7 +295,10 @@ class FlightRepository(
     private fun String.humanize(): String = replace(Regex("([a-z])([A-Z])"), "$1 $2")
 
     companion object {
-        private const val MAX_PARALLEL_REQUESTS = 4
+        // AeroDataBox's BASIC plan is limited to roughly one request per
+        // second. Keep refreshes sequential so a handful of tracked flights
+        // does not trip the limiter; WorkManager absorbs the extra duration.
+        private const val MAX_PARALLEL_REQUESTS = 1
         private const val REFRESH_HORIZON_DAYS = 7L
         private val TIME_FORMAT: DateTimeFormatter = DateTimeFormatter.ofPattern("HH:mm")
     }

@@ -98,7 +98,7 @@ class FlightApiTest {
             .getFlight("UA-1", LocalDate.of(2026, 1, 1))
 
         val request = server.takeRequest()
-        assertEquals("/api/flights/number/UA1/2026-01-01", request.requestUrl?.encodedPath)
-        assertEquals("departure", request.requestUrl?.queryParameter("dateLocalRole"))
+        assertEquals("/api/flights/Number/UA1/2026-01-01", request.requestUrl?.encodedPath)
+        assertEquals("Departure", request.requestUrl?.queryParameter("dateLocalRole"))
     }
 }

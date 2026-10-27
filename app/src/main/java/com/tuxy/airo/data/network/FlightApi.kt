@@ -16,6 +16,7 @@ import okio.IOException
 import org.openapitools.client.models.ErrorContract
 import org.openapitools.client.models.FlightContract
 import org.openapitools.client.models.FlightDirection
+import org.openapitools.client.models.FlightSearchByEnum
 import java.time.LocalDate
 import java.util.concurrent.TimeUnit
 import kotlin.math.min
@@ -70,10 +71,12 @@ class FlightApi(
         val url = config.baseUrl.toHttpUrlOrNull()
             ?.newBuilder()
             ?.addPathSegment("flights")
-            ?.addPathSegment("number")
+            // These path segments are case-sensitive on the server: "Number"
+            // (not "number") is what AeroDataBox/AiroAPI routes on.
+            ?.addPathSegment(FlightSearchByEnum.Number.value)
             ?.addPathSegment(formatFlightNumber(flightNumber))
             ?.addPathSegment(date.toString())
-            ?.addQueryParameter("dateLocalRole", FlightDirection.Departure.name.lowercase())
+            ?.addQueryParameter("dateLocalRole", FlightDirection.Departure.value)
             ?.addQueryParameter("withAircraftImage", withAircraftImage.toString())
             ?.addQueryParameter("withLocation", withLocation.toString())
             // withFlightPlan can be billed as two requests and the app does not
@@ -190,8 +193,8 @@ class FlightApi(
     companion object {
         private const val TAG = "FlightApi"
         private const val MAX_ATTEMPTS = 3
-        private const val BASE_BACKOFF_MILLIS = 400L
-        private const val MAX_BACKOFF_MILLIS = 4_000L
+        private const val BASE_BACKOFF_MILLIS = 1_000L
+        private const val MAX_BACKOFF_MILLIS = 8_000L
         private const val USER_AGENT = "Airo/1.0 (+https://github.com/tuxy/airo)"
 
         val defaultMoshi: Moshi = Moshi.Builder()
