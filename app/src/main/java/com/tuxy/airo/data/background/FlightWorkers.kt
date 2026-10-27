@@ -106,18 +106,8 @@ class FlightRefreshWorker(
 
         return try {
             val summary = container.repository.refreshAll()
-            FlightNotifications.notifyRefresh(
-                applicationContext,
-                updated = summary.updated,
-                failed = summary.failed,
-            )
-            summary.changes.forEach { change ->
-                FlightNotifications.notifyChange(
-                    applicationContext,
-                    flightId = change.flightId,
-                    title = change.title,
-                    content = change.message,
-                )
+            if (summary.changes.isNotEmpty()) {
+                FlightNotifications.notifyChanges(applicationContext, summary.changes)
             }
             if (summary.failed > 0 && summary.updated == 0) {
                 Result.retry()

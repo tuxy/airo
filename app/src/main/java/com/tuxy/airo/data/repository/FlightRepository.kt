@@ -2,6 +2,7 @@ package com.tuxy.airo.data.repository
 
 import androidx.room.withTransaction
 import com.tuxy.airo.data.background.ReminderScheduler
+import com.tuxy.airo.data.flightdata.FlightChange
 import com.tuxy.airo.data.flightdata.FlightData
 import com.tuxy.airo.data.flightdata.FlightDataBase
 import com.tuxy.airo.data.flightdata.FlightDataDao
@@ -39,14 +40,6 @@ sealed interface RefreshFlightResult {
     data object NoData : RefreshFlightResult
     data class Failed(val message: String) : RefreshFlightResult
 }
-
-/** A user-relevant change detected during a refresh. */
-data class FlightChange(
-    val flightId: Int,
-    val callSign: String,
-    val title: String,
-    val message: String,
-)
 
 data class RefreshSummary(
     val total: Int = 0,
@@ -249,44 +242,84 @@ class FlightRepository(
         }
     }
 
-    private fun detectChange(old: FlightData, new: FlightData): FlightChange? {
+    internal fun detectChange(old: FlightData, new: FlightData): FlightChange? {
         // Do not notify on the first successful fetch after adding a flight.
         if (old.lastUpdatedUtc == null && !old.hasKnownStatus) return null
         if (old.lastUpdatedUtc != null && old.lastUpdatedUtc == new.lastUpdatedUtc) return null
 
-        val messages = mutableListOf<String>()
+        val changes = mutableListOf<String>()
 
         if (new.hasKnownStatus && old.status != new.status) {
-            messages += "Status: ${new.status.humanize()}"
-        }
-        if (new.gate.isUseful() && old.gate.isUseful() && old.gate != new.gate) {
-            messages += "Gate ${old.gate} → ${new.gate}"
-        }
-        if (new.terminal.isUseful() && old.terminal.isUseful() &&
-            old.terminal != new.terminal
-        ) {
-            messages += "Terminal ${old.terminal} → ${new.terminal}"
-        }
-        val oldDepart = old.effectiveDepartDate
-        val newDepart = new.effectiveDepartDate
-        if (Duration.between(oldDepart, newDepart).abs() >= Duration.ofMinutes(5)) {
-            messages += "Departure ${oldDepart.format(TIME_FORMAT)} → " +
-                newDepart.format(TIME_FORMAT)
-        }
-        val oldArrive = old.effectiveArriveDate
-        val newArrive = new.effectiveArriveDate
-        if (Duration.between(oldArrive, newArrive).abs() >= Duration.ofMinutes(10)) {
-            messages += "Arrival ${oldArrive.format(TIME_FORMAT)} → " +
-                newArrive.format(TIME_FORMAT)
+            changes += if (old.hasKnownStatus) {
+                "status from ${old.status.humanize()} to ${new.status.humanize()}"
+            } else {
+                "status to ${new.status.humanize()}"
+            }
         }
 
-        if (messages.isEmpty()) return null
+        describeValueChange(
+            label = "gate",
+            oldValue = old.gate,
+            newValue = new.gate,
+        )?.let(changes::add)
+        describeValueChange(
+            label = "terminal",
+            oldValue = old.terminal,
+            newValue = new.terminal,
+        )?.let(changes::add)
+        describeValueChange(
+            label = "baggage claim",
+            oldValue = old.toBaggageClaim,
+            newValue = new.toBaggageClaim,
+        )?.let(changes::add)
+
+        describeTimeChange(
+            label = "departure",
+            oldTime = old.effectiveDepartDate,
+            newTime = new.effectiveDepartDate,
+            threshold = Duration.ofMinutes(5),
+        )?.let(changes::add)
+
+        describeTimeChange(
+            label = "arrival",
+            oldTime = old.effectiveArriveDate,
+            newTime = new.effectiveArriveDate,
+            threshold = Duration.ofMinutes(10),
+        )?.let(changes::add)
+
+        if (changes.isEmpty()) return null
         return FlightChange(
             flightId = new.id,
             callSign = new.callSign,
-            title = "${new.callSign} update",
-            message = messages.joinToString(" · "),
+            changes = changes,
         )
+    }
+
+    private fun describeValueChange(
+        label: String,
+        oldValue: String,
+        newValue: String,
+    ): String? {
+        if (!newValue.isUseful() || oldValue == newValue) return null
+        return if (oldValue.isUseful()) {
+            "$label from $oldValue to $newValue"
+        } else {
+            "$label to $newValue"
+        }
+    }
+
+    private fun describeTimeChange(
+        label: String,
+        oldTime: ZonedDateTime,
+        newTime: ZonedDateTime,
+        threshold: Duration,
+    ): String? {
+        if (Duration.between(oldTime, newTime).abs() < threshold) return null
+        return if (oldTime.toLocalDate() != newTime.toLocalDate()) {
+            "$label date from ${DATE_FORMAT.format(oldTime)} to ${DATE_FORMAT.format(newTime)}"
+        } else {
+            "$label time from ${TIME_FORMAT.format(oldTime)} to ${TIME_FORMAT.format(newTime)}"
+        }
     }
 
     private fun String.isUseful(): Boolean =
@@ -301,5 +334,6 @@ class FlightRepository(
         private const val MAX_PARALLEL_REQUESTS = 1
         private const val REFRESH_HORIZON_DAYS = 7L
         private val TIME_FORMAT: DateTimeFormatter = DateTimeFormatter.ofPattern("HH:mm")
+        private val DATE_FORMAT: DateTimeFormatter = DateTimeFormatter.ofPattern("d MMM")
     }
 }

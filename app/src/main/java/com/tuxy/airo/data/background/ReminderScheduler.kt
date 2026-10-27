@@ -10,7 +10,6 @@ import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
-import android.util.Log
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.ContextCompat
@@ -20,6 +19,7 @@ import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
 import com.tuxy.airo.MainActivity
 import com.tuxy.airo.R
+import com.tuxy.airo.data.flightdata.FlightChange
 import com.tuxy.airo.data.flightdata.FlightData
 import com.tuxy.airo.data.settings.AppPreferences
 import kotlinx.coroutines.flow.first
@@ -91,6 +91,7 @@ class ReminderScheduler(
         if (flight.id == 0) return
         alarmManager?.cancel(reminderIntent(flight))
         WorkManager.getInstance(context).cancelUniqueWork(workName(flight.id))
+        FlightNotifications.cancelFlightChange(context, flight.id)
     }
 
     private fun scheduleExact(
@@ -191,26 +192,14 @@ class ReminderReceiver : BroadcastReceiver() {
 
 /** Notification channels and the small set of notifications the app posts. */
 object FlightNotifications {
-    const val CHANNEL_REFRESH = "flight_refresh_channel"
     const val CHANNEL_ALERTS = "flight_alert_channel"
 
-    private const val TAG = "FlightNotifications"
-
-    private const val REFRESH_NOTIFICATION_ID = 1001
     private const val CHANGE_NOTIFICATION_BASE = 20_000
+    private const val CHANGE_SUMMARY_ID = 1_000_000
+    private const val GROUP_FLIGHT_CHANGES = "flight_changes"
 
     fun ensureChannels(context: Context) {
         val manager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-        manager.createNotificationChannel(
-            NotificationChannel(
-                CHANNEL_REFRESH,
-                context.getString(R.string.app_name) + " updates",
-                NotificationManager.IMPORTANCE_LOW,
-            ).apply {
-                description = context.getString(R.string.refreshing_flight_data)
-                setShowBadge(false)
-            }
-        )
         manager.createNotificationChannel(
             NotificationChannel(
                 CHANNEL_ALERTS,
@@ -230,41 +219,59 @@ object FlightNotifications {
         notify(context, flightId.coerceAtLeast(1), notification)
     }
 
-    fun notifyRefresh(context: Context, updated: Int, failed: Int) {
-        // A refresh that updated nothing is not user-visible news. This also
-        // covers the old "0 flights updated" completion and all-failed runs;
-        // failures are still logged for diagnostics and WorkManager retries.
-        if (!shouldNotifyRefresh(updated)) {
-            if (failed > 0) {
-                Log.w(
-                    TAG,
-                    "Refresh updated 0 flights ($failed failed); suppressing notification",
-                )
-            }
-            return
-        }
+    /**
+     * One grouped notification per changed flight. Multiple changes for the
+     * same flight are already combined into [FlightChange.message]; separate
+     * flights get separate notifications under a shared summary group.
+     */
+    fun notifyChanges(context: Context, changes: List<FlightChange>) {
+        if (changes.isEmpty()) return
         ensureChannels(context)
-        val title = context.getString(R.string.flight_refresh_complete)
-        val text = context.getString(R.string.flight_refresh_complete_desc, updated)
-        val notification = baseBuilder(context, CHANNEL_REFRESH, title, text)
-            .setAutoCancel(true)
-            .build()
-        notify(context, REFRESH_NOTIFICATION_ID, notification)
+
+        // A previous multi-flight summary is stale when only one flight remains.
+        if (changes.size == 1) {
+            NotificationManagerCompat.from(context).cancel(CHANGE_SUMMARY_ID)
+        }
+
+        changes.forEach { change ->
+            val notification = baseBuilder(
+                context,
+                CHANNEL_ALERTS,
+                change.title,
+                change.message,
+            )
+                .setGroup(GROUP_FLIGHT_CHANGES)
+                .setOnlyAlertOnce(false)
+                .setStyle(NotificationCompat.BigTextStyle().bigText(change.message))
+                .setAutoCancel(true)
+                .build()
+            notify(context, CHANGE_NOTIFICATION_BASE + change.flightId, notification)
+        }
+
+        if (changes.size > 1) {
+            val style = NotificationCompat.InboxStyle()
+                .setBigContentTitle(context.getString(R.string.flight_update))
+            changes.forEach { change ->
+                style.addLine("${change.callSign}: ${change.message}")
+            }
+            val summary = baseBuilder(
+                context,
+                CHANNEL_ALERTS,
+                context.getString(R.string.flight_update),
+                context.getString(R.string.flight_updates_summary, changes.size),
+            )
+                .setGroup(GROUP_FLIGHT_CHANGES)
+                .setGroupSummary(true)
+                .setStyle(style)
+                .setAutoCancel(true)
+                .build()
+            notify(context, CHANGE_SUMMARY_ID, summary)
+        }
     }
 
-    internal fun shouldNotifyRefresh(updated: Int): Boolean = updated > 0
-
-    fun notifyChange(
-        context: Context,
-        flightId: Int,
-        title: String,
-        content: String,
-    ) {
-        ensureChannels(context)
-        val notification = baseBuilder(context, CHANNEL_ALERTS, title, content)
-            .setAutoCancel(true)
-            .build()
-        notify(context, CHANGE_NOTIFICATION_BASE + flightId, notification)
+    fun cancelFlightChange(context: Context, flightId: Int) {
+        NotificationManagerCompat.from(context)
+            .cancel(CHANGE_NOTIFICATION_BASE + flightId)
     }
 
     private fun baseBuilder(
