@@ -10,6 +10,7 @@ import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
+import android.util.Log
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.ContextCompat
@@ -193,6 +194,8 @@ object FlightNotifications {
     const val CHANNEL_REFRESH = "flight_refresh_channel"
     const val CHANNEL_ALERTS = "flight_alert_channel"
 
+    private const val TAG = "FlightNotifications"
+
     private const val REFRESH_NOTIFICATION_ID = 1001
     private const val CHANGE_NOTIFICATION_BASE = 20_000
 
@@ -228,23 +231,28 @@ object FlightNotifications {
     }
 
     fun notifyRefresh(context: Context, updated: Int, failed: Int) {
-        if (updated == 0 && failed == 0) return
+        // A refresh that updated nothing is not user-visible news. This also
+        // covers the old "0 flights updated" completion and all-failed runs;
+        // failures are still logged for diagnostics and WorkManager retries.
+        if (!shouldNotifyRefresh(updated)) {
+            if (failed > 0) {
+                Log.w(
+                    TAG,
+                    "Refresh updated 0 flights ($failed failed); suppressing notification",
+                )
+            }
+            return
+        }
         ensureChannels(context)
-        val title = if (updated > 0) {
-            context.getString(R.string.flight_refresh_complete)
-        } else {
-            context.getString(R.string.update_error)
-        }
-        val text = if (updated > 0) {
-            context.getString(R.string.flight_refresh_complete_desc, updated)
-        } else {
-            context.getString(R.string.update_error_desc)
-        }
+        val title = context.getString(R.string.flight_refresh_complete)
+        val text = context.getString(R.string.flight_refresh_complete_desc, updated)
         val notification = baseBuilder(context, CHANNEL_REFRESH, title, text)
             .setAutoCancel(true)
             .build()
         notify(context, REFRESH_NOTIFICATION_ID, notification)
     }
+
+    internal fun shouldNotifyRefresh(updated: Int): Boolean = updated > 0
 
     fun notifyChange(
         context: Context,
